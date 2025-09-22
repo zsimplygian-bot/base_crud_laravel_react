@@ -1,0 +1,1 @@
+import{j as o}from"./app-CX3vRXLx.js";import{F as t}from"./form-page-JagFgT5j.js";import"./app-layout-m4MDTwBO.js";import"./button-CXMDOt1C.js";import"./index-MkUL9Asq.js";import"./index-B5rvu1oh.js";import"./transition-DPOTKLNf.js";import"./form-fields-DpU3dUl7.js";import"./label-KR_n17jv.js";import"./index-DV4MtJSd.js";function j(r){return o.jsx(t,{...r})}export{j as default};
