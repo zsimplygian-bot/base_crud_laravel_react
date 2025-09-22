@@ -16,7 +16,7 @@ class Mascota extends BaseModel
         ['edad', 'EDAD (AÑOS)', 'tel'],
         ['color', 'COLOR', 'text'],
         ['peso', 'PESO (KG)', 'number'],
-        ['imagen', 'IMAGEN', 'file'],
+        //['imagen', 'IMAGEN', 'file'],
     ];
     protected static $validationRules = [
         'mascota' => 'required|string|max:255',
@@ -27,7 +27,7 @@ class Mascota extends BaseModel
         'edad' => 'nullable|int',
         'color' => 'nullable|string|max:100',
         'peso' => 'nullable|numeric',
-        'imagen' => 'nullable|string|max:255',
+        //'imagen' => 'nullable|string|max:255',
     ];
     protected static $tableColumns = [
         ['ID', 'id'],
@@ -39,11 +39,11 @@ class Mascota extends BaseModel
         ['EDAD', 'edad'],
         ['COLOR', 'color'],
         ['PESO', 'peso'],
-        ['FOTO', 'imagen'],
+        //['FOTO', 'imagen'],
         ['FECHA REGISTRO', 'created_at'],
     ];
     protected static array $apiConfig = [
-        'inputKey' => 'especie',
+        //'inputKey' => 'especie',
         'type' => 'file',
         'endpoint' => 'clasificador-imagen',
         'fields' => [

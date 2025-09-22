@@ -62,6 +62,7 @@ const renderMap: Record<string, RenderFunction> = {
   },
   valor: (value: any) => <span>S/. {Number(value).toFixed(2)}</span>,
   total: (value: any) => <span>S/. {Number(value).toFixed(2)}</span>,
+  precio: (value: any) => <span>S/. {Number(value).toFixed(2)}</span>,
   estado: EstadoBadge,
   estado_delega: EstadoBadge,
   imagen: (value: any, _row, view) => ImageCell(value, view),

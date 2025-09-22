@@ -66,7 +66,7 @@ export const DataTableFooter: React.FC<DataTableFooterProps> = ({
                   <SelectValue>{pageSize}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {[10, 25, 100, 250].map((option) => (
+                  {[10, 25, 50, 100, 250, 1000].map((option) => (
                     <SelectItem key={option} value={String(option)}>
                       {option}
                     </SelectItem>

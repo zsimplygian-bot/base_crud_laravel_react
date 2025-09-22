@@ -4,28 +4,13 @@ use Illuminate\Support\Facades\DB;
 class Lista
 {
     protected static array $tablasPermitidas = [
-     'sexo', 'cliente', 'mascota', 'estado',
+     'sexo', 'cliente', 'mascota', 'estado_cita', 'estado_mascota', 'motivo_cita',
     ];
     protected static array $columnasTablasSimples = [
-        'especialidad' => ['id_especialidad as id', 'especialidad as label'],
+        //'especialidad' => ['id_especialidad as id', 'especialidad as label'],
     ];
     protected static array $listasEspeciales = [
-        'id_delegado' => 'getListaDelegado',
-        'id_pfildelegado' => 'getListaPfildelegado',
-        'id_pfildelegado2' => 'getListaPfildelegado2',
-        'id_persona_n' => 'getListaPersonaN',
-        'id_persona_j' => 'getListaPersonaJ',
-        'id_propietario_n' => 'getListaPersonaN',
-        'id_propietario_j' => 'getListaPersonaJ',
-        'id_tramitador' => 'getListaPersonaN',
-        'periovigenciadelega' => 'getListaPeriodoVigenciaDelega',
-        'proyectista' => 'getListaPersonaN',
-        'previo1' => 'getPrevio1Options',
-        'previo2' => 'getPrevio2Options',
-        'previo3' => 'getPrevio3Options',
-        'previo4' => 'getPrevio4Options',
-        'previo5' => 'getPrevio5Options',
-        'previo6' => 'getPrevio6Options',
+       // 'id_mascota' => 'getListaMascota',
     ];
     // Lista simple desde tabla permitida
     public function getLista(string $tabla): array
@@ -72,6 +57,19 @@ class Lista
         return $this->getLista($claveNormalizada);
     }
     // Métodos especiales
+    public function getListaMascota(): array
+    {
+        return $this->fetch(
+            'mascota as m',
+            [
+                ['join', 'cliente as c', 'm.id_mascota', '=', 'c.id_cliente'],
+            ],
+            [
+                'm.id_mascota as id',
+                DB::raw("CONCAT(m.mascota, ' - ', c.cliente) as label")
+            ]
+        );
+    }
     public function getListaDelegado(): array
     {
         return $this->fetch(

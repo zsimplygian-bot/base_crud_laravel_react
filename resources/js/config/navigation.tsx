@@ -1,66 +1,80 @@
 import {
   LayoutGrid,
-  Tag,
   PawPrint,
   Calendar,
   Stethoscope,
   ClipboardList,
-  FileText,
   Users,
   User,
-  Building,
-  Car,
-  MapPin,
+  Syringe,
   BookOpen,
-  Folder,
 } from "lucide-react";
-// Función genérica para construir la estructura esperada por NavMain/NavFooter
-function buildNavStructure(
-  rawItems: Array<[string, any, Array<[string, string, any?]>]>
-) {
-  return rawItems.map(([title, icon, items]) => ({
+
+// Definición genérica de items de navegación
+type RawItem = {
+  title: string;
+  icon: any;
+  href?: string;
+  children?: RawItem[];
+};
+
+// Función: convierte RawItem en estructura compatible con NavMain/NavFooter
+function buildNavStructure(rawItems: RawItem[]) {
+  return rawItems.map(({ title, icon, href, children }) => ({
     title,
     icon,
-    href: items.length === 1 ? items[0][1] : undefined, // Solo si tiene un solo hijo
-    children: items.length > 1
-      ? items.map(([subTitle, href, subIcon]) => ({
-          title: subTitle,
-          href,
-          icon: subIcon ?? icon,
+    href: href ?? (children?.length === 1 ? children[0].href : undefined),
+    children: children?.length
+      ? children.map((c) => ({
+          title: c.title,
+          href: c.href,
+          icon: c.icon ?? icon,
         }))
       : undefined,
   }));
 }
-// Declaración simple para Sidebar
-const rawSidebar = [
-  ["Dashboard", LayoutGrid, [["Dashboard", "/dashboard"]]],
 
-  ["Cliente", User, [
-    ["Cliente", "/cliente", Users],
-  ]],
-
-  ["Mascota", PawPrint, [
-    ["Mascotas", "/mascota", PawPrint],
-  ]],
-
-  ["Cita", Calendar, [
-    ["Citas", "/cita", Calendar],
-  ]],
-
-  ["Consulta", Stethoscope, [
-    ["Consultas", "/consulta", ClipboardList],
-  ]],
-
-  ["Estado", BookOpen, [
-    ["Estado", "/itemsimple?tipo=estado"],
-  ]],
+// Sidebar "crudo" en formato más limpio
+const rawSidebar: RawItem[] = [
+  {
+    title: "Dashboard",
+    icon: LayoutGrid,
+    href: "/dashboard",
+  },
+  {
+    title: "Cliente",
+    icon: User,
+    title: "Clientes", href: "/cliente", icon: Users,
+  },
+  {
+    title: "Mascota",
+    icon: PawPrint,
+    title: "Mascotas", href: "/mascota",
+  },
+  {
+    title: "Cita",
+    icon: Calendar,
+    title: "Citas", href: "/cita",
+  },
+  {
+    title: "Consulta",
+    icon: Stethoscope,
+    title: "Consultas", href: "/consulta", icon: ClipboardList,
+  },
+  {
+    title: "Vacunas",
+    icon: Syringe, // icono de vacuna 💉
+    title: "Vacunas", href: "/vacuna",
+  },
+  {
+    title: "Item simple",
+    icon: BookOpen,
+    children: [{ title: "Motivo cita", href: "/itemsimple?tipo=motivo_cita" }],
+  },
 ];
 
-// Declaración para Footer
-const rawFooter = [
-  ["Repositorio", Folder, [["Repositorio", "https://github.com/laravel/react-starter-kit"]]],
-  ["Documentación", BookOpen, [["Documentación", "https://laravel.com/docs/starter-kits"]]],
-];
-// Exporta con estructura compatible
+// Footer (por ahora vacío, se puede extender con docs/repositorio)
+const rawFooter: RawItem[] = [];
+
 export const sidebarItems = buildNavStructure(rawSidebar);
 export const footerNavItems = buildNavStructure(rawFooter);

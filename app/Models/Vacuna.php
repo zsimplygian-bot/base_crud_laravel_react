@@ -2,26 +2,28 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-class Cita extends BaseModel
+class Vacuna extends BaseModel
 {
     use HasFactory;
-    protected $table = 'cita';
-    public static string $title = 'Citas';
+    protected $table = 'vacuna';
+    public static string $title = 'Vacunas';
     protected static $simpleFormFieldDefinitions = [
         ['id_mascota', 'MASCOTA', 'select'],
-        ['fecha', 'FECHA', 'date'],
-        ['hora', 'HORA', 'time'],
-        ['id_motivo_cita', 'MOTIVO', 'select'],
+        ['vacuna', 'VACUNA', 'text'],
+        ['descripcion', 'DESCRIPCIÓN', 'text'],
+        ['fecha_aplicacion', 'FECHA DE APLICACIÓN', 'date'],
+        ['proxima_dosis', 'PRÓXIMA DOSIS', 'date'],
         ['precio', 'PRECIO', 'number'],
-        ['id_estado_cita', 'ESTADO', 'select'],
+        ['observaciones', 'OBSERVACIONES', 'textarea'],
     ];
     protected static $validationRules = [
         'id_mascota' => 'required|int',
-        'fecha' => 'required|date',
-        'hora' => 'required',
-        'id_motivo_cita' => 'required|int',
+        'vacuna' => 'required|string|max:255',
+        'descripcion' => 'nullable|string|max:255',
+        'fecha_aplicacion' => 'required|date',
+        'proxima_dosis' => 'nullable|date',
         'precio' => 'required|numeric',
-        'id_estado_cita' => 'required|int',
+        'observaciones' => 'nullable|string',
     ];
     protected static $footerfieldDefinitions = [
         'precio' => [ 'label' => 'Total', 'type' => 'text', 'width' => 2],
@@ -29,31 +31,29 @@ class Cita extends BaseModel
     protected static $tableColumns = [
         ['ID', 'id'],
         ['MASCOTA', 'mascota'],
-        ['FECHA', 'fecha'],
-        ['HORA', 'hora'],
-        ['MOTIVO', 'motivo_cita'],
+        ['VACUNA', 'vacuna'],
+        ['DESCRIPCIÓN', 'descripcion'],
+        ['FECHA APLICACIÓN', 'fecha_aplicacion'],
+        ['PRÓXIMA DOSIS', 'proxima_dosis'],
         ['PRECIO', 'precio'],
-        ['ESTADO', 'estado_cita'],
+        ['OBSERVACIONES', 'observaciones'],
         ['FECHA REGISTRO', 'created_at'],
     ];
     public static function getQuery()
     {
         $alias = (new self)->getTable();
         $alias2 = 'mascota';
-        $alias3 = 'estado_cita';
-        $alias4 = 'motivo_cita';
         $query = DB::table($alias)
             ->leftJoin($alias2, "{$alias}.id_{$alias2}", '=', "{$alias2}.id_{$alias2}")
-            ->leftJoin($alias3, "{$alias}.id_{$alias3}", '=', "{$alias3}.id_{$alias3}")
-            ->leftJoin($alias4, "{$alias}.id_{$alias4}", '=', "{$alias4}.id_{$alias4}")
             ->select([
                 "{$alias}.id_{$alias} as id",
                 "{$alias2}.mascota as mascota",
-                "{$alias}.fecha",
-                "{$alias}.hora",
-                "{$alias4}.motivo_cita",
+                "{$alias}.vacuna",
+                "{$alias}.descripcion",
+                "{$alias}.fecha_aplicacion",
+                "{$alias}.proxima_dosis",
                 "{$alias}.precio",
-                "{$alias3}.estado_cita",
+                "{$alias}.observaciones",
                 "{$alias}.created_at",
             ]);
         return ['query' => $query, 'alias' => $alias];

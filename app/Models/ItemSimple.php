@@ -49,14 +49,14 @@ class ItemSimple extends Model
     protected static function resolveTable(string $tipo): ?string
     {
         return match ($tipo) {
-            'ano', 'estado', 'estado_liquid', 'dictamen', 'categoria' => $tipo,
+            'estado_cita', 'estado_mascota', 'motivo_cita' => $tipo,
             default => null,
         };
     }
     public static function getTitleForTipo(string $tipo): string
     {
         return match ($tipo) {
-            'categoria' => 'Categoría',
+            'motivo_cita' => 'Motivo cita',
             default => ucfirst($tipo),
         };
     }

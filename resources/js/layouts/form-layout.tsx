@@ -12,8 +12,6 @@ import { useFormCalculate } from "@/hooks/use-form-calculate";
 import useToggleForm from "@/hooks/use-toggle-form";
 import { useFormAction } from "@/hooks/use-form-action";
 import { FormFieldsRenderer } from "@/components/form-fields";
-import { RenderSheetFields } from "@/hooks/use-render-sheet-fields";
-
 // 👇 importamos el hook que hiciste
 import { ApiConfigEntry, useFetchWithButton } from "@/hooks/use-fetch-with-button";
 
@@ -84,7 +82,6 @@ const LayoutForm: React.FC<LayoutFormProps> = ({
     data,
     setData
   );
-
   const { hiddenFields, ToggleUI } = useToggleForm(
     toggleOptions,
     setData,
@@ -146,17 +143,6 @@ const LayoutForm: React.FC<LayoutFormProps> = ({
           </div>
           {FooterButtons}
         </form>
-
-        <RenderSheetFields
-          sheetFields={sheetFields}
-          data={data}
-          setData={setData}
-          errors={errors}
-          readonly={readonly}
-          configReadonly={configReadonly}
-          isMobile={isMobile}
-          hiddenFields={hiddenFields}
-        />
       </CardContent>
     </Card>
   );

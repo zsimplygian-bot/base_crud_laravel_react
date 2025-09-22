@@ -13,6 +13,7 @@ class Consulta extends BaseModel
         ['sintomas', 'SÍNTOMAS', 'text'],
         ['diagnostico', 'DIAGNÓSTICO', 'textarea'],
         ['tratamiento', 'TRATAMIENTO', 'textarea'],
+        ['precio', 'PRECIO', 'number'],
         ['observaciones', 'OBSERVACIONES', 'textarea'],
     ];
     protected static $validationRules = [
@@ -21,7 +22,11 @@ class Consulta extends BaseModel
         'sintomas' => 'nullable|string',
         'diagnostico' => 'nullable|string',
         'tratamiento' => 'nullable|string',
+        'precio' => 'required|numeric',
         'observaciones' => 'nullable|string',
+    ];
+    protected static $footerfieldDefinitions = [
+        'precio' => [ 'label' => 'Total', 'type' => 'text', 'width' => 2],
     ];
     protected static $tableColumns = [
         ['ID', 'id'],
@@ -30,11 +35,12 @@ class Consulta extends BaseModel
         ['SÍNTOMAS', 'sintomas'],
         ['DIAGNÓSTICO', 'diagnostico'],
         ['TRATAMIENTO', 'tratamiento'],
+        ['PRECIO', 'precio'],
         ['OBSERVACIONES', 'observaciones'],
         ['FECHA REGISTRO', 'created_at'],
     ];
     protected static array $apiConfig = [
-        'inputKey' => 'sintomas',
+        //'inputKey' => 'sintomas',
         'endpoint' => 'diagnostico',
         'type' => 'text',
         'fields' => [
@@ -55,6 +61,7 @@ class Consulta extends BaseModel
                 "{$alias}.sintomas",
                 "{$alias}.diagnostico",
                 "{$alias}.tratamiento",
+                "{$alias}.precio",
                 "{$alias}.observaciones",
                 "{$alias}.created_at",
             ]);

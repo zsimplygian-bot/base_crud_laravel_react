@@ -6,15 +6,14 @@ class ModelRegistry
     public static function resolve(string $view, ?string $tipo = null)
     {
         $modelMap = [
-            'producto' => M\Producto::class,
-            'proveedor' => M\Proveedor::class,
             'cliente'   => M\Cliente::class,
             'mascota'   => M\Mascota::class,
             'cita'   => M\Cita  ::class,
             'consulta'   => M\Consulta  ::class,
+            'vacuna'   => M\Vacuna  ::class,
         ];
         if ($view === 'itemsimple') {
-            $allowedTipos = ['estado'];
+            $allowedTipos = ['motivo_cita'];
             if (!$tipo || !in_array($tipo, $allowedTipos)) {
                 throw new \InvalidArgumentException("Tipo 'itemsimple' no permitido o no especificado");
             }
