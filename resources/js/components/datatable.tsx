@@ -70,16 +70,16 @@ export const DataTable: React.FC<DataTableProps> = ({
   return (
     <div className="w-full">
       <div className="rounded-md border overflow-x-auto max-h-[545px]">
-        <Table className="min-w-max w-full">
+        <Table className="min-w-max w-full bg-white dark:bg-gray-900">
           <TableHeader>
             <TableRow>
-              <TableHead className="sticky left-0 z-20 bg-white dark:bg-background font-semibold" />
+              <TableHead className="sticky left-0 z-20 bg-white dark:bg-background font-semibold bg-white dark:bg-gray-900" />
               {columns
                 .filter((col) => col.accessor && columnVisibility?.[col.accessor] !== false)
                 .map((col) => (
                   <TableHead
                     key={col.accessor}
-                    className="sticky top-0 bg-white dark:bg-background"
+                    className="sticky top-0 bg-white dark:bg-background bg-white dark:bg-gray-900"
                   >
                     <button
                       onClick={() => handleSort(col.accessor)}
@@ -87,7 +87,7 @@ export const DataTable: React.FC<DataTableProps> = ({
                         sortBy === col.accessor
                           ? "text-foreground font-semibold"
                           : "text-muted-foreground"
-                      } hover:bg-accent hover:text-accent-foreground`}
+                      } hover:bg-accent hover:text-accent-foreground `}
                       style={{
                         paddingLeft: "15px",
                         position: "relative",
@@ -122,7 +122,7 @@ export const DataTable: React.FC<DataTableProps> = ({
             ) : data.length > 0 ? (
               data.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
-                  <TableCell className="sticky left-0 z-10 dark:bg-background">
+                  <TableCell className="sticky left-0 z-10 dark:bg-background bg-white dark:bg-gray-900">
                     <ActionButtons
                       rowId={row.id}
                       view={view}

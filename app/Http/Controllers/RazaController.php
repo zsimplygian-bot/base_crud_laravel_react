@@ -1,11 +1,11 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\Consulta;
+use App\Models\Raza;
 use App\Http\Controllers\BaseController;
-class ConsultaController extends BaseController
+class RazaController extends BaseController
 {
     public function __construct() {
-        $this->model = Consulta::class; 
+        $this->model = Raza::class; 
         parent::__construct();
     }
 }

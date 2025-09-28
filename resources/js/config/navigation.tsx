@@ -9,7 +9,6 @@ import {
   Syringe,
   BookOpen,
 } from "lucide-react";
-
 // Definición genérica de items de navegación
 type RawItem = {
   title: string;
@@ -17,7 +16,6 @@ type RawItem = {
   href?: string;
   children?: RawItem[];
 };
-
 // Función: convierte RawItem en estructura compatible con NavMain/NavFooter
 function buildNavStructure(rawItems: RawItem[]) {
   return rawItems.map(({ title, icon, href, children }) => ({
@@ -33,48 +31,43 @@ function buildNavStructure(rawItems: RawItem[]) {
       : undefined,
   }));
 }
-
 // Sidebar "crudo" en formato más limpio
 const rawSidebar: RawItem[] = [
   {
-    title: "Dashboard",
     icon: LayoutGrid,
-    href: "/dashboard",
+    title: "Dashboard", href: "/dashboard",
   },
   {
-    title: "Cliente",
     icon: User,
     title: "Clientes", href: "/cliente", icon: Users,
   },
   {
-    title: "Mascota",
     icon: PawPrint,
     title: "Mascotas", href: "/mascota",
   },
   {
-    title: "Cita",
     icon: Calendar,
     title: "Citas", href: "/cita",
   },
   {
-    title: "Consulta",
     icon: Stethoscope,
-    title: "Consultas", href: "/consulta", icon: ClipboardList,
+    title: "Historias clínicas", href: "/historia_clinica", icon: ClipboardList,
   },
   {
-    title: "Vacunas",
     icon: Syringe, // icono de vacuna 💉
     title: "Vacunas", href: "/vacuna",
   },
   {
-    title: "Item simple",
+    title: "Items",
     icon: BookOpen,
-    children: [{ title: "Motivo cita", href: "/itemsimple?tipo=motivo_cita" }],
+    children: [
+               { title: "Especie", href: "/itemsimple?tipo=especie"},
+               { title: "Raza", href: "/raza"},
+               { title: "Motivo cita", href: "/itemsimple?tipo=motivo_cita"},
+    ],
   },
 ];
-
 // Footer (por ahora vacío, se puede extender con docs/repositorio)
 const rawFooter: RawItem[] = [];
-
 export const sidebarItems = buildNavStructure(rawSidebar);
 export const footerNavItems = buildNavStructure(rawFooter);

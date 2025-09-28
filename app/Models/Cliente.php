@@ -6,7 +6,7 @@ class Cliente extends BaseModel
 {
     use HasFactory;
     protected $table = 'cliente';
-    public static string $title = 'Clientes';
+    public static string $title = 'Dueños';
     protected static $simpleFormFieldDefinitions = [
         ['cliente', 'CLIENTE',  'text'], 
         ['dni', 'DNI', 'tel', 'maxlength:8'],
@@ -16,7 +16,7 @@ class Cliente extends BaseModel
     ];
     protected static $validationRules = [
         'cliente' => 'required|string|max:255',
-        'dni' => 'required|string|max:8',
+        'dni' => 'nullable|string|max:8',
         'telefono' => 'nullable|string|max:9',
         'email' => 'nullable|email|max:255',
         'direccion' => 'nullable|string|max:255',

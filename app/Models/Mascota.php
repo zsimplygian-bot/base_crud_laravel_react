@@ -10,8 +10,7 @@ class Mascota extends BaseModel
     protected static $simpleFormFieldDefinitions = [
         ['mascota', 'NOMBRE', 'text'],
         ['id_cliente', 'DUEÑO', 'select'],
-        ['especie', 'ESPECIE', 'text'],
-        ['raza', 'RAZA', 'text'],
+        ['id_raza', 'ESPECIE - RAZA', 'select'],
         ['id_sexo', 'SEXO', 'select'],
         ['edad', 'EDAD (AÑOS)', 'tel'],
         ['color', 'COLOR', 'text'],
@@ -21,14 +20,19 @@ class Mascota extends BaseModel
     protected static $validationRules = [
         'mascota' => 'required|string|max:255',
         'id_cliente' => 'required|int',
-        'especie' => 'required|string|max:255',
-        'raza' => 'nullable|string|max:255',
+        'id_raza' => 'required|int',
         'id_sexo' => 'nullable|int|max:2',
         'edad' => 'nullable|int',
         'color' => 'nullable|string|max:100',
         'peso' => 'nullable|numeric',
         //'imagen' => 'nullable|string|max:255',
     ];
+    protected static $toolbarfieldDefinitions = [
+        'id_cliente' => ['label' => 'DUEÑO', 'type' => 'select', 'width' => 2],
+        'id_raza' => ['label' => 'ESPECIE - RAZA', 'type' => 'select', 'width' => 2],
+        'id_sexo' => ['label' => 'SEXO', 'type' => 'select', 'width' => 2],
+    ];
+    public static array $allowedFilters = ['id_cliente', 'id_raza', 'id_sexo'];
     protected static $tableColumns = [
         ['ID', 'id'],
         ['NOMBRE', 'mascota'],
@@ -38,7 +42,7 @@ class Mascota extends BaseModel
         ['SEXO', 'sexo'],
         ['EDAD', 'edad'],
         ['COLOR', 'color'],
-        ['PESO', 'peso'],
+        ['PESO (KG)', 'peso'],
         //['FOTO', 'imagen'],
         ['FECHA REGISTRO', 'created_at'],
     ];
@@ -56,17 +60,21 @@ class Mascota extends BaseModel
     {
         $alias = (new self)->getTable();
         $alias2 = 'cliente';
-        $alias3 = 'sexo';
+        $alias3 = 'raza';
+        $alias4 = 'especie';
+        $alias5 = 'sexo';
         $query = DB::table($alias)
             ->leftJoin($alias2, "{$alias}.id_{$alias2}", '=', "{$alias2}.id_{$alias2}")
             ->leftJoin($alias3, "{$alias}.id_{$alias3}", '=', "{$alias3}.id_{$alias3}")
+            ->leftJoin($alias4, "{$alias3}.id_{$alias4}", '=', "{$alias4}.id_{$alias4}")
+            ->leftJoin($alias5, "{$alias}.id_{$alias5}", '=', "{$alias5}.id_{$alias5}")
             ->select([
                 "{$alias}.id_{$alias} as id",
                 "{$alias}.mascota",
                 "{$alias2}.cliente",
-                "{$alias}.especie",
-                "{$alias}.raza",
-                "{$alias3}.sexo",
+                "{$alias4}.especie",
+                "{$alias3}.raza",
+                "{$alias5}.sexo",
                 "{$alias}.edad",
                 "{$alias}.color",
                 "{$alias}.peso",

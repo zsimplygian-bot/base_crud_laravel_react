@@ -8,12 +8,13 @@ class ModelRegistry
         $modelMap = [
             'cliente'   => M\Cliente::class,
             'mascota'   => M\Mascota::class,
-            'cita'   => M\Cita  ::class,
-            'consulta'   => M\Consulta  ::class,
-            'vacuna'   => M\Vacuna  ::class,
+            'cita'   => M\Cita::class,
+            'historia_clinica'   => M\HistoriaClinica::class,
+            'raza'   => M\Raza::class,
+            'vacuna'   => M\Vacuna::class,
         ];
         if ($view === 'itemsimple') {
-            $allowedTipos = ['motivo_cita'];
+            $allowedTipos = ['motivo_cita', 'especie'];
             if (!$tipo || !in_array($tipo, $allowedTipos)) {
                 throw new \InvalidArgumentException("Tipo 'itemsimple' no permitido o no especificado");
             }

@@ -25,11 +25,15 @@ class Vacuna extends BaseModel
         'precio' => 'required|numeric',
         'observaciones' => 'nullable|string',
     ];
+    protected static $toolbarfieldDefinitions = [
+        'id_mascota' => ['label' => 'DUEÑO - MASCOTA', 'type' => 'select', 'width' => 3],
+    ];
     protected static $footerfieldDefinitions = [
         'precio' => [ 'label' => 'Total', 'type' => 'text', 'width' => 2],
     ];
     protected static $tableColumns = [
         ['ID', 'id'],
+        ['DUEÑO', 'cliente'],
         ['MASCOTA', 'mascota'],
         ['VACUNA', 'vacuna'],
         ['DESCRIPCIÓN', 'descripcion'],
@@ -43,11 +47,14 @@ class Vacuna extends BaseModel
     {
         $alias = (new self)->getTable();
         $alias2 = 'mascota';
+        $alias3 = 'cliente';
         $query = DB::table($alias)
             ->leftJoin($alias2, "{$alias}.id_{$alias2}", '=', "{$alias2}.id_{$alias2}")
+            ->leftJoin($alias3, "{$alias2}.id_{$alias3}", '=', "{$alias3}.id_{$alias3}")
             ->select([
                 "{$alias}.id_{$alias} as id",
                 "{$alias2}.mascota as mascota",
+                "{$alias3}.cliente as cliente",
                 "{$alias}.vacuna",
                 "{$alias}.descripcion",
                 "{$alias}.fecha_aplicacion",

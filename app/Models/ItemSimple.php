@@ -49,7 +49,7 @@ class ItemSimple extends Model
     protected static function resolveTable(string $tipo): ?string
     {
         return match ($tipo) {
-            'estado_cita', 'estado_mascota', 'motivo_cita' => $tipo,
+            'estado_cita', 'estado_mascota', 'motivo_cita', 'especie' => $tipo,
             default => null,
         };
     }

@@ -105,7 +105,11 @@ const LayoutForm: React.FC<LayoutFormProps> = ({
   };
 
   return (
-    <Card className={`${!isMobile ? width_form : ""} border-2 ${borderColor}`}>
+    <Card
+      className={`bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${
+        !isMobile ? width_form : ""
+      } border-2 ${borderColor}`}
+    >
       <CardHeader>
         <div className="flex items-start flex-wrap gap-x-4">
           <div>
