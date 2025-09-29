@@ -38,8 +38,8 @@ const rawSidebar: RawItem[] = [
     title: "Dashboard", href: "/dashboard",
   },
   {
-    icon: User,
-    title: "Clientes", href: "/cliente", icon: Users,
+    icon: Users,
+    title: "Clientes", href: "/cliente",
   },
   {
     icon: PawPrint,
@@ -51,7 +51,7 @@ const rawSidebar: RawItem[] = [
   },
   {
     icon: Stethoscope,
-    title: "Historias clínicas", href: "/historia_clinica", icon: ClipboardList,
+    title: "Historias clínicas", href: "/historia_clinica",
   },
   {
     icon: Syringe, // icono de vacuna 💉
@@ -61,9 +61,9 @@ const rawSidebar: RawItem[] = [
     title: "Items",
     icon: BookOpen,
     children: [
-               { title: "Especie", href: "/itemsimple?tipo=especie"},
-               { title: "Raza", href: "/raza"},
-               { title: "Motivo cita", href: "/itemsimple?tipo=motivo_cita"},
+               { title: "Especie", href: "/itemsimple?tipo=especie", icon: PawPrint,},
+               { title: "Raza", href: "/raza", icon: PawPrint,},
+               { title: "Motivo cita", href: "/itemsimple?tipo=motivo_cita", icon: Calendar,},
     ],
   },
 ];

@@ -1,5 +1,5 @@
 import { Head, useForm, router } from "@inertiajs/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AppLayout from "@/layouts/app-layout";
 import LayoutForm from "@/layouts/form-layout";
 
@@ -26,6 +26,122 @@ type Seguimiento = {
   created_at: string;
 };
 
+const ModalBackdrop: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="absolute inset-0 bg-black/40" />
+    <div className="relative z-10 w-full flex justify-center">{children}</div>
+  </div>
+);
+
+const SeguimientoFormModal: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  seguimiento?: Seguimiento | null;
+  historiaId: number;
+}> = ({ open, onClose, seguimiento, historiaId }) => {
+  const { data, setData, post, put, reset } = useForm({
+    detalle: "",
+    tratamiento: "",
+    observaciones: "",
+    fecha: new Date().toISOString().slice(0, 10),
+    id_historia_clinica: historiaId,
+  });
+
+  // 🔹 Sincronizar valores cuando cambie "seguimiento"
+  useEffect(() => {
+    if (seguimiento) {
+      setData({
+        detalle: seguimiento.detalle || "",
+        tratamiento: seguimiento.tratamiento || "",
+        observaciones: seguimiento.observaciones || "",
+        fecha: seguimiento.fecha || new Date().toISOString().slice(0, 10),
+        id_historia_clinica: historiaId,
+      });
+    } else {
+      reset({
+        detalle: "",
+        tratamiento: "",
+        observaciones: "",
+        fecha: new Date().toISOString().slice(0, 10),
+        id_historia_clinica: historiaId,
+      });
+    }
+  }, [seguimiento, open]);
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (seguimiento) {
+      put(route("seguimientos.update", seguimiento.id), {
+        onSuccess: () => {
+          reset();
+          onClose();
+        },
+      });
+    } else {
+      post(route("seguimientos.store"), {
+        onSuccess: () => {
+          reset();
+          onClose();
+        },
+      });
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <ModalBackdrop>
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 w-full md:w-3/4 max-w-4xl">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          {seguimiento ? "Editar Seguimiento" : "Nuevo Seguimiento"}
+        </h3>
+        <form onSubmit={submit} className="flex flex-col gap-3">
+          <textarea
+            value={data.detalle}
+            onChange={(e) => setData("detalle", e.target.value)}
+            className="w-full min-h-[100px] rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
+            placeholder="Detalle del seguimiento..."
+            required
+          />
+          <textarea
+            value={data.tratamiento}
+            onChange={(e) => setData("tratamiento", e.target.value)}
+            className="w-full min-h-[80px] rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
+            placeholder="Tratamiento (opcional)"
+          />
+          <textarea
+            value={data.observaciones}
+            onChange={(e) => setData("observaciones", e.target.value)}
+            className="w-full min-h-[80px] rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
+            placeholder="Observaciones (opcional)"
+          />
+          <input
+            type="date"
+            value={data.fecha}
+            onChange={(e) => setData("fecha", e.target.value)}
+            className="rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
+          />
+          <div className="flex justify-end gap-2 mt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-900 dark:text-white"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
+            >
+              Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+    </ModalBackdrop>
+  );
+};
+
 export const FormPage: React.FC<FormProps> = ({
   form_data,
   formFields,
@@ -40,51 +156,12 @@ export const FormPage: React.FC<FormProps> = ({
   seguimientos = [],
 }) => {
   const [isModalOpen, setModalOpen] = useState(false);
-  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editSeguimiento, setEditSeguimiento] = useState<Seguimiento | null>(null);
+  const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const historiaId = Number(window.location.pathname.split("/").pop());
-  const { data, setData, post, put, processing, reset } = useForm({
-    detalle: "",
-    tratamiento: "",
-    observaciones: "",
-    fecha: new Date().toISOString().slice(0, 10),
-    id_historia_clinica: form_data?.id || historiaId,
-  });
-
   const showActions = action !== "info" && action !== "delete";
-
-  const openEditModal = (s?: Seguimiento) => {
-    if (s) {
-      setEditSeguimiento(s);
-      setData({
-        detalle: s.detalle,
-        tratamiento: s.tratamiento || "",
-        observaciones: s.observaciones || "",
-        fecha: s.fecha,
-        id_historia_clinica: form_data?.id || historiaId,
-      });
-    } else {
-      setEditSeguimiento(null);
-      reset("detalle", "tratamiento", "observaciones", "fecha");
-    }
-    setModalOpen(true);
-  };
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const callback = {
-      onSuccess: () => {
-        reset("detalle", "tratamiento", "observaciones", "fecha");
-        setModalOpen(false);
-        setEditSeguimiento(null);
-      },
-    };
-    editSeguimiento
-      ? put(route("seguimientos.update", editSeguimiento.id), callback)
-      : post(route("seguimientos.store"), callback);
-  };
 
   const handleDelete = () => {
     if (!deleteId) return;
@@ -93,19 +170,8 @@ export const FormPage: React.FC<FormProps> = ({
         setDeleteModalOpen(false);
         setDeleteId(null);
       },
-      onError: () => {
-        setDeleteModalOpen(false);
-        setDeleteId(null);
-      },
     });
   };
-
-  const ModalBackdrop: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/40" /> {/* fondo oscuro semitransparente */}
-      <div className="relative z-10">{children}</div>
-    </div>
-  );
 
   return (
     <AppLayout breadcrumbs={[{ title, href: view }]}>
@@ -131,7 +197,10 @@ export const FormPage: React.FC<FormProps> = ({
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">SEGUIMIENTO:</h2>
               {showActions && (
                 <button
-                  onClick={() => openEditModal()}
+                  onClick={() => {
+                    setEditSeguimiento(null);
+                    setModalOpen(true);
+                  }}
                   className="bg-indigo-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-indigo-700 transition"
                 >
                   + Agregar
@@ -156,14 +225,19 @@ export const FormPage: React.FC<FormProps> = ({
                         </p>
                       )}
                       {s.observaciones && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Obs: {s.observaciones}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Obs: {s.observaciones}
+                        </p>
                       )}
                       <p className="text-xs text-gray-400 dark:text-gray-500">{s.fecha}</p>
                     </div>
                     {showActions && (
                       <div className="flex flex-col gap-1">
                         <button
-                          onClick={() => openEditModal(s)}
+                          onClick={() => {
+                            setEditSeguimiento(s);
+                            setModalOpen(true);
+                          }}
                           className="px-2 py-1 rounded bg-yellow-500 text-white text-xs hover:bg-yellow-600 transition"
                         >
                           Editar
@@ -186,59 +260,13 @@ export const FormPage: React.FC<FormProps> = ({
           </div>
         )}
 
-        {/* Modal Crear/Editar */}
-        {isModalOpen && showActions && (
-          <ModalBackdrop>
-            <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
-                {editSeguimiento ? "Editar Seguimiento" : "Nuevo Seguimiento"}
-              </h3>
-              <form onSubmit={submit} className="flex flex-col gap-3">
-                <textarea
-                  value={data.detalle}
-                  onChange={(e) => setData("detalle", e.target.value)}
-                  className="w-full rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
-                  placeholder="Detalle del seguimiento..."
-                  required
-                />
-                <textarea
-                  value={data.tratamiento}
-                  onChange={(e) => setData("tratamiento", e.target.value)}
-                  className="w-full rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
-                  placeholder="Tratamiento (opcional)"
-                />
-                <textarea
-                  value={data.observaciones}
-                  onChange={(e) => setData("observaciones", e.target.value)}
-                  className="w-full rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
-                  placeholder="Observaciones (opcional)"
-                />
-                <input
-                  type="date"
-                  value={data.fecha}
-                  onChange={(e) => setData("fecha", e.target.value)}
-                  className="rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
-                />
-                <div className="flex justify-end gap-2 mt-2">
-                  <button
-                    type="button"
-                    onClick={() => setModalOpen(false)}
-                    className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700 hover:bg-gray-400 dark:hover:bg-gray-600 text-gray-900 dark:text-white"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={processing}
-                    className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
-                  >
-                    Guardar
-                  </button>
-                </div>
-              </form>
-            </div>
-          </ModalBackdrop>
-        )}
+        {/* Modal Crear/Editar Seguimiento */}
+        <SeguimientoFormModal
+          open={isModalOpen}
+          onClose={() => setModalOpen(false)}
+          seguimiento={editSeguimiento}
+          historiaId={form_data?.id || historiaId}
+        />
 
         {/* Modal Confirmación Eliminar */}
         {isDeleteModalOpen && (

@@ -21,7 +21,7 @@ class Mascota extends BaseModel
         'mascota' => 'required|string|max:255',
         'id_cliente' => 'required|int',
         'id_raza' => 'required|int',
-        'id_sexo' => 'nullable|int|max:2',
+        'id_sexo' => 'required|int|max:2',
         'edad' => 'nullable|int',
         'color' => 'nullable|string|max:100',
         'peso' => 'nullable|numeric',
