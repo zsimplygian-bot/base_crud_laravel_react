@@ -21,22 +21,23 @@ $resourcesWithForms = [
     'vacuna' => C\VacunaController::class,
 ];
 
+$resourcesWithSeguimiento = ['cita', 'historia_clinica', 'vacuna']; // ⚡ solo estos tienen seguimiento
+
 foreach ($resourcesWithForms as $uri => $controller) {
     Route::resource($uri, $controller);
-
-    // Ruta para formulario dinámico
     Route::get("$uri/form/{action}/{id?}", [$controller, 'handleAction'])->name("$uri.form");
 
-    // ⚡ Rutas de seguimientos agrupadas por vista
-    Route::prefix("$uri/seguimientos")->name("$uri.seguimientos.")->group(function () use ($uri) {
-    $controllerBase = $uri === 'historia_clinica' ? 'HistoriaClinica' : ucfirst($uri);
-    $seguimientoController = "App\\Http\\Controllers\\{$controllerBase}SeguimientoController";
+    // Solo genera rutas de seguimiento si aplica
+    if (in_array($uri, $resourcesWithSeguimiento)) {
+        $controllerBase = $uri === 'historia_clinica' ? 'HistoriaClinica' : ucfirst($uri);
+        $seguimientoController = "App\\Http\\Controllers\\{$controllerBase}SeguimientoController";
 
-    Route::post('/', [$seguimientoController, 'store'])->name('store');
-    Route::put('/{id}', [$seguimientoController, 'update'])->name('update');
-    Route::delete('/{id}', [$seguimientoController, 'destroy'])->name('destroy');
-});
-
+        Route::prefix("$uri/seguimientos")->name("$uri.seguimientos.")->group(function () use ($seguimientoController) {
+            Route::post('/', [$seguimientoController, 'store'])->name('store');
+            Route::put('/{id}', [$seguimientoController, 'update'])->name('update');
+            Route::delete('/{id}', [$seguimientoController, 'destroy'])->name('destroy');
+        });
+    }
 }
 
 // Grupo para itemsimple
