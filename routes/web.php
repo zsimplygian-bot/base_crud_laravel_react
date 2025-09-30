@@ -28,8 +28,7 @@ foreach ($resourcesWithForms as $uri => $controller) {
     Route::get("$uri/form/{action}/{id?}", [$controller, 'handleAction'])->name("$uri.form");
 
     // ⚡ Rutas de seguimientos agrupadas por vista
-Route::prefix("$uri/seguimientos")->name("$uri.seguimientos.")->group(function () use ($uri) {
-    // 🔹 Convertir a PascalCase si es historia_clinica
+    Route::prefix("$uri/seguimientos")->name("$uri.seguimientos.")->group(function () use ($uri) {
     $controllerBase = $uri === 'historia_clinica' ? 'HistoriaClinica' : ucfirst($uri);
     $seguimientoController = "App\\Http\\Controllers\\{$controllerBase}SeguimientoController";
 

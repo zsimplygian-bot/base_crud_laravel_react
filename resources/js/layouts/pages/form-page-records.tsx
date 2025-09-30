@@ -57,39 +57,26 @@ const SeguimientoFormModal: React.FC<{
   }, [seguimiento, modalFields]);
 
   const submit = (e: React.FormEvent) => {
-  e.preventDefault();
-
-  // 🔹 Mapear views problemáticas a PascalCase real
-  const viewMap: Record<string, string> = {
-    historia_clinica: "HistoriaClinica",
-    cita: "Cita",
-    vacuna: "Vacuna",
-    // agrega otros si necesitas
+    e.preventDefault();
+    const routeName = `${view}.seguimientos`;
+    if (seguimiento) {
+      put(route(`${routeName}.update`, seguimiento.id), {
+        data,
+        onSuccess: () => {
+          reset();
+          onClose();
+        },
+      });
+    } else {
+      post(route(`${routeName}.store`), {
+        data,
+        onSuccess: () => {
+          reset();
+          onClose();
+        },
+      });
+    }
   };
-
-  const pascalView = viewMap[view] ?? view;
-  const routeName = `${pascalView}.seguimientos`;
-
-  if (seguimiento) {
-    put(route(`${routeName}.update`, seguimiento.id), {
-      data,
-      onSuccess: () => {
-        reset();
-        onClose();
-      },
-    });
-  } else {
-    post(route(`${routeName}.store`), {
-      data,
-      onSuccess: () => {
-        reset();
-        onClose();
-      },
-    });
-  }
-};
-
-
 
   if (!open) return null;
 
