@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\DB;
 class Lista
 {
     protected static array $tablasPermitidas = [
-     'sexo', 'cliente', 'mascota', 'estado_cita', 'estado_mascota', 'motivo_cita', 'estado_historia_clinica', 'especie',
+     'sexo', 'cliente', 'mascota', 'estado_cita', 'estado_mascota', 'motivo_cita', 'estado_historia_clinica', 'especie', 'unidad_tiempo',
     ];
     protected static array $columnasTablasSimples = [
         //'especialidad' => ['id_especialidad as id', 'especialidad as label'],

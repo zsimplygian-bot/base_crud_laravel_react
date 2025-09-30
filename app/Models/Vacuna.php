@@ -2,15 +2,20 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 class Vacuna extends BaseModel
 {
     use HasFactory;
     protected $table = 'vacuna';
+    public function vacuna_seguimientos(): HasMany
+    {
+        return $this->hasMany(VacunaSeguimiento::class, 'id_vacuna');
+    }
     public static string $title = 'Vacunas';
     protected static $simpleFormFieldDefinitions = [
         ['id_mascota', 'MASCOTA', 'select'],
-        ['vacuna', 'VACUNA', 'text'],
-        ['descripcion', 'DESCRIPCIÓN', 'text'],
+        ['vacuna', 'VACUNA', 'textarea'],
+        ['descripcion', 'DESCRIPCIÓN', 'textarea'],
         ['fecha_aplicacion', 'FECHA DE APLICACIÓN', 'date'],
         ['proxima_dosis', 'PRÓXIMA DOSIS', 'date'],
         ['precio', 'PRECIO', 'number'],

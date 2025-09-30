@@ -1,16 +1,10 @@
 <?php
 namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class HistoriaClinicaSeguimiento extends Model
+class HistoriaClinicaSeguimiento extends BaseSeguimiento
 {
-    use HasFactory;
-
     protected $table = 'historia_clinica_seguimiento';
     protected $primaryKey = 'id_historia_clinica_seguimiento';
-
+    protected $parentForeignKey = 'id_historia_clinica';
     protected $fillable = [
         'id_historia_clinica',
         'detalle',
@@ -19,17 +13,8 @@ class HistoriaClinicaSeguimiento extends Model
         'fecha',
         'creater_id',
     ];
-
-    // Mapea id para Ziggy
-    protected $appends = ['id'];
-
-    public function getIdAttribute()
+    public function parent()
     {
-        return $this->attributes['id_historia_clinica_seguimiento'];
-    }
-
-    public function historiaClinica()
-    {
-        return $this->belongsTo(HistoriaClinica::class, 'id_historia_clinica', 'id');
+        return $this->belongsTo(HistoriaClinica::class, $this->parentForeignKey, 'id');
     }
 }

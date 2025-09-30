@@ -1,3 +1,4 @@
+// layouts/pages/form-page.tsx
 import { Head, useForm, router } from "@inertiajs/react";
 import { useState, useEffect } from "react";
 import AppLayout from "@/layouts/app-layout";
@@ -6,6 +7,7 @@ import LayoutForm from "@/layouts/form-layout";
 interface FormProps {
   form_data: any;
   formFields: any;
+  modalFields: any[]; // ⚡ campos dinámicos para el modal
   action: string;
   custom_title: string;
   view: string;
@@ -17,14 +19,7 @@ interface FormProps {
   seguimientos?: Seguimiento[];
 }
 
-type Seguimiento = {
-  id: number;
-  detalle: string;
-  tratamiento?: string;
-  observaciones?: string;
-  fecha: string;
-  created_at: string;
-};
+type Seguimiento = Record<string, any>;
 
 const ModalBackdrop: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -38,54 +33,63 @@ const SeguimientoFormModal: React.FC<{
   onClose: () => void;
   seguimiento?: Seguimiento | null;
   historiaId: number;
-}> = ({ open, onClose, seguimiento, historiaId }) => {
+  modalFields: any[];
+  view: string;
+}> = ({ open, onClose, seguimiento, historiaId, modalFields, view }) => {
+  // Inicializamos los datos dinámicamente según modalFields
+  const initialData = modalFields.reduce((acc, field) => {
+    acc[field.name] = seguimiento?.[field.name] ?? (field.type === "date" ? new Date().toISOString().slice(0, 10) : "");
+    return acc;
+  }, {} as Record<string, any>);
+
   const { data, setData, post, put, reset } = useForm({
-    detalle: "",
-    tratamiento: "",
-    observaciones: "",
-    fecha: new Date().toISOString().slice(0, 10),
-    id_historia_clinica: historiaId,
+    [`id_${view}`]: historiaId, // ⚡ FK dinámica
+    ...initialData,
   });
 
-  // 🔹 Sincronizar valores cuando cambie "seguimiento"
+  // Sincronizar valores cuando cambie seguimiento o modalFields
   useEffect(() => {
-    if (seguimiento) {
-      setData({
-        detalle: seguimiento.detalle || "",
-        tratamiento: seguimiento.tratamiento || "",
-        observaciones: seguimiento.observaciones || "",
-        fecha: seguimiento.fecha || new Date().toISOString().slice(0, 10),
-        id_historia_clinica: historiaId,
-      });
-    } else {
-      reset({
-        detalle: "",
-        tratamiento: "",
-        observaciones: "",
-        fecha: new Date().toISOString().slice(0, 10),
-        id_historia_clinica: historiaId,
-      });
-    }
-  }, [seguimiento, open]);
+    const newData = modalFields.reduce((acc, field) => {
+      acc[field.name] = seguimiento?.[field.name] ?? (field.type === "date" ? new Date().toISOString().slice(0, 10) : "");
+      return acc;
+    }, {} as Record<string, any>);
+    setData({ [`id_${view}`]: historiaId, ...newData });
+  }, [seguimiento, modalFields]);
 
   const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (seguimiento) {
-      put(route("seguimientos.update", seguimiento.id), {
-        onSuccess: () => {
-          reset();
-          onClose();
-        },
-      });
-    } else {
-      post(route("seguimientos.store"), {
-        onSuccess: () => {
-          reset();
-          onClose();
-        },
-      });
-    }
+  e.preventDefault();
+
+  // 🔹 Mapear views problemáticas a PascalCase real
+  const viewMap: Record<string, string> = {
+    historia_clinica: "HistoriaClinica",
+    cita: "Cita",
+    vacuna: "Vacuna",
+    // agrega otros si necesitas
   };
+
+  const pascalView = viewMap[view] ?? view;
+  const routeName = `${pascalView}.seguimientos`;
+
+  if (seguimiento) {
+    put(route(`${routeName}.update`, seguimiento.id), {
+      data,
+      onSuccess: () => {
+        reset();
+        onClose();
+      },
+    });
+  } else {
+    post(route(`${routeName}.store`), {
+      data,
+      onSuccess: () => {
+        reset();
+        onClose();
+      },
+    });
+  }
+};
+
+
 
   if (!open) return null;
 
@@ -96,31 +100,28 @@ const SeguimientoFormModal: React.FC<{
           {seguimiento ? "Editar Seguimiento" : "Nuevo Seguimiento"}
         </h3>
         <form onSubmit={submit} className="flex flex-col gap-3">
-          <textarea
-            value={data.detalle}
-            onChange={(e) => setData("detalle", e.target.value)}
-            className="w-full min-h-[100px] rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
-            placeholder="Detalle del seguimiento..."
-            required
-          />
-          <textarea
-            value={data.tratamiento}
-            onChange={(e) => setData("tratamiento", e.target.value)}
-            className="w-full min-h-[80px] rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
-            placeholder="Tratamiento (opcional)"
-          />
-          <textarea
-            value={data.observaciones}
-            onChange={(e) => setData("observaciones", e.target.value)}
-            className="w-full min-h-[80px] rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
-            placeholder="Observaciones (opcional)"
-          />
-          <input
-            type="date"
-            value={data.fecha}
-            onChange={(e) => setData("fecha", e.target.value)}
-            className="rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
-          />
+          {modalFields.map((field) =>
+            field.type === "textarea" ? (
+              <textarea
+                key={field.name}
+                value={data[field.name]}
+                onChange={(e) => setData(field.name, e.target.value)}
+                className="w-full min-h-[80px] rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
+                placeholder={field.label}
+                required={field.required}
+              />
+            ) : (
+              <input
+                key={field.name}
+                type={field.type}
+                value={data[field.name]}
+                onChange={(e) => setData(field.name, e.target.value)}
+                className="rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
+                placeholder={field.label}
+                required={field.required}
+              />
+            )
+          )}
           <div className="flex justify-end gap-2 mt-2">
             <button
               type="button"
@@ -145,6 +146,7 @@ const SeguimientoFormModal: React.FC<{
 export const FormPage: React.FC<FormProps> = ({
   form_data,
   formFields,
+  modalFields = [],
   action,
   custom_title,
   view,
@@ -160,12 +162,12 @@ export const FormPage: React.FC<FormProps> = ({
   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const historiaId = Number(window.location.pathname.split("/").pop());
+  const mainId = form_data?.[`id_${view}`] ?? Number(window.location.pathname.split("/").pop() ?? 0);
   const showActions = action !== "info" && action !== "delete";
 
   const handleDelete = () => {
     if (!deleteId) return;
-    router.delete(route("seguimientos.destroy", deleteId), {
+    router.delete(route(`${view}.seguimientos.destroy`, deleteId), {
       onSuccess: () => {
         setDeleteModalOpen(false);
         setDeleteId(null);
@@ -191,7 +193,7 @@ export const FormPage: React.FC<FormProps> = ({
         />
 
         {/* Seguimientos */}
-        {view === "historia_clinica" && action !== "create" && (
+        {action !== "create" && (
           <div className="rounded-xl border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 p-4 shadow">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">SEGUIMIENTO:</h2>
@@ -218,18 +220,16 @@ export const FormPage: React.FC<FormProps> = ({
                     className="p-3 rounded-lg border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm flex justify-between items-start"
                   >
                     <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">{s.detalle}</p>
-                      {s.tratamiento && (
-                        <p className="text-xs text-gray-600 dark:text-gray-300">
-                          Tratamiento: {s.tratamiento}
-                        </p>
+                      {modalFields.map((field) =>
+                        s[field.name] ? (
+                          <p
+                            key={field.name}
+                            className={`text-sm ${field.type === "textarea" ? "font-medium" : "text-gray-600 dark:text-gray-300"}`}
+                          >
+                            {field.label}: {s[field.name]}
+                          </p>
+                        ) : null
                       )}
-                      {s.observaciones && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          Obs: {s.observaciones}
-                        </p>
-                      )}
-                      <p className="text-xs text-gray-400 dark:text-gray-500">{s.fecha}</p>
                     </div>
                     {showActions && (
                       <div className="flex flex-col gap-1">
@@ -265,7 +265,9 @@ export const FormPage: React.FC<FormProps> = ({
           open={isModalOpen}
           onClose={() => setModalOpen(false)}
           seguimiento={editSeguimiento}
-          historiaId={form_data?.id || historiaId}
+          historiaId={mainId}
+          modalFields={modalFields}
+          view={view} // 🔹 pasa la vista al modal
         />
 
         {/* Modal Confirmación Eliminar */}

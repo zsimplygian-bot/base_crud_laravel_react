@@ -1,8 +1,10 @@
 <?php
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
+
 abstract class BaseController extends Controller
 {
     protected string $view;
@@ -12,6 +14,7 @@ abstract class BaseController extends Controller
     protected string $width_form = 'md';
     protected string $model;
     protected $listaController;
+
     public function __construct()
     {
         $this->listaController = app(ListaController::class);
@@ -21,6 +24,7 @@ abstract class BaseController extends Controller
             $this->title = $this->custom_title = $this->getModelTitle($instance);
         }
     }
+
     public function index(Request $request)
     {
         return Inertia::render("{$this->view}/index", [
@@ -35,18 +39,27 @@ abstract class BaseController extends Controller
             'queryparams'   => $this->getValidatedQueryParams($request),
         ]);
     }
+
     public function handleAction(string $action, ?int $id = null)
     {
         $isCreate = $action === 'create';
         $record = $isCreate ? $this->getModelInstance() : $this->model::find($id);
+
         if (!$isCreate && !$record) {
             return redirect()->route("{$this->view}.index")->with('error', 'Registro no encontrado');
         }
+
         $formFields = $this->model::getFormFields($this->listaController, $record, $action);
-        $formData = $isCreate
+        $formData   = $isCreate
             ? collect($formFields)->mapWithKeys(fn ($f, $k) => [$k => $f['value'] ?? null])->toArray()
             : $record->toArray();
-        return Inertia::render("{$this->view}/form", [
+
+        // ⚡ Datos extra que el hijo pueda añadir
+        $extraData = method_exists($this, 'extraFormData') 
+            ? $this->extraFormData($record, $action) 
+            : [];
+
+        return Inertia::render("{$this->view}/form", array_merge([
             'form_data'     => $formData,
             'action'        => $action,
             'formFields'    => $formFields,
@@ -59,47 +72,62 @@ abstract class BaseController extends Controller
             'toggleOptions' => method_exists($this->model, 'getToggleOptions') ? $this->model::getToggleOptions() : null,
             'apiConfig'     => $this->model::getApiConfig(),
             'success'       => session('success'),
-        ]);
+        ], $extraData));
     }
+
+    /**
+     * Hook para añadir datos extra en el render del formulario.
+     * Por defecto retorna vacío, los hijos pueden sobrescribirlo.
+     */
+    protected function extraFormData($record, string $action): array
+    {
+        return [];
+    }
+
     public function store(Request $request)
     {
         $data = $this->validateRequest($request);
-        // Normalizar fechas ISO 8601 antes de guardar
         $data = $this->normalizeDateFields($data);
         $model = $this->getModelInstance();
         $this->handleFileUploads($request, $model, $data);
         $model->fill($data);
         $model->creater_id = auth()?->id();
         $model->save();
+
         return $this->redirectAfterAction('create');
     }
+
     public function update(Request $request, $id)
     {
         $model = $this->model::findOrFail($id);
         $data = $this->validateRequest($request);
-        // Normalizar fechas ISO 8601 antes de guardar
         $data = $this->normalizeDateFields($data);
         $this->handleFileUploads($request, $model, $data);
         $model->fill($data);
         $model->updater_id = auth()?->id();
         $model->save();
+
         return $this->redirectAfterAction('update');
     }
+
     public function destroy($id)
     {
         $this->model::findOrFail($id)->delete();
         return $this->redirectAfterAction('delete');
     }
+
     protected function validateRequest(Request $request): array
     {
         return $request->validate($this->model::getValidationRules());
     }
+
     protected function getValidatedQueryParams(Request $request): array
     {
         return method_exists($this->model, 'getQueryParams')
             ? $this->model::getQueryParams()
             : [];
     }
+
     protected function redirectAfterAction(string $action, array $extraParams = []): \Illuminate\Http\RedirectResponse
     {
         if (method_exists($this->model, 'getQueryParams')) {
@@ -113,6 +141,7 @@ abstract class BaseController extends Controller
             ->route("{$this->view}.index", $extraParams)
             ->with('success', $this->getSuccessMessage($action));
     }
+
     protected function getSuccessMessage(string $action): string
     {
         return [
@@ -121,15 +150,19 @@ abstract class BaseController extends Controller
             'delete' => 'Registro eliminado exitosamente.',
         ][$action] ?? 'Acción realizada exitosamente.';
     }
+
     protected function getModelInstance()
     {
         return new $this->model();
     }
+
     protected function getModelTitle($modelInstance): string
     {
-        return property_exists($this->model, 'title') ? $this->model::$title : ($this->title ?: class_basename($modelInstance));
+        return property_exists($this->model, 'title') 
+            ? $this->model::$title 
+            : ($this->title ?: class_basename($modelInstance));
     }
-    // Maneja archivos enviados en los formularios (ej: imágenes)
+
     protected function handleFileUploads(Request $request, $model, array &$data): void
     {
         foreach ($this->model::getValidationRules() as $field => $rules) {
@@ -145,7 +178,7 @@ abstract class BaseController extends Controller
             }
         }
     }
-    // Convierte fechas ISO 8601 a formato MySQL (Y-m-d H:i:s)
+
     protected function normalizeDateFields(array $data): array
     {
         foreach ($data as $key => $value) {
@@ -154,7 +187,7 @@ abstract class BaseController extends Controller
                     $date = Carbon::parse($value);
                     $data[$key] = $date->format('Y-m-d H:i:s');
                 } catch (\Exception $e) {
-                    // Opcional: Log::warning("Fecha inválida: $value en el campo $key");
+                    // Log opcional
                 }
             }
         }

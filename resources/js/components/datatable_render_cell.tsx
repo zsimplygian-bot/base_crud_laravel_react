@@ -82,6 +82,22 @@ const renderMap: Record<string, RenderFunction> = {
     }
     return <span className={style}>{stock}</span>;
   },
+  edad: (value: any) => {
+    if (!value) return "—";
+    const match = String(value).match(/^(\d+)\s*(AÑO|MES)$/i);
+    if (!match) return value;
+
+    const cantidad = Number(match[1]);
+    const unidad = match[2].toUpperCase();
+
+    if (unidad === "AÑO") {
+      return cantidad === 1 ? "1 AÑO" : `${cantidad} AÑOS`;
+    } else if (unidad === "MES") {
+      return cantidad === 1 ? "1 MES" : `${cantidad} MESES`;
+    }
+
+    return value;
+  },
 };
 export const useRenderCellContent = () => {
   const renderCellContent = (

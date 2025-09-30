@@ -2,17 +2,23 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 class Cita extends BaseModel
 {
     use HasFactory;
     protected $table = 'cita';
+    public function cita_seguimientos(): HasMany
+    {
+        return $this->hasMany(CitaSeguimiento::class, 'id_cita');
+    }
     public static string $title = 'Citas';
     protected static $simpleFormFieldDefinitions = [
         ['id_mascota', 'DUEÑO - MASCOTA', 'select'],
         ['fecha', 'FECHA', 'date'],
         ['hora', 'HORA', 'time'],
         ['id_motivo_cita', 'MOTIVO', 'select'],
-        ['precio', 'PRECIO', 'number'],
+        ['precio', 'PRECIO S/.', 'number'],
+        ['observaciones', 'OBSERVACIONES', 'textarea'],
         ['id_estado_cita', 'ESTADO', 'select'],
     ];
     protected static $validationRules = [

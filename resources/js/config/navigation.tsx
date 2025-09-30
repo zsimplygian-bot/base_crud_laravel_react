@@ -38,24 +38,24 @@ const rawSidebar: RawItem[] = [
     title: "Dashboard", href: "/dashboard",
   },
   {
-    icon: Users,
-    title: "Clientes", href: "/cliente",
-  },
-  {
-    icon: PawPrint,
-    title: "Mascotas", href: "/mascota",
+    icon: Stethoscope,
+    title: "Historias clínicas", href: "/historia_clinica",
   },
   {
     icon: Calendar,
     title: "Citas", href: "/cita",
   },
   {
-    icon: Stethoscope,
-    title: "Historias clínicas", href: "/historia_clinica",
-  },
-  {
     icon: Syringe, // icono de vacuna 💉
     title: "Vacunas", href: "/vacuna",
+  },
+  {
+    icon: PawPrint,
+    title: "Mascotas", href: "/mascota",
+  },
+  {
+    icon: Users,
+    title: "Dueños", href: "/cliente",
   },
   {
     title: "Items",

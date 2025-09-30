@@ -3,12 +3,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-
 class HistoriaClinica extends BaseModel
 {
     use HasFactory;
     protected $table = 'historia_clinica';
-    public function seguimientos(): HasMany
+    public function historia_seguimientos(): HasMany
     {
         return $this->hasMany(HistoriaClinicaSeguimiento::class, 'id_historia_clinica');
     }
@@ -16,10 +15,10 @@ class HistoriaClinica extends BaseModel
     protected static $simpleFormFieldDefinitions = [
         ['id_mascota', 'DUEÑO - MASCOTA', 'select'],
         ['fecha', 'FECHA', 'date'],
-        ['sintomas', 'SÍNTOMAS', 'text'],
+        ['sintomas', 'SÍNTOMAS', 'textarea'],
         ['diagnostico', 'DIAGNÓSTICO', 'textarea'],
         ['tratamiento', 'TRATAMIENTO', 'textarea'],
-        ['precio', 'PRECIO', 'number'],
+        ['precio', 'PRECIO S/.', 'number'],
         ['observaciones', 'OBSERVACIONES', 'textarea'],
         ['id_estado_historia_clinica', 'ESTADO HISTORIA', 'select'],
     ];

@@ -17,10 +17,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { Plus } from "lucide-react";
 import { useCreateButtonLink } from "@/hooks/use-create-button-link";
-
 // 👇 importamos el hook del ApiButton
 import { useFetchWithButton } from "@/hooks/use-fetch-with-button";
-
 type Props = {
   formFields: any;
   data: any;
@@ -91,6 +89,7 @@ export const FormFieldsRenderer: React.FC<Props> = ({
       {Object.entries(formFields).map(([fieldKey, field]: any) => {
         const f = field.form ?? field;
         if (f.hidden || hiddenFields.includes(fieldKey)) return null;
+
         const isReadonly = f.readonly || readonly || configReadonly;
         const disabled = f.disabled || isReadonly;
         const value = data[fieldKey] ?? f.value ?? f.default ?? "";
@@ -282,6 +281,87 @@ export const FormFieldsRenderer: React.FC<Props> = ({
                 </Popover>
                 {ApiButton && <ApiButton fieldKey={fieldKey} />}
               </div>
+            ) : f.type === "image" || f.type === "file" ? (
+              <>
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor={`file-input-${fieldKey}`}
+                    className="inline-block px-3 py-2 bg-gray-200 text-sm rounded cursor-pointer hover:bg-gray-300 text-black"
+                  >
+                    Seleccionar archivo
+                  </label>
+                  <input
+                    id={`file-input-${fieldKey}`}
+                    type="file"
+                    accept={f.accept || (f.type === "image" ? "image/*" : undefined)}
+                    disabled={disabled}
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) setData(fieldKey, file);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const file = data[fieldKey];
+                      if (!file || !(file instanceof File)) {
+                        alert("Seleccione un archivo primero");
+                        return;
+                      }
+                      const formData = new FormData();
+                      formData.append(fieldKey, file);
+                      formData.append("view", view);
+                      try {
+                        const csrfToken = document
+                          .querySelector('meta[name="csrf-token"]')
+                          ?.getAttribute("content");
+                        const response = await fetch("/ruta-api-upload", {
+                          method: "POST",
+                          headers: {
+                            "X-CSRF-TOKEN": csrfToken || "",
+                          },
+                          body: formData,
+                          credentials: "same-origin",
+                        });
+                        if (!response.ok) {
+                          alert("Error subiendo archivo");
+                          return;
+                        }
+                        const result = await response.json();
+                        setData(fieldKey, result.filename);
+                      } catch (error) {
+                        alert("Error subiendo archivo");
+                        console.error(error);
+                      }
+                    }}
+                    disabled={disabled || typeof value === "string"}
+                    className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm"
+                  >
+                    Subir
+                  </button>
+                  {ApiButton && <ApiButton fieldKey={fieldKey} />}
+                </div>
+                {value && typeof value === "object" && value.name && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Archivo seleccionado: {value.name}
+                  </p>
+                )}
+                {value && typeof value === "string" && (
+                  <div className="mt-2 space-y-1">
+                    <p className="text-sm text-muted-foreground">Archivo subido: {value}</p>
+                    <>
+                      <p className="text-sm text-muted-foreground">Vista previa:</p>
+                      {console.log("Renderizando preview", value, view)}
+                      <img
+                        src={`/images/${view}/${value}`}
+                        alt={`Vista previa de ${f.label}`}
+                        className="max-h-48 rounded border"
+                      />
+                    </>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="flex items-center">
                 <Input
