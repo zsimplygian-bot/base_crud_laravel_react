@@ -16,6 +16,7 @@ class Mascota extends BaseModel
         ['edad', 'EDAD', 'number'],
         ['color', 'COLOR', 'text'],
         ['peso', 'PESO (KG)', 'number'],
+        ['observaciones', 'OBSERVACIONES', 'textarea'],
         //['imagen', 'IMAGEN', 'file'],
     ];
     protected static $validationRules = [
@@ -27,6 +28,7 @@ class Mascota extends BaseModel
         'edad' => 'nullable|int',
         'color' => 'nullable|string|max:100',
         'peso' => 'nullable|numeric',
+        'observaciones' => 'nullable|string',
         //'imagen' => 'nullable|string|max:255',
     ];
     protected static $toolbarfieldDefinitions = [
