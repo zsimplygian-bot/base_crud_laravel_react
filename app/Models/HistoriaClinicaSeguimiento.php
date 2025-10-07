@@ -27,7 +27,7 @@ class HistoriaClinicaSeguimiento extends BaseSeguimiento
             ['detalle', 'DETALLE', 'textarea'],
             ['tratamiento', 'TRATAMIENTO', 'textarea'],
             ['observaciones', 'OBSERVACIONES', 'textarea'],
-            ['precio', 'PRECIO S/', 'text'],
+            ['precio', 'PRECIO S/', 'number'],
             ['fecha', 'FECHA', 'date'],
         ];
     }

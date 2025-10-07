@@ -16,7 +16,7 @@ class Cita extends BaseModel
         ['id_mascota', 'MASCOTA - DUEÑO', 'select'],
         ['fecha', 'FECHA', 'date'],
         ['hora', 'HORA', 'time'],
-        ['id_motivo_cita', 'MOTIVO', 'multiselect'],
+        ['id_motivo_cita', 'MOTIVO', 'select'],
         ['precio', 'PRECIO S/.', 'number'],
         ['observaciones', 'OBSERVACIONES', 'textarea'],
         ['id_estado_cita', 'ESTADO', 'select'],
@@ -27,6 +27,7 @@ class Cita extends BaseModel
         'hora' => 'required',
         'id_motivo_cita' => 'required|int',
         'precio' => 'required|numeric',
+        'observaciones' => 'nullable|string',
         'id_estado_cita' => 'required|int',
     ];
     protected static $toolbarfieldDefinitions = [
@@ -42,6 +43,7 @@ class Cita extends BaseModel
         ['ID', 'id'],
         ['MASCOTA', 'mascota'],
         ['DUEÑO', 'cliente'],
+        ['SEG', 'seguimiento'],
         ['FECHA', 'fecha'],
         ['HORA', 'hora'],
         ['MOTIVO', 'motivo_cita'],
@@ -50,28 +52,42 @@ class Cita extends BaseModel
         ['FECHA REGISTRO', 'created_at'],
     ];
     public static function getQuery()
-    {
-        $alias = (new self)->getTable();
-        $alias2 = 'mascota';
-        $alias3 = 'estado_cita';
-        $alias4 = 'motivo_cita';
-        $alias5 = 'cliente';
-        $query = DB::table($alias)
-            ->leftJoin($alias2, "{$alias}.id_{$alias2}", '=', "{$alias2}.id_{$alias2}")
-            ->leftJoin($alias3, "{$alias}.id_{$alias3}", '=', "{$alias3}.id_{$alias3}")
-            ->leftJoin($alias4, "{$alias}.id_{$alias4}", '=', "{$alias4}.id_{$alias4}")
-            ->leftJoin($alias5, "{$alias2}.id_{$alias5}", '=', "{$alias5}.id_{$alias5}")
-            ->select([
-                "{$alias}.id_{$alias} as id",
-                "{$alias2}.mascota as mascota",
-                "{$alias5}.cliente as cliente",
-                "{$alias}.fecha",
-                "{$alias}.hora",
-                "{$alias4}.motivo_cita",
-                "{$alias}.precio",
-                "{$alias3}.estado_cita",
-                "{$alias}.created_at",
-            ]);
-        return ['query' => $query, 'alias' => $alias];
-    }
+{
+    $alias = (new self)->getTable();
+    $alias2 = 'mascota';
+    $alias3 = 'estado_cita';
+    $alias4 = 'motivo_cita';
+    $alias5 = 'cliente';
+    $seguimientoTable = 'cita_seguimiento';
+
+    $query = DB::table($alias)
+        ->leftJoin($alias2, "{$alias}.id_{$alias2}", '=', "{$alias2}.id_{$alias2}")
+        ->leftJoin($alias3, "{$alias}.id_{$alias3}", '=', "{$alias3}.id_{$alias3}")
+        ->leftJoin($alias4, "{$alias}.id_{$alias4}", '=', "{$alias4}.id_{$alias4}")
+        ->leftJoin($alias5, "{$alias2}.id_{$alias5}", '=', "{$alias5}.id_{$alias5}")
+        ->select([
+            "{$alias}.id_{$alias} as id",
+            "{$alias2}.mascota as mascota",
+            "{$alias5}.cliente as cliente",
+            "{$alias}.fecha",
+            "{$alias}.hora",
+            "{$alias4}.motivo_cita",
+            "{$alias}.precio",
+            "{$alias3}.estado_cita",
+            "{$alias}.created_at",
+            DB::raw("
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 
+                        FROM {$seguimientoTable} s 
+                        WHERE s.id_{$seguimientoTable} = {$alias}.id_{$alias}
+                    ) THEN 'SI'
+                    ELSE 'NO'
+                END AS seguimiento
+            "),
+        ]);
+
+    return ['query' => $query, 'alias' => $alias];
+}
+
 }

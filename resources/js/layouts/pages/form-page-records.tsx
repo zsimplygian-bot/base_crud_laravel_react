@@ -1,12 +1,13 @@
-import React, { useState, useEffect, useMemo } from "react";
+// layouts/pages/form-page.tsx
 import { Head, useForm, router } from "@inertiajs/react";
+import { useState, useEffect } from "react";
 import AppLayout from "@/layouts/app-layout";
 import LayoutForm from "@/layouts/form-layout";
 
 interface FormProps {
   form_data: any;
   formFields: any;
-  modalFields: any[];
+  modalFields: any[]; // ⚡ campos dinámicos para el modal
   action: string;
   custom_title: string;
   view: string;
@@ -35,40 +36,47 @@ const SeguimientoFormModal: React.FC<{
   modalFields: any[];
   view: string;
 }> = ({ open, onClose, seguimiento, historiaId, modalFields, view }) => {
+  // ⚡ console.log de los campos dinámicos dentro del modal
+  console.log("Modal fields:", modalFields);
 
-  // 🧠 Memoriza campos iniciales solo cuando cambian modalFields o seguimiento
-  const initialData = useMemo(() => {
-    return (modalFields || []).reduce((acc: Record<string, any>, field: any) => {
-      const name = field.name || field[0];
-      const type = field.type || field[2];
-      acc[name] = seguimiento?.[name] ?? (type === "date" ? new Date().toISOString().slice(0, 10) : "");
-      return acc;
-    }, {});
-  }, [modalFields, seguimiento]);
+  const initialData = modalFields.reduce((acc, field) => {
+    acc[field[0]] = seguimiento?.[field[0]] ?? (field[2] === "date" ? new Date().toISOString().slice(0, 10) : "");
+    return acc;
+  }, {} as Record<string, any>);
 
   const { data, setData, post, put, reset } = useForm({
     [`id_${view}`]: historiaId,
     ...initialData,
   });
 
-  // 🧩 Log solo cuando cambian los campos
   useEffect(() => {
-    console.log("Modal fields:", modalFields);
-  }, [modalFields]);
+    const newData = modalFields.reduce((acc, field) => {
+      acc[field[0]] = seguimiento?.[field[0]] ?? (field[2] === "date" ? new Date().toISOString().slice(0, 10) : "");
+      return acc;
+    }, {} as Record<string, any>);
+    setData({ [`id_${view}`]: historiaId, ...newData });
+  }, [seguimiento, modalFields]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const routeName = `${view}.seguimientos`;
-    const payload = {
-      data,
-      onSuccess: () => {
-        reset();
-        onClose();
-      },
-    };
-
-    if (seguimiento) put(route(`${routeName}.update`, seguimiento.id), payload);
-    else post(route(`${routeName}.store`), payload);
+    if (seguimiento) {
+      put(route(`${routeName}.update`, seguimiento.id), {
+        data,
+        onSuccess: () => {
+          reset();
+          onClose();
+        },
+      });
+    } else {
+      post(route(`${routeName}.store`), {
+        data,
+        onSuccess: () => {
+          reset();
+          onClose();
+        },
+      });
+    }
   };
 
   if (!open) return null;
@@ -79,40 +87,29 @@ const SeguimientoFormModal: React.FC<{
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
           {seguimiento ? "Editar Seguimiento" : "Nuevo Seguimiento"}
         </h3>
-
         <form onSubmit={submit} className="flex flex-col gap-3">
-          {modalFields.map((field: any) => {
-            const name = field.name || field[0];
-            const label = field.label || field[1];
-            const type = field.type || field[2];
-            const required = field.required ?? false;
-
-            if (type === "textarea") {
-              return (
-                <textarea
-                  key={name}
-                  value={data[name] ?? ""}
-                  onChange={(e) => setData(name, e.target.value)}
-                  placeholder={label}
-                  required={required}
-                  className="w-full min-h-[80px] rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
-                />
-              );
-            }
-
-            return (
-              <input
-                key={name}
-                type={type}
-                value={data[name] ?? ""}
-                onChange={(e) => setData(name, e.target.value)}
-                placeholder={label}
-                required={required}
-                className="rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
+          {modalFields.map((field) =>
+            field[2] === "textarea" ? (
+              <textarea
+                key={field[0]}
+                value={data[field[0]]}
+                onChange={(e) => setData(field[0], e.target.value)}
+                className="w-full min-h-[80px] rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
+                placeholder={field[1]}
+                required={field[3] ?? false}
               />
-            );
-          })}
-
+            ) : (
+              <input
+                key={field[0]}
+                type={field[2]}
+                value={data[field[0]]}
+                onChange={(e) => setData(field[0], e.target.value)}
+                className="rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
+                placeholder={field[1]}
+                required={field[3] ?? false}
+              />
+            )
+          )}
           <div className="flex justify-end gap-2 mt-2">
             <button
               type="button"
@@ -156,10 +153,8 @@ export const FormPage: React.FC<FormProps> = ({
   const mainId = form_data?.[`id_${view}`] ?? Number(window.location.pathname.split("/").pop() ?? 0);
   const showActions = action !== "info" && action !== "delete";
 
-  // 🧠 Log solo una vez
-  useEffect(() => {
-    console.log("FormPage modalFields:", modalFields);
-  }, [modalFields]);
+  // ⚡ Console log aquí para ver modalFields al renderizar la página
+  console.log("FormPage modalFields:", modalFields);
 
   const handleDelete = () => {
     if (!deleteId) return;
@@ -214,19 +209,16 @@ export const FormPage: React.FC<FormProps> = ({
                     className="p-3 rounded-lg border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm flex justify-between items-start"
                   >
                     <div>
-                      {modalFields.map((field: any) => {
-                        const name = field.name || field[0];
-                        const label = field.label || field[1];
-                        const type = field.type || field[2];
-                        return s[name] ? (
+                      {modalFields.map((field) =>
+                        s[field[0]] ? (
                           <p
-                            key={name}
-                            className={`text-sm ${type === "textarea" ? "font-medium" : "text-gray-600 dark:text-gray-300"}`}
+                            key={field[0]}
+                            className={`text-sm ${field[2] === "textarea" ? "font-medium" : "text-gray-600 dark:text-gray-300"}`}
                           >
-                            {label}: {s[name]}
+                            {field[1]}: {s[field[0]]}
                           </p>
-                        ) : null;
-                      })}
+                        ) : null
+                      )}
                     </div>
                     {showActions && (
                       <div className="flex flex-col gap-1">
