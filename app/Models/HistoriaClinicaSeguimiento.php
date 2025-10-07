@@ -10,11 +10,25 @@ class HistoriaClinicaSeguimiento extends BaseSeguimiento
         'detalle',
         'tratamiento',
         'observaciones',
+        'precio',
         'fecha',
         'creater_id',
     ];
     public function parent()
     {
         return $this->belongsTo(HistoriaClinica::class, $this->parentForeignKey, 'id');
+    }
+    /**
+     * Campos personalizados tipo simple: [field, LABEL, type]
+     */
+    public static function getCustomFields(): array
+    {
+        return [
+            ['detalle', 'DETALLE', 'textarea'],
+            ['tratamiento', 'TRATAMIENTO', 'textarea'],
+            ['observaciones', 'OBSERVACIONES', 'textarea'],
+            ['precio', 'PRECIO S/', 'text'],
+            ['fecha', 'FECHA', 'date'],
+        ];
     }
 }

@@ -9,63 +9,47 @@ abstract class BaseSeguimiento extends Model
 {
     use HasFactory;
 
-    /**
-     * Llave primaria del seguimiento
-     */
     protected $primaryKey = '';
-
-    /**
-     * Nombre de la columna FK hacia el modelo padre
-     */
     protected $parentForeignKey = '';
-
-    /**
-     * Campos fillable del seguimiento
-     */
     protected $fillable = [];
-
-    /**
-     * Campos que se agregan automáticamente al serializar
-     */
     protected $appends = ['id'];
 
-    /**
-     * Obtener el ID real del modelo
-     */
     public function getIdAttribute()
     {
-        return $this->attributes[$this->primaryKey];
+        return $this->attributes[$this->primaryKey] ?? null;
     }
 
-    /**
-     * Relación hacia el modelo padre
-     */
     abstract public function parent();
 
     /**
-     * Devuelve los campos para el modal dinámicamente
+     * Devuelve los campos del modal dinámicamente según $fillable del hijo
+     * Retorna array de arrays tipo: [field, LABEL, type]
      */
     public static function getModalFields(): array
-    {
-        $instance = new static();
-        $fillable = $instance->getFillable();
+{
+    $instance = new static();
+
+    if (method_exists($instance, 'getCustomFields')) {
+        $custom = $instance::getCustomFields();
         $fields = [];
-
-        foreach ($fillable as $field) {
-            if ($field === $instance->parentForeignKey || $field === 'creater_id') continue;
-
-            $type = 'text';
-            if (str_contains($field, 'fecha')) $type = 'date';
-            if (in_array($field, ['detalle', 'tratamiento', 'observaciones'])) $type = 'textarea';
-
-            $fields[] = [
-                'name'     => $field,
-                'label'    => ucfirst(str_replace('_', ' ', $field)),
-                'type'     => $type,
-                'required' => in_array($field, ['detalle', 'fecha']),
-            ];
+        foreach ($custom as $field) {
+            if (isset($field['name'])) { // asociativo
+                $fields[] = [$field['name'], $field['label'], $field['type']];
+            } else { // numérico
+                $fields[] = $field;
+            }
         }
-
         return $fields;
     }
+
+    // Si no hay customFields, generamos desde fillable
+    $fields = [];
+    foreach ($instance->getFillable() as $field) {
+        if ($field === $instance->parentForeignKey || $field === 'creater_id') continue;
+        $fields[] = [$field, strtoupper(str_replace('_', ' ', $field)), 'text'];
+    }
+
+    return $fields;
+}
+
 }

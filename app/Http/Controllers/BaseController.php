@@ -54,7 +54,6 @@ abstract class BaseController extends Controller
             ? collect($formFields)->mapWithKeys(fn ($f, $k) => [$k => $f['value'] ?? null])->toArray()
             : $record->toArray();
 
-        // ⚡ Datos extra que el hijo pueda añadir
         $extraData = method_exists($this, 'extraFormData') 
             ? $this->extraFormData($record, $action) 
             : [];
@@ -75,10 +74,6 @@ abstract class BaseController extends Controller
         ], $extraData));
     }
 
-    /**
-     * Hook para añadir datos extra en el render del formulario.
-     * Por defecto retorna vacío, los hijos pueden sobrescribirlo.
-     */
     protected function extraFormData($record, string $action): array
     {
         return [];
@@ -88,8 +83,11 @@ abstract class BaseController extends Controller
     {
         $data = $this->validateRequest($request);
         $data = $this->normalizeDateFields($data);
+        $data = $this->normalizeMultiValueFields($data);
+
         $model = $this->getModelInstance();
         $this->handleFileUploads($request, $model, $data);
+
         $model->fill($data);
         $model->creater_id = auth()?->id();
         $model->save();
@@ -102,7 +100,10 @@ abstract class BaseController extends Controller
         $model = $this->model::findOrFail($id);
         $data = $this->validateRequest($request);
         $data = $this->normalizeDateFields($data);
+        $data = $this->normalizeMultiValueFields($data);
+
         $this->handleFileUploads($request, $model, $data);
+
         $model->fill($data);
         $model->updater_id = auth()?->id();
         $model->save();
@@ -189,6 +190,19 @@ abstract class BaseController extends Controller
                 } catch (\Exception $e) {
                     // Log opcional
                 }
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * ⚡ Normaliza cualquier campo multi-array para guardarlo en la BD como JSON
+     */
+    protected function normalizeMultiValueFields(array $data): array
+    {
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                $data[$key] = json_encode($value);
             }
         }
         return $data;

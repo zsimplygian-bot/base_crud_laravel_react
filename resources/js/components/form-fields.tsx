@@ -178,70 +178,83 @@ export const FormFieldsRenderer: React.FC<Props> = ({
                   >
                     <SelectValue placeholder="-" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <div className="p-2 flex items-center gap-2">
-                      <div className="relative w-full">
-                        <input
-                          ref={(el) => (searchInputRefs.current[fieldKey] = el)}
-                          type="text"
-                          className={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none ${
-                            shouldRenderCreateButton(fieldKey) ? "pr-10" : "pr-6"
-                          }`}
-                          placeholder="Buscar..."
-                          value={searchTerm}
-                          onChange={(e) =>
-                            setSearchTerms((prev) => ({
-                              ...prev,
-                              [fieldKey]: e.target.value,
-                            }))
-                          }
-                          onKeyDown={(e) => e.stopPropagation()}
-                        />
-                        {searchTerm && (
-                          <button
-                            type="button"
-                            onClick={clearSearch}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
-                            tabIndex={-1}
-                          >
-                            &times;
-                          </button>
-                        )}
-                      </div>
-                      {shouldRenderCreateButton(fieldKey) && (
-                        <Link
-                          href={getCreateLink(fieldKey)}
-                          className="flex-shrink-0 p-1 rounded bg-blue-500 hover:bg-blue-600 text-white"
-                          title={`Agregar nuevo ${f.label}`}
-                        >
-                          <Plus size={16} />
-                        </Link>
-                      )}
-                    </div>
-                    {Array.isArray(opcionesSelect) && opcionesSelect.length > 0 ? (
-                      opcionesSelect
-                        .filter((option: any) =>
-                          option.label?.toLowerCase().includes(searchTerm.toLowerCase())
-                        )
-                        .map((option: any) => (
-                          <SelectItem
-                            key={option.id}
-                            value={option.id?.toString()}
-                            onMouseDown={(e) => e.preventDefault()}
-                          >
-                            {option.label}
-                          </SelectItem>
-                        ))
-                    ) : (
-                      <div className="px-3 py-2 text-sm text-muted-foreground">
-                        {!f.options?.data?.length
-                          ? f.options?.message
-                            ? `⚠️ ${f.options.message}`
-                            : "No hay opciones disponibles"
-                          : null}
-                      </div>
-                    )}
-                  </SelectContent>
+                  <SelectContent
+  onMouseDown={(e) => e.preventDefault()} // evita perder foco
+  onClick={(e) => e.stopPropagation()} // evita que Radix cierre el menú
+>
+  <div className="p-2 flex items-center gap-2">
+    <div className="relative w-full">
+      <input
+        ref={(el) => (searchInputRefs.current[fieldKey] = el)}
+        type="text"
+        className={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none ${
+          shouldRenderCreateButton(fieldKey) ? "pr-10" : "pr-6"
+        }`}
+        placeholder="Buscar..."
+        value={searchTerm}
+        onChange={(e) =>
+          setSearchTerms((prev) => ({
+            ...prev,
+            [fieldKey]: e.target.value,
+          }))
+        }
+        onKeyDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()} // <- evita que se cierre al hacer clic
+        autoFocus
+      />
+      {searchTerm && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSearchTerms((prev) => ({ ...prev, [fieldKey]: "" }));
+            searchInputRefs.current[fieldKey]?.focus();
+          }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
+          tabIndex={-1}
+        >
+          &times;
+        </button>
+      )}
+    </div>
+
+    {shouldRenderCreateButton(fieldKey) && (
+      <Link
+        href={getCreateLink(fieldKey)}
+        onMouseDown={(e) => e.stopPropagation()} // <- mantiene el menú abierto
+        className="flex-shrink-0 p-1 rounded bg-blue-500 hover:bg-blue-600 text-white"
+        title={`Agregar nuevo ${f.label}`}
+      >
+        <Plus size={16} />
+      </Link>
+    )}
+  </div>
+
+  {Array.isArray(opcionesSelect) && opcionesSelect.length > 0 ? (
+    opcionesSelect
+      .filter((option: any) =>
+        option.label?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+      .map((option: any) => (
+        <SelectItem
+          key={option.id}
+          value={option.id?.toString()}
+          onMouseDown={(e) => e.preventDefault()}
+        >
+          {option.label}
+        </SelectItem>
+      ))
+  ) : (
+    <div className="px-3 py-2 text-sm text-muted-foreground">
+      {!f.options?.data?.length
+        ? f.options?.message
+          ? `⚠️ ${f.options.message}`
+          : "No hay opciones disponibles"
+        : null}
+    </div>
+  )}
+</SelectContent>
+
                 </Select>
                 {ApiButton && <ApiButton fieldKey={fieldKey} />}
               </div>

@@ -8,7 +8,6 @@ class VacunaSeguimiento extends BaseSeguimiento
     protected $fillable = [
         'id_vacuna',
         'detalle',
-        'tratamiento',
         'observaciones',
         'fecha',
         'creater_id',
@@ -16,5 +15,13 @@ class VacunaSeguimiento extends BaseSeguimiento
     public function parent()
     {
         return $this->belongsTo(Vacuna::class, $this->parentForeignKey, 'id');
+    }
+    public static function getCustomFields(): array
+    {
+        return [
+            ['detalle', 'DETALLE', 'textarea'],
+            ['observaciones', 'OBSERVACIONES', 'textarea'],
+            ['fecha', 'FECHA', 'date'],
+        ];
     }
 }

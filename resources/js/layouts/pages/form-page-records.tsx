@@ -1,13 +1,12 @@
-// layouts/pages/form-page.tsx
+import React, { useState, useEffect, useMemo } from "react";
 import { Head, useForm, router } from "@inertiajs/react";
-import { useState, useEffect } from "react";
 import AppLayout from "@/layouts/app-layout";
 import LayoutForm from "@/layouts/form-layout";
 
 interface FormProps {
   form_data: any;
   formFields: any;
-  modalFields: any[]; // ⚡ campos dinámicos para el modal
+  modalFields: any[];
   action: string;
   custom_title: string;
   view: string;
@@ -36,46 +35,40 @@ const SeguimientoFormModal: React.FC<{
   modalFields: any[];
   view: string;
 }> = ({ open, onClose, seguimiento, historiaId, modalFields, view }) => {
-  // Inicializamos los datos dinámicamente según modalFields
-  const initialData = modalFields.reduce((acc, field) => {
-    acc[field.name] = seguimiento?.[field.name] ?? (field.type === "date" ? new Date().toISOString().slice(0, 10) : "");
-    return acc;
-  }, {} as Record<string, any>);
+
+  // 🧠 Memoriza campos iniciales solo cuando cambian modalFields o seguimiento
+  const initialData = useMemo(() => {
+    return (modalFields || []).reduce((acc: Record<string, any>, field: any) => {
+      const name = field.name || field[0];
+      const type = field.type || field[2];
+      acc[name] = seguimiento?.[name] ?? (type === "date" ? new Date().toISOString().slice(0, 10) : "");
+      return acc;
+    }, {});
+  }, [modalFields, seguimiento]);
 
   const { data, setData, post, put, reset } = useForm({
-    [`id_${view}`]: historiaId, // ⚡ FK dinámica
+    [`id_${view}`]: historiaId,
     ...initialData,
   });
 
-  // Sincronizar valores cuando cambie seguimiento o modalFields
+  // 🧩 Log solo cuando cambian los campos
   useEffect(() => {
-    const newData = modalFields.reduce((acc, field) => {
-      acc[field.name] = seguimiento?.[field.name] ?? (field.type === "date" ? new Date().toISOString().slice(0, 10) : "");
-      return acc;
-    }, {} as Record<string, any>);
-    setData({ [`id_${view}`]: historiaId, ...newData });
-  }, [seguimiento, modalFields]);
+    console.log("Modal fields:", modalFields);
+  }, [modalFields]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const routeName = `${view}.seguimientos`;
-    if (seguimiento) {
-      put(route(`${routeName}.update`, seguimiento.id), {
-        data,
-        onSuccess: () => {
-          reset();
-          onClose();
-        },
-      });
-    } else {
-      post(route(`${routeName}.store`), {
-        data,
-        onSuccess: () => {
-          reset();
-          onClose();
-        },
-      });
-    }
+    const payload = {
+      data,
+      onSuccess: () => {
+        reset();
+        onClose();
+      },
+    };
+
+    if (seguimiento) put(route(`${routeName}.update`, seguimiento.id), payload);
+    else post(route(`${routeName}.store`), payload);
   };
 
   if (!open) return null;
@@ -86,29 +79,40 @@ const SeguimientoFormModal: React.FC<{
         <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
           {seguimiento ? "Editar Seguimiento" : "Nuevo Seguimiento"}
         </h3>
+
         <form onSubmit={submit} className="flex flex-col gap-3">
-          {modalFields.map((field) =>
-            field.type === "textarea" ? (
-              <textarea
-                key={field.name}
-                value={data[field.name]}
-                onChange={(e) => setData(field.name, e.target.value)}
-                className="w-full min-h-[80px] rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
-                placeholder={field.label}
-                required={field.required}
-              />
-            ) : (
+          {modalFields.map((field: any) => {
+            const name = field.name || field[0];
+            const label = field.label || field[1];
+            const type = field.type || field[2];
+            const required = field.required ?? false;
+
+            if (type === "textarea") {
+              return (
+                <textarea
+                  key={name}
+                  value={data[name] ?? ""}
+                  onChange={(e) => setData(name, e.target.value)}
+                  placeholder={label}
+                  required={required}
+                  className="w-full min-h-[80px] rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
+                />
+              );
+            }
+
+            return (
               <input
-                key={field.name}
-                type={field.type}
-                value={data[field.name]}
-                onChange={(e) => setData(field.name, e.target.value)}
+                key={name}
+                type={type}
+                value={data[name] ?? ""}
+                onChange={(e) => setData(name, e.target.value)}
+                placeholder={label}
+                required={required}
                 className="rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2"
-                placeholder={field.label}
-                required={field.required}
               />
-            )
-          )}
+            );
+          })}
+
           <div className="flex justify-end gap-2 mt-2">
             <button
               type="button"
@@ -152,6 +156,11 @@ export const FormPage: React.FC<FormProps> = ({
   const mainId = form_data?.[`id_${view}`] ?? Number(window.location.pathname.split("/").pop() ?? 0);
   const showActions = action !== "info" && action !== "delete";
 
+  // 🧠 Log solo una vez
+  useEffect(() => {
+    console.log("FormPage modalFields:", modalFields);
+  }, [modalFields]);
+
   const handleDelete = () => {
     if (!deleteId) return;
     router.delete(route(`${view}.seguimientos.destroy`, deleteId), {
@@ -166,7 +175,6 @@ export const FormPage: React.FC<FormProps> = ({
     <AppLayout breadcrumbs={[{ title, href: view }]}>
       <Head title={title} />
       <div className="flex h-full flex-1 flex-col gap-6 p-4">
-        {/* Formulario principal */}
         <LayoutForm
           form_data={form_data}
           formFields={formFields}
@@ -179,7 +187,6 @@ export const FormPage: React.FC<FormProps> = ({
           apiConfig={apiConfig}
         />
 
-        {/* Seguimientos */}
         {action !== "create" && (
           <div className="rounded-xl border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 p-4 shadow">
             <div className="flex justify-between items-center mb-4">
@@ -207,16 +214,19 @@ export const FormPage: React.FC<FormProps> = ({
                     className="p-3 rounded-lg border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm flex justify-between items-start"
                   >
                     <div>
-                      {modalFields.map((field) =>
-                        s[field.name] ? (
+                      {modalFields.map((field: any) => {
+                        const name = field.name || field[0];
+                        const label = field.label || field[1];
+                        const type = field.type || field[2];
+                        return s[name] ? (
                           <p
-                            key={field.name}
-                            className={`text-sm ${field.type === "textarea" ? "font-medium" : "text-gray-600 dark:text-gray-300"}`}
+                            key={name}
+                            className={`text-sm ${type === "textarea" ? "font-medium" : "text-gray-600 dark:text-gray-300"}`}
                           >
-                            {field.label}: {s[field.name]}
+                            {label}: {s[name]}
                           </p>
-                        ) : null
-                      )}
+                        ) : null;
+                      })}
                     </div>
                     {showActions && (
                       <div className="flex flex-col gap-1">
@@ -247,17 +257,15 @@ export const FormPage: React.FC<FormProps> = ({
           </div>
         )}
 
-        {/* Modal Crear/Editar Seguimiento */}
         <SeguimientoFormModal
           open={isModalOpen}
           onClose={() => setModalOpen(false)}
           seguimiento={editSeguimiento}
           historiaId={mainId}
           modalFields={modalFields}
-          view={view} // 🔹 pasa la vista al modal
+          view={view}
         />
 
-        {/* Modal Confirmación Eliminar */}
         {isDeleteModalOpen && (
           <ModalBackdrop>
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 w-full max-w-sm">

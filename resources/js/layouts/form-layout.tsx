@@ -14,7 +14,6 @@ import { useFormAction } from "@/hooks/use-form-action";
 import { FormFieldsRenderer } from "@/components/form-fields";
 // 👇 importamos el hook que hiciste
 import { ApiConfigEntry, useFetchWithButton } from "@/hooks/use-fetch-with-button";
-
 type LayoutFormProps = {
   form_data: any;
   formFields: any;
@@ -29,7 +28,6 @@ type LayoutFormProps = {
   submitForm?: React.FormEventHandler;
   apiConfig?: ApiConfigEntry;
 };
-
 const LayoutForm: React.FC<LayoutFormProps> = ({
   form_data,
   formFields,
@@ -54,12 +52,9 @@ const LayoutForm: React.FC<LayoutFormProps> = ({
     errors,
     recentlySuccessful,
   } = useForm(form_data);
-
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-
   const isMobile = useIsMobile();
   useFormCalculate({ view, data, setData });
-
   const {
     title,
     description,
@@ -89,7 +84,6 @@ const LayoutForm: React.FC<LayoutFormProps> = ({
     view,
     action
   );
-
   // 👇 inicializamos el botón dinámico para API
   const FetchButton = useFetchWithButton({
     data,
@@ -97,13 +91,11 @@ const LayoutForm: React.FC<LayoutFormProps> = ({
     apiConfig,
     view,
   });
-
   const handleSubmitWithLog: React.FormEventHandler = (e) => {
     e.preventDefault();
     console.log("📤 Datos que se enviarán:", data);
     handleSubmit(e);
   };
-
   return (
     <Card
       className={`bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${
@@ -151,5 +143,4 @@ const LayoutForm: React.FC<LayoutFormProps> = ({
     </Card>
   );
 };
-
 export default LayoutForm;

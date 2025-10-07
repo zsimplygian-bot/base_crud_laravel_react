@@ -13,10 +13,10 @@ class Cita extends BaseModel
     }
     public static string $title = 'Citas';
     protected static $simpleFormFieldDefinitions = [
-        ['id_mascota', 'DUEÑO - MASCOTA', 'select'],
+        ['id_mascota', 'MASCOTA - DUEÑO', 'select'],
         ['fecha', 'FECHA', 'date'],
         ['hora', 'HORA', 'time'],
-        ['id_motivo_cita', 'MOTIVO', 'select'],
+        ['id_motivo_cita', 'MOTIVO', 'multiselect'],
         ['precio', 'PRECIO S/.', 'number'],
         ['observaciones', 'OBSERVACIONES', 'textarea'],
         ['id_estado_cita', 'ESTADO', 'select'],
@@ -30,7 +30,7 @@ class Cita extends BaseModel
         'id_estado_cita' => 'required|int',
     ];
     protected static $toolbarfieldDefinitions = [
-        'id_mascota' => ['label' => 'DUEÑO - MASCOTA', 'type' => 'select', 'width' => 3],
+        'id_mascota' => ['label' => 'MASCOTA - DUEÑO', 'type' => 'select', 'width' => 3],
         'id_motivo_cita' => ['label' => 'MOTIVO CITA', 'type' => 'select', 'width' => 2],
         'id_estado_cita' => ['label' => 'ESTADO CITA', 'type' => 'select', 'width' => 2],
     ];
