@@ -67,9 +67,7 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
         ]
       : []),
     // Incluir Imprimir si la vista es válida
-    ...(view === "liquidacion" ||
-    view === "detalle_liquidacion" ||
-    view === "honora"
+    ...(view === "historia_clinica"
       ? [
           {
             label: "Imprimir",

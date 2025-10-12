@@ -8,11 +8,14 @@ class Lista
 {
     protected static array $tablasPermitidas = [
         'sexo',
+        'medicamento',
+        'procedimiento',
         'cliente',
         'mascota',
         'estado_cita',
         'estado_mascota',
         'motivo_cita',
+        'motivo_historia_clinica',
         'estado_historia_clinica',
         'especie',
         'unidad_tiempo',

@@ -94,27 +94,30 @@ abstract class BaseModel extends Model
             ];
             // Analiza los argumentos extra
             for ($i = $startOpt; $i < count($item); $i++) {
-                $opt = $item[$i];
-                if (is_string($opt)) {
-                    if (in_array($opt, ['readonly', 'disabled', 'required', 'autofocus'])) {
-                        $definition[$opt] = true;
-                    } elseif (preg_match('/^>(\d+)$/', $opt, $match)) {
-                        $definition['min'] = (int)$match[1];
-                    } elseif (preg_match('/^<(\d+)$/', $opt, $match)) {
-                        $definition['max'] = (int)$match[1];
-                    } elseif (preg_match('/^maxlength:(\d+)$/', $opt, $match)) {
-                        $definition['maxlength'] = (int)$match[1];
-                    } elseif (preg_match('/^pattern:(.+)$/', $opt, $match)) {
-                        $definition['pattern'] = $match[1];
-                    }
-                } elseif (is_array($opt)) {
-                    foreach ($opt as $key => $val) {
-                        if (!is_null($val)) {
-                            $definition[$key] = $val;
-                        }
-                    }
-                }
+    $opt = $item[$i];
+    if (is_string($opt)) {
+        if (in_array($opt, ['readonly', 'disabled', 'required', 'autofocus'])) {
+            $definition[$opt] = true;
+        } elseif (preg_match('/^>(\d+)$/', $opt, $match)) {
+            $definition['min'] = (int)$match[1];
+        } elseif (preg_match('/^<(\d+)$/', $opt, $match)) {
+            $definition['max'] = (int)$match[1];
+        } elseif (preg_match('/^maxlength:(\d+)$/', $opt, $match)) {
+            $definition['maxlength'] = (int)$match[1];
+        } elseif (preg_match('/^pattern:(.+)$/', $opt, $match)) {
+            $definition['pattern'] = $match[1];
+        } elseif (preg_match('/^placeholder:(.+)$/', $opt, $match)) {
+            $definition['placeholder'] = trim($match[1]);
+        }
+    } elseif (is_array($opt)) {
+        foreach ($opt as $key => $val) {
+            if (!is_null($val)) {
+                $definition[$key] = $val;
             }
+        }
+    }
+}
+
             $result[$field] = $definition;
         }
         return $result;

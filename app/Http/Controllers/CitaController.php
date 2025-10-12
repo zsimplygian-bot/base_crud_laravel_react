@@ -9,11 +9,5 @@ class CitaController extends BaseController
         $this->model = Cita::class; 
         parent::__construct();
     }
-    protected function extraFormData($record, string $action): array
-    {
-        return [
-            'modalFields'  => CitaSeguimiento::getModalFields(),
-            'seguimientos' => $record ? $record->cita_seguimientos()->orderBy('fecha', 'desc')->get() : [],
-        ];
-    }
+
 }

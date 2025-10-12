@@ -10,12 +10,10 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-
 // Breadcrumbs para navegación
 const breadcrumbs: BreadcrumbItem[] = [
   { title: 'Dashboard', href: '/dashboard' },
 ];
-
 // Tipo para cada ítem del dashboard
 type MenuItem = {
   key: string;
@@ -26,7 +24,6 @@ type MenuItem = {
   url_create: string;
   url_detail: string;
 };
-
 // Props del dashboard
 type DashboardProps = {
   menus: MenuItem[];
@@ -35,14 +32,13 @@ type DashboardProps = {
     citasPorMes: { mes: string; total: number }[];
   };
 };
-
 export default function Dashboard({ menus, stats }: DashboardProps) {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Dashboard" />
       <div className="flex flex-1 flex-col gap-6 p-4">
         {/* Grid con cards */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
   {menus.map(({ key, titulo, total, url_create, url_detail, color, icon }, index) => (
     <div
       key={index}
@@ -58,7 +54,6 @@ export default function Dashboard({ menus, stats }: DashboardProps) {
         </div>
         <p className="mt-2 text-center text-lg font-medium">{titulo}</p>
       </div>
-
       {/* Enlaces de acción */}
       <div className="mt-4 flex justify-center">
         <Link
@@ -79,7 +74,6 @@ export default function Dashboard({ menus, stats }: DashboardProps) {
     </div>
   ))}
 </div>
-
 {/* Gráfico con Recharts - Totales */}
 <div className="rounded-xl border p-4 shadow-lg bg-white text-gray-900 border-gray-300 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700">
   <h2 className="mb-4 text-xl font-semibold">Estadísticas generales</h2>
@@ -93,7 +87,6 @@ export default function Dashboard({ menus, stats }: DashboardProps) {
     </BarChart>
   </ResponsiveContainer>
 </div>
-
 {/* Gráfico de razas más comunes */}
 <div className="rounded-xl border p-4 shadow-lg bg-white text-gray-900 border-gray-300 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700">
   <h2 className="mb-4 text-xl font-semibold">Razas más comunes</h2>
@@ -107,7 +100,6 @@ export default function Dashboard({ menus, stats }: DashboardProps) {
     </BarChart>
   </ResponsiveContainer>
 </div>
-
 {/* Gráfico de citas por mes */}
 <div className="rounded-xl border p-4 shadow-lg bg-white text-gray-900 border-gray-300 dark:bg-gray-900 dark:text-gray-100 dark:border-gray-700">
   <h2 className="mb-4 text-xl font-semibold">Citas por mes</h2>
@@ -120,6 +112,14 @@ export default function Dashboard({ menus, stats }: DashboardProps) {
       <Bar dataKey="total" fill="#F59E0B" radius={[8, 8, 0, 0]} />
     </BarChart>
   </ResponsiveContainer>
+</div>
+<div className="flex justify-end">
+  <button
+    onClick={() => window.location.href = route('export.db')}
+    className="rounded-lg bg-indigo-600 px-4 py-2 text-white font-medium shadow hover:bg-indigo-700 transition"
+  >
+    Exportar Base de Datos
+  </button>
 </div>
 
       </div>

@@ -29,11 +29,6 @@ class Dashboard
                 'icon'  => 'fas fa-notes-medical',
                 'color' => 'bg-yellow-500',
             ],
-            'vacuna' => [
-                'label' => 'Vacuna',
-                'icon'  => 'fas fa-syringe',
-                'color' => 'bg-purple-500',
-            ],
         ];
     }
 

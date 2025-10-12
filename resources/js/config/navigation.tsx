@@ -46,10 +46,6 @@ const rawSidebar: RawItem[] = [
     title: "Citas", href: "/cita",
   },
   {
-    icon: Syringe, // icono de vacuna 💉
-    title: "Vacunas", href: "/vacuna",
-  },
-  {
     icon: PawPrint,
     title: "Mascotas", href: "/mascota",
   },
@@ -61,9 +57,12 @@ const rawSidebar: RawItem[] = [
     title: "Items",
     icon: BookOpen,
     children: [
+               { title: "Medicamentos", href: "/medicamento", icon: Syringe,},
+               { title: "Procedimientos", href: "/procedimiento", icon: ClipboardList,},
                { title: "Especie", href: "/itemsimple?tipo=especie", icon: PawPrint,},
                { title: "Raza", href: "/raza", icon: PawPrint,},
                { title: "Motivo cita", href: "/itemsimple?tipo=motivo_cita", icon: Calendar,},
+               { title: "Motivo historia", href: "/itemsimple?tipo=motivo_historia_clinica", icon: Calendar,},
     ],
   },
 ];

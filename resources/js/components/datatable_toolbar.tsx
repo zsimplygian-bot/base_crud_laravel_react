@@ -290,29 +290,64 @@ export const DataTableToolbar: React.FC<DataTableToolbarProps> = ({
         </Popover>
       </div>
       {/* Grupo derecho (Filtros avanzados) */}
-      <div className="flex flex-wrap items-end gap-4 w-full md:w-auto">
-        {toolbarfields && Object.keys(toolbarfields).length > 0 && (
-          <>
-            <FormFieldsRenderer
-              formFields={toolbarfields}
-              data={localFilterValues}
-              setData={(f, v) => handleLocalFilterChange(f, v)}
-              errors={{}}
-              readonly={false}
-              configReadonly={false}
-              hiddenFields={[]}
-              isMobile={isMobile}
-            />
-            <Button
-              variant="outline"
-              className="whitespace-nowrap h-10 self-end"
-              onClick={handleFilterClick}
-            >
-              Filtrar
-            </Button>
-          </>
-        )}
+<div className="flex flex-wrap items-end gap-4 w-full md:w-auto">
+  {toolbarfields && Object.keys(toolbarfields).length > 0 && (
+    <>
+      <FormFieldsRenderer
+        formFields={toolbarfields}
+        data={localFilterValues}
+        setData={(f, v) => handleLocalFilterChange(f, v)}
+        errors={{}}
+        readonly={false}
+        configReadonly={false}
+        hiddenFields={[]}
+        isMobile={isMobile}
+      />
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          className="whitespace-nowrap h-10 self-end"
+          onClick={handleFilterClick}
+        >
+          Filtrar
+        </Button>
+
+        {/* 🔹 Nuevo botón LIMPIAR */}
+        <Button
+          variant="secondary"
+          className="whitespace-nowrap h-10 self-end"
+          onClick={() => {
+            // 1️⃣ Limpiar estados locales
+            setLocalSearchTerm("");
+            setLocalSelectedColumn(null);
+            setLocalFilterValues({});
+            setDateRange(undefined);
+            // 2️⃣ Limpiar estados globales
+            setAppliedSearchTerm(null);
+            setSelectedColumn(null);
+            setFilterValues?.({});
+            setPageIndex(0);
+            // 3️⃣ Quitar query params de la URL
+            const url = new URL(window.location.href);
+            url.search = "";
+            window.history.replaceState({}, "", url.toString());
+            // 4️⃣ Ejecutar callback opcional
+            if (onFilterApply) {
+              onFilterApply({
+                selectedColumn: null,
+                searchTerm: null,
+                filterValues: {},
+              });
+            }
+          }}
+        >
+          Limpiar
+        </Button>
       </div>
+    </>
+  )}
+</div>
+
     </div>
   );
 };

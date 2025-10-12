@@ -49,7 +49,7 @@ class ItemSimple extends Model
     protected static function resolveTable(string $tipo): ?string
     {
         return match ($tipo) {
-            'estado_cita', 'estado_mascota', 'motivo_cita', 'especie' => $tipo,
+            'estado_cita', 'estado_mascota', 'motivo_cita', 'especie', 'motivo_historia_clinica' => $tipo,
             default => null,
         };
     }
@@ -57,6 +57,7 @@ class ItemSimple extends Model
     {
         return match ($tipo) {
             'motivo_cita' => 'Motivo cita',
+            'motivo_historia_clinica' => 'Motivo Historia Clinica',
             default => ucfirst($tipo),
         };
     }

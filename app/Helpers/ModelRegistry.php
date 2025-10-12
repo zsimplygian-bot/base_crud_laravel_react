@@ -12,9 +12,11 @@ class ModelRegistry
             'historia_clinica'   => M\HistoriaClinica::class,
             'raza'   => M\Raza::class,
             'vacuna'   => M\Vacuna::class,
+            'medicamento'   => M\Medicamento::class,
+            'procedimiento'   => M\Procedimiento::class,
         ];
         if ($view === 'itemsimple') {
-            $allowedTipos = ['motivo_cita', 'especie'];
+            $allowedTipos = ['motivo_cita', 'especie', 'motivo_historia_clinica'];
             if (!$tipo || !in_array($tipo, $allowedTipos)) {
                 throw new \InvalidArgumentException("Tipo 'itemsimple' no permitido o no especificado");
             }

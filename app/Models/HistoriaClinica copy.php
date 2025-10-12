@@ -11,7 +11,6 @@ class HistoriaClinica extends BaseModel
 
     protected $table = 'historia_clinica';
 
-    // 🔹 Relaciones
     public function historia_seguimientos(): HasMany
     {
         return $this->hasMany(HistoriaClinicaSeguimiento::class, 'id_historia_clinica');
@@ -27,17 +26,11 @@ class HistoriaClinica extends BaseModel
         return $this->hasMany(HistoriaClinicaMedicamento::class, 'id_historia_clinica');
     }
 
-    public function historia_anamnesis(): HasMany
-    {
-        return $this->hasMany(HistoriaClinicaAnamnesis::class, 'id_historia_clinica');
-    }
-
     public function motivo_historia()
     {
         return $this->belongsTo(MotivoHistoriaClinica::class, 'id_motivo_historia_clinica');
     }
 
-    // 🔹 Configuración general
     public static string $title = 'Historias Clínicas';
 
     protected static $simpleFormFieldDefinitions = [
@@ -60,7 +53,7 @@ class HistoriaClinica extends BaseModel
 
     protected static $toolbarfieldDefinitions = [
         'id_mascota' => ['label' => 'MASCOTA - DUEÑO', 'type' => 'select', 'width' => 3],
-        'id_estado_historia_clinica' => ['label' => 'ESTADO', 'type' => 'select', 'width' => 2],
+        'id_estado_historia_clinica' => ['label' => 'ESTADO HISTORIA', 'type' => 'select', 'width' => 2],
     ];
 
     public static array $allowedFilters = ['id_mascota', 'id_estado_historia_clinica'];
@@ -69,7 +62,19 @@ class HistoriaClinica extends BaseModel
         'precio' => ['label' => 'Total', 'type' => 'text', 'width' => 2],
     ];
 
-    // 🔹 Consulta principal
+    protected static $tableColumns = [
+        ['ID', 'id'],
+        ['DUEÑO', 'cliente'],
+        ['MASCOTA', 'mascota'],
+        ['FECHA', 'fecha'],
+        ['MOTIVO', 'motivo_historia_clinica'],
+        ['DETALLE', 'detalle'],
+        ['OBSERVACIONES', 'observaciones'],
+        ['ESTADO HISTORIA', 'estado_historia_clinica'],
+        ['FECHA REGISTRO', 'created_at'],
+        ['TOTAL', 'precio'],
+    ];
+
     public static function getQuery()
     {
         $alias = (new self)->getTable(); // historia_clinica
@@ -77,6 +82,7 @@ class HistoriaClinica extends BaseModel
         $alias3 = 'cliente';
         $alias4 = 'estado_historia_clinica';
         $aliasMotivo = 'motivo_historia_clinica';
+        $seguimientoTable = 'historia_clinica_seguimiento';
         $procedimientoTable = 'historia_clinica_procedimiento';
         $medicamentoTable = 'historia_clinica_medicamento';
 
@@ -85,6 +91,7 @@ class HistoriaClinica extends BaseModel
             ->leftJoin($alias3, "{$alias2}.id_{$alias3}", '=', "{$alias3}.id_{$alias3}")
             ->leftJoin($alias4, "{$alias}.id_{$alias4}", '=', "{$alias4}.id_{$alias4}")
             ->leftJoin($aliasMotivo, "{$alias}.id_motivo_historia_clinica", '=', "{$aliasMotivo}.id_motivo_historia_clinica")
+            ->leftJoin($seguimientoTable . ' as s', "s.id_{$alias}", '=', "{$alias}.id_{$alias}")
             ->leftJoin($procedimientoTable . ' as p', "p.id_historia_clinica", '=', "{$alias}.id_{$alias}")
             ->leftJoin($medicamentoTable . ' as m', "m.id_historia_clinica", '=', "{$alias}.id_{$alias}")
             ->select([
@@ -95,9 +102,10 @@ class HistoriaClinica extends BaseModel
                 "{$aliasMotivo}.motivo_historia_clinica as motivo_historia_clinica",
                 "{$alias}.detalle",
                 "{$alias}.observaciones",
-                "{$alias4}.estado_historia_clinica as estado",
+                "{$alias4}.estado_historia_clinica as estado_historia_clinica",
                 "{$alias}.created_at",
-                DB::raw("COALESCE(SUM(p.precio),0) + COALESCE(SUM(m.precio),0) as precio"),
+                DB::raw("COALESCE(SUM(s.precio),0) + COALESCE(SUM(p.precio),0) + COALESCE(SUM(m.precio),0) as precio"),
+                
             ])
             ->groupBy(
                 "{$alias}.id_{$alias}",
@@ -110,28 +118,7 @@ class HistoriaClinica extends BaseModel
                 "{$alias4}.estado_historia_clinica",
                 "{$alias}.created_at"
             );
+
         return ['query' => $query, 'alias' => $alias];
-    }
-    protected static $tableColumns = [
-        ['ID', 'id'],
-        ['MASCOTA', 'mascota'],
-        ['DUEÑO', 'cliente'],
-        ['FECHA', 'fecha'],
-        ['MOTIVO', 'motivo_historia_clinica'],
-        ['DETALLE', 'detalle'],
-        ['TOTAL', 'precio'],
-        ['OBSERVACIONES', 'observaciones'],
-        ['ESTADO', 'estado'],
-        ['FECHA REGISTRO', 'created_at'],
-    ];
-    public function mascota()
-    {
-        // Asegúrate que el segundo parámetro coincide con la columna de FK en historia_clinica
-        return $this->belongsTo(Mascota::class, 'id_mascota', 'id_mascota');
-    }
-    public function estado_historia_clinica()
-    {
-        // Asegúrate que el segundo parámetro coincide con la columna de FK en historia_clinica
-        return $this->belongsTo(EstadoHistoriaClinica::class, 'id_estado_historia_clinica', 'id_estado_historia_clinica');
     }
 }

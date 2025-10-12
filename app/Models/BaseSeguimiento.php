@@ -21,35 +21,44 @@ abstract class BaseSeguimiento extends Model
 
     abstract public function parent();
 
-    /**
-     * Devuelve los campos del modal dinámicamente según $fillable del hijo
-     * Retorna array de arrays tipo: [field, LABEL, type]
-     */
     public static function getModalFields(): array
-{
-    $instance = new static();
-
-    if (method_exists($instance, 'getCustomFields')) {
-        $custom = $instance::getCustomFields();
+    {
+        $instance = new static();
         $fields = [];
-        foreach ($custom as $field) {
-            if (isset($field['name'])) { // asociativo
-                $fields[] = [$field['name'], $field['label'], $field['type']];
-            } else { // numérico
-                $fields[] = $field;
+        $lista = new \App\Models\Lista();
+
+        foreach ($instance->getFillable() as $field) {
+            if ($field === $instance->parentForeignKey || $field === 'creater_id') continue;
+
+            $label = strtoupper(str_replace('_', ' ', $field));
+            $type = 'text';
+            $options = [];
+
+            // 🔹 Detectar tipos automáticamente según nombre del campo
+            if (str_contains($field, 'fecha')) {
+                $type = 'date';
+            } elseif (str_contains($field, 'precio') || str_contains($field, 'monto') || str_contains($field, 'duracion')) {
+                $type = 'number';
             }
+
+            // 🔹 Si el campo pertenece a una lista, usar select
+            $claveNormalizada = preg_match('/^id_/', $field) ? substr($field, 3) : $field;
+            $permitidas = $lista::getTablasPermitidas();
+            $especiales = (new \ReflectionClass($lista))->getStaticProperties()['listasEspeciales'];
+
+            if (in_array($claveNormalizada, $permitidas, true) || array_key_exists($field, $especiales)) {
+                $type = 'select';
+                $resultado = $lista->getListaDinamica($claveNormalizada);
+                if ($resultado['success'] && !empty($resultado['data'])) {
+                    $options = $resultado['data'];
+                }
+            }
+
+            $fields[] = $type === 'select'
+                ? [$field, $label, $type, $options]
+                : [$field, $label, $type];
         }
+
         return $fields;
     }
-
-    // Si no hay customFields, generamos desde fillable
-    $fields = [];
-    foreach ($instance->getFillable() as $field) {
-        if ($field === $instance->parentForeignKey || $field === 'creater_id') continue;
-        $fields[] = [$field, strtoupper(str_replace('_', ' ', $field)), 'text'];
-    }
-
-    return $fields;
-}
-
 }

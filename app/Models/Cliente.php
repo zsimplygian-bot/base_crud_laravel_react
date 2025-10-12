@@ -11,7 +11,7 @@ class Cliente extends BaseModel
         ['cliente', 'CLIENTE',  'text'], 
         ['dni', 'DNI', 'tel', 'maxlength:8'],
         ['telefono', 'TELÉFONO', 'tel', 'maxlength:9'],
-        ['email', 'EMAIL', 'email'],
+        //['email', 'EMAIL', 'email'],
         ['direccion', 'DIRECCIÓN', 'textarea'], 
     ];
     protected static $validationRules = [
@@ -26,7 +26,7 @@ class Cliente extends BaseModel
         ['CLIENTE', 'cliente'],
         ['DNI', 'dni'],
         ['TELÉFONO', 'telefono'],
-        ['EMAIL', 'email'],
+        //['EMAIL', 'email'],
         ['DIRECCIÓN', 'direccion'],
         ['FECHA REGISTRO', 'created_at'],
     ];
@@ -39,7 +39,7 @@ class Cliente extends BaseModel
                 "{$alias}.cliente",
                 "{$alias}.dni",
                 "{$alias}.telefono",
-                "{$alias}.email",
+                //"{$alias}.email",
                 "{$alias}.direccion",
                 "{$alias}.created_at",
             ]);

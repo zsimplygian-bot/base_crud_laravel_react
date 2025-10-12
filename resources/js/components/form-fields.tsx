@@ -107,6 +107,9 @@ export const FormFieldsRenderer: React.FC<Props> = ({
           onKeyDown: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) =>
             handleKeyDown(e, fieldKey, value),
         };
+        if (f.placeholder) {
+          inputProps.placeholder = f.placeholder;
+        }
         const opcionesSelect = Array.isArray(f.options?.data)
           ? f.options.data
           : Array.isArray(f.options)
@@ -272,30 +275,40 @@ export const FormFieldsRenderer: React.FC<Props> = ({
                 {ApiButton && <ApiButton fieldKey={fieldKey} />}
               </div>
             ) : f.type === "date" ? (
-              <div className="flex items-center">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Input
-                      id={fieldKey}
-                      type="text"
-                      value={value ? format(new Date(value), "dd/MM/yyyy") : ""}
-                      readOnly
-                      disabled={disabled}
-                      className="w-full cursor-pointer"
-                    />
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={value ? new Date(value) : undefined}
-                      onSelect={(date) => setData(fieldKey, date?.toISOString())}
-                      disabled={disabled}
-                    />
-                  </PopoverContent>
-                </Popover>
-                {ApiButton && <ApiButton fieldKey={fieldKey} />}
-              </div>
-            ) : (
+  <div className="flex items-center">
+    <Popover>
+      <PopoverTrigger asChild>
+        <Input
+          id={fieldKey}
+          type="text"
+          value={
+            value
+              ? format(
+                  new Date(value + "T00:00:00"), // evita el offset UTC
+                  "dd/MM/yyyy"
+                )
+              : ""
+          }
+          readOnly
+          disabled={disabled}
+          className="w-full cursor-pointer"
+        />
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0">
+        <Calendar
+          mode="single"
+          selected={value ? new Date(value + "T00:00:00") : undefined}
+          onSelect={(date) =>
+            setData(fieldKey, date ? format(date, "yyyy-MM-dd") : "")
+          }
+          disabled={disabled}
+        />
+      </PopoverContent>
+    </Popover>
+    {ApiButton && <ApiButton fieldKey={fieldKey} />}
+  </div>
+)
+ : (
               <div className="flex items-center">
                 <Input
                   id={fieldKey}

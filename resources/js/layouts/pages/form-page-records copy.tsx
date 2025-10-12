@@ -45,18 +45,9 @@ const RegistroModal: React.FC<{
   tipo: "seguimientos" | "procedimientos" | "medicamentos" | "anamnesis";
 }> = ({ open, onClose, registro, parentId, modalFields, routeName, titulo, tipo }) => {
   const initialData = modalFields.reduce((acc, field) => {
-  const [name, , type] = field;
-  if (registro?.[name] !== undefined) {
-    acc[name] = registro[name];
-  } else if (type === "date") {
-    acc[name] = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-  } else if (type === "time") {
-    acc[name] = "08:00"; // valor por defecto en formato HH:MM
-  } else {
-    acc[name] = "";
-  }
-  return acc;
-}, {} as Record<string, any>);
+    acc[field[0]] = registro?.[field[0]] ?? (field[2] === "date" ? new Date().toISOString().slice(0, 10) : "");
+    return acc;
+  }, {} as Record<string, any>);
 
   const { data, setData, post, put, reset } = useForm({
     id_historia_clinica: parentId,
@@ -120,7 +111,6 @@ const RegistroModal: React.FC<{
               const formatted = value ? value.slice(0, 16) : "";
               return <input key={name} type="datetime-local" value={formatted} onChange={(e) => setData(name, e.target.value)} className="rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2" placeholder={label} />;
             }
-            
             return <input key={name} type={type} value={value} onChange={(e) => setData(name, e.target.value)} className="rounded border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-900 dark:text-white p-2" placeholder={label} />;
           })}
           <div className="flex justify-end gap-2 mt-2">
@@ -193,12 +183,12 @@ export const FormPage: React.FC<FormProps> = ({
     }
   };
 
-const todosRegistros = [
-  ...anamnesis.map((r) => ({ ...r, tipo: "Anamnesis", $displayFields: anamnesisFields.reduce((acc, f) => { acc[f[0]] = f[1]; return acc; }, {}) })),
-  ...seguimientos.map((r) => ({ ...r, tipo: "Seguimiento", $displayFields: modalFields.reduce((acc, f) => { acc[f[0]] = f[1]; return acc; }, {}) })),
-  ...procedimientos.map((r) => ({ ...r, tipo: "Procedimiento", $displayFields: procedimientoFields.reduce((acc, f) => { acc[f[0]] = f[1]; return acc; }, {}) })),
-  ...medicamentos.map((r) => ({ ...r, tipo: "Medicamento", $displayFields: medicamentoFields.reduce((acc, f) => { acc[f[0]] = f[1]; return acc; }, {}) })),
-].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  const todosRegistros = [
+    ...anamnesis.map((r) => ({ ...r, tipo: "Anamnesis", $displayFields: anamnesisFields.reduce((acc, f) => { acc[f[0]] = f[1]; return acc; }, {}) })),
+    ...seguimientos.map((r) => ({ ...r, tipo: "Seguimiento", $displayFields: modalFields.reduce((acc, f) => { acc[f[0]] = f[1]; return acc; }, {}) })),
+    ...procedimientos.map((r) => ({ ...r, tipo: "Procedimiento", $displayFields: procedimientoFields.reduce((acc, f) => { acc[f[0]] = f[1]; return acc; }, {}) })),
+    ...medicamentos.map((r) => ({ ...r, tipo: "Medicamento", $displayFields: medicamentoFields.reduce((acc, f) => { acc[f[0]] = f[1]; return acc; }, {}) })),
+  ].sort((a, b) => new Date(a.fecha).getTime() - new Date(b.fecha).getTime());
 
   return (
     <AppLayout breadcrumbs={[{ title, href: view }]}>
@@ -270,28 +260,24 @@ const todosRegistros = [
           registro={modalConfig.registro}
           parentId={mainId}
           modalFields={
-  modalConfig.tipo === "procedimientos"
-    ? procedimientoFields
-    : modalConfig.tipo === "medicamentos"
-    ? medicamentoFields
-    : modalConfig.tipo === "anamnesis"
-    ? anamnesisFields
-    : modalFields
-}
-
+            modalConfig.tipo === "procedimientos"
+              ? procedimientoFields
+              : modalConfig.tipo === "medicamentos"
+              ? medicamentoFields
+              : "anamnesis" || modalConfig.tipo === "anamnesis"
+              ? anamnesisFields
+              : modalFields
+          }
           routeName={getRoute(modalConfig.tipo ?? "anamnesis")}
           titulo={
-  modalConfig.tipo === "procedimientos"
-    ? "Procedimiento"
-    : modalConfig.tipo === "medicamentos"
-    ? "Medicamento"
-    : modalConfig.tipo === "anamnesis"
-    ? "Anamnesis"
-    : modalConfig.tipo === "seguimientos"
-    ? "Seguimiento"
-    : "Registro"
-}
-
+            modalConfig.tipo === "procedimientos"
+              ? "Procedimiento"
+              : modalConfig.tipo === "medicamentos"
+              ? "Medicamento"
+              : modalConfig.tipo === "anamnesis"
+              ? "Anamnesis"
+              : "Anamnesis"
+          }
           tipo={modalConfig.tipo as any}
         />
 

@@ -8,9 +8,7 @@ class HistoriaClinicaSeguimiento extends BaseSeguimiento
     protected $fillable = [
         'id_historia_clinica',
         'detalle',
-        'tratamiento',
         'observaciones',
-        'precio',
         'fecha',
         'creater_id',
     ];
@@ -18,16 +16,11 @@ class HistoriaClinicaSeguimiento extends BaseSeguimiento
     {
         return $this->belongsTo(HistoriaClinica::class, $this->parentForeignKey, 'id');
     }
-    /**
-     * Campos personalizados tipo simple: [field, LABEL, type]
-     */
     public static function getCustomFields(): array
     {
         return [
             ['detalle', 'DETALLE', 'textarea'],
-            ['tratamiento', 'TRATAMIENTO', 'textarea'],
             ['observaciones', 'OBSERVACIONES', 'textarea'],
-            ['precio', 'PRECIO S/', 'number'],
             ['fecha', 'FECHA', 'date'],
         ];
     }
