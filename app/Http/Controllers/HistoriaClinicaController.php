@@ -12,6 +12,7 @@ class HistoriaClinicaController extends BaseController
     public function __construct()
     {
         $this->model = HistoriaClinica::class;
+        $this->view = 'historia_clinica';
         parent::__construct();
     }
 

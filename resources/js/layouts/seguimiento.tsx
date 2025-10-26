@@ -5,11 +5,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { FormFieldsRenderer } from "@/components/form-fields";
 import { PencilIcon, TrashIcon, PlusIcon } from "lucide-react";
 
-interface Registro { id?: number; [key: string]: any }
+interface Registro {
+  id?: number;
+  [key: string]: any;
+}
+
 interface SeguimientoSectionProps {
   view: string;
   formId: number;
-  showActions?: boolean;
+  action?: string;
   seguimientos?: Registro[];
   procedimientos?: Registro[];
   medicamentos?: Registro[];
@@ -30,7 +34,7 @@ const tiposMap = {
 export default function SeguimientoSection({
   view,
   formId,
-  showActions = true,
+  action = "view",
   seguimientos = [],
   procedimientos = [],
   medicamentos = [],
@@ -40,9 +44,16 @@ export default function SeguimientoSection({
   medicamentoFields = [],
   anamnesisFields = [],
 }: SeguimientoSectionProps) {
-
-  const [modal, setModal] = useState<{ open: boolean; registro: Registro | null; tipo: string | null }>({ open: false, registro: null, tipo: null });
-  const [confirm, setConfirm] = useState<{ open: boolean; registro: Registro | null; tipo: string }>({ open: false, registro: null, tipo: "" });
+  const [modal, setModal] = useState<{ open: boolean; registro: Registro | null; tipo: string | null }>({
+    open: false,
+    registro: null,
+    tipo: null,
+  });
+  const [confirm, setConfirm] = useState<{ open: boolean; registro: Registro | null; tipo: string }>({
+    open: false,
+    registro: null,
+    tipo: "",
+  });
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -77,16 +88,25 @@ export default function SeguimientoSection({
 
   const currentFieldArray = useMemo(() => {
     switch (modal.tipo) {
-      case "procedimientos": return procedimientoFieldsArr;
-      case "medicamentos": return medicamentoFieldsArr;
-      case "anamnesis": return anamnesisFieldsArr;
-      default: return modalFieldsArr;
+      case "procedimientos":
+        return procedimientoFieldsArr;
+      case "medicamentos":
+        return medicamentoFieldsArr;
+      case "anamnesis":
+        return anamnesisFieldsArr;
+      default:
+        return modalFieldsArr;
     }
   }, [modal.tipo, procedimientoFieldsArr, medicamentoFieldsArr, anamnesisFieldsArr, modalFieldsArr]);
 
   const currentFormFieldsObj = useMemo(() => {
     const obj: Record<string, any> = {};
-    currentFieldArray.forEach((f) => { if (Array.isArray(f) && f[0]) obj[f[0]] = { form: { key: f[0], label: f[1], type: f[2], options: f[3], placeholder: "", width: f[4] } }; });
+    currentFieldArray.forEach((f) => {
+      if (Array.isArray(f) && f[0])
+        obj[f[0]] = {
+          form: { key: f[0], label: f[1], type: f[2], options: f[3], placeholder: "", width: 1 },
+        };
+    });
     return obj;
   }, [currentFieldArray]);
 
@@ -94,62 +114,56 @@ export default function SeguimientoSection({
     if (!modal.open) return;
     setErrors({});
     const base: Record<string, any> = {};
-    currentFieldArray.forEach((f) => { if (Array.isArray(f) && f[0]) base[f[0]] = modal.registro?.[f[0]] ?? ""; });
+    currentFieldArray.forEach((f) => {
+      if (Array.isArray(f) && f[0]) base[f[0]] = modal.registro?.[f[0]] ?? "";
+    });
     setFormData(base);
   }, [modal.open, modal.registro, currentFieldArray]);
 
-  // === ID priorizando las tablas intermedias ===
   const getRegistroId = (registro: Registro, tipo: string) => {
-  // solo quitar 's' si no es 'anamnesis'
-  const singular = tipo === "anamnesis" ? tipo : tipo.replace(/s$/, "");
-
-  const posibles = [
-    registro[`id_historia_clinica_${singular}`], // preferido
-    registro[`id_${singular}`],
-    registro.id,
-  ];
-
-  return posibles.find((v) => v !== undefined && v !== null);
-};
+    const singular = tipo === "anamnesis" ? tipo : tipo.replace(/s$/, "");
+    const posibles = [
+      registro[`id_historia_clinica_${singular}`],
+      registro[`id_${singular}`],
+      registro.id,
+    ];
+    return posibles.find((v) => v !== undefined && v !== null);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!modal.tipo) return;
+    e.preventDefault();
+    if (!modal.tipo) return;
+    const tipoKey = modal.tipo === "anamnesis" ? "anamnesis" : modal.tipo.replace(/s$/, "");
+    const routeName = `${view}.${tiposMap[tipoKey] ?? "anamnesis"}`;
+    const registroId = modal.registro ? getRegistroId(modal.registro, modal.tipo) : null;
+    const url = modal.registro
+      ? route(`${routeName}.update`, { [tipoKey]: registroId })
+      : route(`${routeName}.store`);
+    const dataPayload = { ...formData, id_historia_clinica: formId };
+    router[modal.registro ? "put" : "post"](url, {
+      data: dataPayload,
+      onError: setErrors,
+      onSuccess: () => setModal({ open: false, registro: null, tipo: null }),
+    });
+  };
 
-  const tipoKey = modal.tipo === "anamnesis" ? "anamnesis" : modal.tipo.replace(/s$/, "");
-  const routeName = `${view}.${tiposMap[tipoKey] ?? "anamnesis"}`;
-  const registroId = modal.registro ? getRegistroId(modal.registro, modal.tipo) : null;
-  const url = modal.registro
-    ? route(`${routeName}.update`, { [tipoKey]: registroId })
-    : route(`${routeName}.store`);
+  const handleDelete = () => {
+    if (!confirm.registro) return;
+    const tipoKey = confirm.tipo === "anamnesis" ? "anamnesis" : confirm.tipo.replace(/s$/, "");
+    const routeName = `${view}.${tiposMap[tipoKey] ?? "anamnesis"}`;
+    const registroId = getRegistroId(confirm.registro, confirm.tipo);
+    if (!registroId) return;
+    const delUrl = route(`${routeName}.destroy`, { [tipoKey]: registroId });
+    router.delete(delUrl, {
+      onSuccess: () => setConfirm({ open: false, registro: null, tipo: "" }),
+    });
+  };
 
-  const dataPayload = { ...formData, id_historia_clinica: formId };
-
-  router[modal.registro ? "put" : "post"](url, {
-    data: dataPayload,
-    onError: setErrors,
-    onSuccess: () => setModal({ open: false, registro: null, tipo: null }),
-  });
-};
-
-const handleDelete = () => {
-  if (!confirm.registro) return;
-
-  const tipoKey = confirm.tipo === "anamnesis" ? "anamnesis" : confirm.tipo.replace(/s$/, "");
-  const routeName = `${view}.${tiposMap[tipoKey] ?? "anamnesis"}`;
-  const registroId = getRegistroId(confirm.registro, confirm.tipo);
-  if (!registroId) return;
-
-  const delUrl = route(`${routeName}.destroy`, { [tipoKey]: registroId });
-
-  router.delete(delUrl, {
-    onSuccess: () => setConfirm({ open: false, registro: null, tipo: "" }),
-  });
-};
+  const canEdit = action === "update";
 
   return (
     <div className="flex flex-col gap-4 mt-0">
-      {showActions && (
+      {canEdit && (
         <div className="flex flex-wrap gap-2">
           {Object.entries({
             anamnesis: "Anamnesis",
@@ -170,105 +184,103 @@ const handleDelete = () => {
       )}
 
       {todosRegistros.map((r) => {
-  const tipoLower = tiposMap[r.tipo.toLowerCase()] || "anamnesis";
-  const recordId = getRegistroId(r, tipoLower);
-  return (
-    <div
-      key={`${r.tipo}-${recordId}`}
-      className="p-3 rounded-lg border bg-gray-50 dark:bg-gray-900 flex justify-between items-start"
-    >
-      <div className="flex-1">
-        <p className="font-semibold text-gray-800 dark:text-white">
-          {r.tipo} — {r.fecha}
-        </p>
-        {Array.isArray(r.fields) &&
-          r.fields
-            .filter((f: any[]) => Array.isArray(f) && f[0] !== "fecha")
-            .map((f: any[], i: number) => {
-              const key = f[0];
-              const label = f[1];
-              let value = r[key] ?? "-";
-
-              // si es id_medicamento → nombre_medicamento
-              if (/^id_/.test(key)) {
-                const nombreKey = key.replace(/^id_/, "nombre_");
-                if (r[nombreKey] !== undefined && r[nombreKey] !== null) {
-                  value = r[nombreKey];
-                }
-              }
-
-              return (
-                <p key={i} className="text-sm text-gray-700 dark:text-gray-300">
-                  {label}: {value}
-                </p>
-              );
-            })}
-      </div>
-
-      {showActions && (
-        <div className="flex flex-col gap-1 ml-2">
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={() => setModal({ open: true, registro: r, tipo: tipoLower })}
+        const tipoLower = tiposMap[r.tipo.toLowerCase()] || "anamnesis";
+        const recordId = getRegistroId(r, tipoLower);
+        return (
+          <div
+            key={`${r.tipo}-${recordId}`}
+            className="p-3 rounded-lg border bg-gray-50 dark:bg-gray-900 flex justify-between items-start"
           >
-            <PencilIcon className="w-4 h-4" />
-          </Button>
-          <Button
-            size="icon"
-            variant="destructive"
-            onClick={() => setConfirm({ open: true, registro: r, tipo: tipoLower })}
-          >
-            <TrashIcon className="w-4 h-4" />
-          </Button>
-        </div>
-      )}
-    </div>
-  );
-})}
+            <div className="flex-1">
+              <p className="font-semibold text-gray-800 dark:text-white">
+                {r.tipo} — {r.fecha}
+              </p>
+              {Array.isArray(r.fields) &&
+                r.fields
+                  .filter((f: any[]) => Array.isArray(f) && f[0] !== "fecha")
+                  .map((f: any[], i: number) => {
+                    const key = f[0];
+                    const label = f[1];
+                    let value = r[key] ?? "-";
+                    if (/^id_/.test(key)) {
+                      const nombreKey = key.replace(/^id_/, "nombre_");
+                      if (r[nombreKey] !== undefined && r[nombreKey] !== null) {
+                        value = r[nombreKey];
+                      }
+                    }
+                    return (
+                      <p key={i} className="text-sm text-gray-700 dark:text-gray-300">
+                        {label}: {value}
+                      </p>
+                    );
+                  })}
+            </div>
 
+            {canEdit && (
+              <div className="flex flex-col gap-1 ml-2">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  onClick={() => setModal({ open: true, registro: r, tipo: tipoLower })}
+                >
+                  <PencilIcon className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="destructive"
+                  onClick={() => setConfirm({ open: true, registro: r, tipo: tipoLower })}
+                >
+                  <TrashIcon className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        );
+      })}
 
       {/* Modal Form */}
       {modal.open && (
         <Dialog open={modal.open} onOpenChange={() => setModal({ open: false, registro: null, tipo: null })}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="max-w-lg w-full">
             <DialogHeader>
               <DialogTitle>
-                {modal.registro ? `Editar ${modal.tipo?.replace(/s$/, "")}` : `Nuevo ${modal.tipo?.replace(/s$/, "")}`}
+                {modal.registro
+                  ? `Editar ${modal.tipo?.replace(/s$/, "")}`
+                  : `Nuevo ${modal.tipo?.replace(/s$/, "")}`}
               </DialogTitle>
             </DialogHeader>
+
             <form onSubmit={handleSubmit} className="space-y-3 w-full">
-  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-    {Object.entries(currentFormFieldsObj).map(([key, field]: any) => (
-      <div key={key} className="min-w-0">
-        <FormFieldsRenderer
-          formFields={{ [key]: field }}
-          data={formData}
-          setData={(k, v) => setFormData((p) => ({ ...p, [k]: v }))}
-          errors={errors}
-          readonly={false}
-          configReadonly={false}
-          hiddenFields={[]}
-          isMobile={false}
-          inputRefs={inputRefs}
-          view={view}
-        />
-      </div>
-    ))}
-  </div>
+              <div className="flex flex-col gap-3">
+                {Object.entries(currentFormFieldsObj).map(([key, field]: any) => (
+                  <div key={key} className="w-full">
+                    <FormFieldsRenderer
+                      formFields={{ [key]: field }}
+                      data={formData}
+                      setData={(k, v) => setFormData((p) => ({ ...p, [k]: v }))}
+                      errors={errors}
+                      readonly={false}
+                      configReadonly={false}
+                      hiddenFields={[]}
+                      isMobile={true}
+                      inputRefs={inputRefs}
+                      view={view}
+                    />
+                  </div>
+                ))}
+              </div>
 
-  <div className="flex justify-end gap-2 pt-3">
-    <Button
-      type="button"
-      variant="outline"
-      onClick={() => setModal({ open: false, registro: null, tipo: null })}
-    >
-      Cancelar
-    </Button>
-    <Button type="submit">Guardar</Button>
-  </div>
-</form>
-
+              <div className="flex justify-end gap-2 pt-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setModal({ open: false, registro: null, tipo: null })}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit">Guardar</Button>
+              </div>
+            </form>
           </DialogContent>
         </Dialog>
       )}
@@ -276,7 +288,7 @@ const handleDelete = () => {
       {/* Confirm Delete */}
       {confirm.open && (
         <Dialog open={confirm.open} onOpenChange={() => setConfirm({ open: false, registro: null, tipo: "" })}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="max-w-md w-full">
             <DialogHeader>
               <DialogTitle>¿Eliminar {confirm.registro?.tipo ?? "registro"}?</DialogTitle>
             </DialogHeader>

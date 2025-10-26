@@ -84,10 +84,28 @@ abstract class BaseController extends Controller
     /* ===========================
        CRUD
        =========================== */
-    public function store(Request $request)
-    {
-        return $this->saveRecord($request, $this->getModelInstance(), 'create');
+   public function store(Request $request)
+{
+    $data = $this->validateData($request);
+    $this->normalizeData($data);
+
+    $model = $this->getModelInstance();
+    $model->fill($data);
+    $model->creater_id = auth()?->id();
+    $model->save();
+
+    $this->processFileUploads($request, $model, $data);
+
+    if ($this->view === 'historia_clinica') {
+        $id = $model->getKey();
+        return redirect("/{$this->view}/form/update/{$id}")
+            ->with('success', 'Registro creado exitosamente.');
     }
+
+    return $this->redirectAfterAction('create');
+}
+
+
 
     public function update(Request $request, $id)
     {
@@ -98,6 +116,17 @@ abstract class BaseController extends Controller
     public function destroy($id)
     {
         $model = $this->model::findOrFail($id);
+
+        // Si es historia_clinica, eliminar dependencias
+        if ($this->view === 'historia_clinica') {
+            $idHistoria = $model->getKey();
+
+            \App\Models\HistoriaClinicaSeguimiento::where('id_historia_clinica', $idHistoria)->delete();
+            \App\Models\HistoriaClinicaAnamnesis::where('id_historia_clinica', $idHistoria)->delete();
+            \App\Models\HistoriaClinicaProcedimiento::where('id_historia_clinica', $idHistoria)->delete();
+            \App\Models\HistoriaClinicaMedicamento::where('id_historia_clinica', $idHistoria)->delete();
+        }
+
         $this->deleteFileIfExists($model, 'imagen');
         $model->delete();
 
