@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Intervention\Image\Laravel\Facades\Image;
 
 abstract class BaseController extends Controller
 {
@@ -18,6 +19,7 @@ abstract class BaseController extends Controller
     public function __construct()
     {
         $this->listaController = app(ListaController::class);
+
         if (!empty($this->model)) {
             $instance = $this->getModelInstance();
             $this->view = $instance->getTable();
@@ -25,38 +27,43 @@ abstract class BaseController extends Controller
         }
     }
 
+    /* ===========================
+       INDEX
+       =========================== */
     public function index(Request $request)
     {
+        $model = $this->getModelInstance();
         return Inertia::render("{$this->view}/index", [
             'success'       => session('success'),
-            'campos'        => $this->model::getColumns(),
+            'campos'        => $model::getColumns(),
             'custom_title'  => $this->custom_title,
             'title'         => $this->title,
             'view'          => $this->view,
             'width_index'   => $this->width_index,
-            'toolbarfields' => $this->model::getToolbarFields($this->listaController),
-            'footerFields'  => $this->model::getFooterFields(),
+            'toolbarfields' => $model::getToolbarFields($this->listaController),
+            'footerFields'  => $model::getFooterFields(),
             'queryparams'   => $this->getValidatedQueryParams($request),
         ]);
     }
 
+    /* ===========================
+       FORM ACTION HANDLER
+       =========================== */
     public function handleAction(string $action, ?int $id = null)
     {
         $isCreate = $action === 'create';
         $record = $isCreate ? $this->getModelInstance() : $this->model::find($id);
 
         if (!$isCreate && !$record) {
-            return redirect()->route("{$this->view}.index")->with('error', 'Registro no encontrado');
+            return back()->with('error', 'Registro no encontrado');
         }
 
         $formFields = $this->model::getFormFields($this->listaController, $record, $action);
-        $formData   = $isCreate
-            ? collect($formFields)->mapWithKeys(fn ($f, $k) => [$k => $f['value'] ?? null])->toArray()
+        $formData = $isCreate
+            ? collect($formFields)->mapWithKeys(fn($f, $k) => [$k => $f['value'] ?? null])->toArray()
             : $record->toArray();
 
-        $extraData = method_exists($this, 'extraFormData') 
-            ? $this->extraFormData($record, $action) 
-            : [];
+        $extraData = method_exists($this, 'extraFormData') ? $this->extraFormData($record, $action) : [];
 
         return Inertia::render("{$this->view}/form", array_merge([
             'form_data'     => $formData,
@@ -74,82 +81,104 @@ abstract class BaseController extends Controller
         ], $extraData));
     }
 
-    protected function extraFormData($record, string $action): array
-    {
-        return [];
-    }
-
+    /* ===========================
+       CRUD
+       =========================== */
     public function store(Request $request)
     {
-        $data = $this->validateRequest($request);
-        $data = $this->normalizeDateFields($data);
-        $data = $this->normalizeMultiValueFields($data);
-
-        $model = $this->getModelInstance();
-        $this->handleFileUploads($request, $model, $data);
-
-        $model->fill($data);
-        $model->creater_id = auth()?->id();
-        $model->save();
-
-        return $this->redirectAfterAction('create');
+        return $this->saveRecord($request, $this->getModelInstance(), 'create');
     }
 
     public function update(Request $request, $id)
     {
         $model = $this->model::findOrFail($id);
-        $data = $this->validateRequest($request);
-        $data = $this->normalizeDateFields($data);
-        $data = $this->normalizeMultiValueFields($data);
-
-        $this->handleFileUploads($request, $model, $data);
-
-        $model->fill($data);
-        $model->updater_id = auth()?->id();
-        $model->save();
-
-        return $this->redirectAfterAction('update');
+        return $this->saveRecord($request, $model, 'update');
     }
 
     public function destroy($id)
     {
-        $this->model::findOrFail($id)->delete();
+        $model = $this->model::findOrFail($id);
+        $this->deleteFileIfExists($model, 'imagen');
+        $model->delete();
+
         return $this->redirectAfterAction('delete');
     }
 
-    protected function validateRequest(Request $request): array
+    /* ===========================
+       HELPERS
+       =========================== */
+    protected function saveRecord(Request $request, $model, string $action)
     {
-        return $request->validate($this->model::getValidationRules());
-    }
+        $data = $this->validateData($request);
+        $this->normalizeData($data);
+        $model->fill($data);
 
-    protected function getValidatedQueryParams(Request $request): array
-    {
-        return method_exists($this->model, 'getQueryParams')
-            ? $this->model::getQueryParams()
-            : [];
-    }
-
-    protected function redirectAfterAction(string $action, array $extraParams = []): \Illuminate\Http\RedirectResponse
-    {
-        if (method_exists($this->model, 'getQueryParams')) {
-            foreach ($this->model::getQueryParams() as $param) {
-                if (request()->has($param)) {
-                    $extraParams[$param] = request()->input($param);
-                }
-            }
+        if ($action === 'create') {
+            $model->creater_id = auth()?->id();
+        } else {
+            $model->updater_id = auth()?->id();
         }
+
+        $model->save();
+        $this->processFileUploads($request, $model, $data);
+
+        return $this->redirectAfterAction($action);
+    }
+
+    protected function deleteFileIfExists($model, string $field)
+    {
+        if (!empty($model->{$field})) {
+            $filePath = public_path("images/{$this->view}/{$model->{$field}}");
+            if (is_file($filePath)) unlink($filePath);
+        }
+    }
+
+    protected function redirectAfterAction(string $action): \Illuminate\Http\RedirectResponse
+    {
         return redirect()
-            ->route("{$this->view}.index", $extraParams)
+            ->route("{$this->view}.index")
             ->with('success', $this->getSuccessMessage($action));
     }
 
-    protected function getSuccessMessage(string $action): string
+    protected function validateData(Request $request): array
     {
-        return [
-            'create' => 'Registro creado exitosamente.',
-            'update' => 'Registro actualizado exitosamente.',
-            'delete' => 'Registro eliminado exitosamente.',
-        ][$action] ?? 'Acción realizada exitosamente.';
+        $rules = $this->model::getValidationRules();
+        $fileField = 'imagen';
+        if ($request->hasFile($fileField)) {
+            $rules[$fileField] = 'file|image|mimes:jpeg,png,jpg,gif|max:2048';
+        }
+        return $request->validate($rules);
+    }
+
+    protected function normalizeData(array &$data): void
+    {
+        foreach ($data as $key => $value) {
+            if (is_string($value) && preg_match('/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/', $value)) {
+                try {
+                    $data[$key] = Carbon::parse($value)->format('Y-m-d H:i:s');
+                } catch (\Throwable) {}
+            } elseif (is_array($value)) {
+                $data[$key] = json_encode($value);
+            }
+        }
+    }
+
+    protected function processFileUploads(Request $request, $model, array &$data): void
+    {
+        foreach ($request->files as $field => $file) {
+            if (!$file || !$file->isValid()) continue;
+
+            $filename = $model->getKey() . '.jpg';
+            $path = public_path("images/{$this->view}");
+            if (!is_dir($path)) mkdir($path, 0755, true);
+
+            $image = Image::read($file);
+            if ($image->width() > 1024) $image->scale(1024);
+
+            $image->toJpeg(90)->save("{$path}/{$filename}");
+            $model->{$field} = $filename;
+            $model->save();
+        }
     }
 
     protected function getModelInstance()
@@ -159,52 +188,25 @@ abstract class BaseController extends Controller
 
     protected function getModelTitle($modelInstance): string
     {
-        return property_exists($this->model, 'title') 
-            ? $this->model::$title 
+        return property_exists($this->model, 'title')
+            ? $this->model::$title
             : ($this->title ?: class_basename($modelInstance));
     }
 
-    protected function handleFileUploads(Request $request, $model, array &$data): void
+    protected function getValidatedQueryParams(Request $request): array
     {
-        foreach ($this->model::getValidationRules() as $field => $rules) {
-            if ($request->hasFile($field) && $request->file($field)->isValid()) {
-                $file = $request->file($field);
-                $filename = $field . '_' . time() . '.' . $file->getClientOriginalExtension();
-                $destinationPath = public_path("images/{$this->view}");
-                if (!is_dir($destinationPath)) {
-                    mkdir($destinationPath, 0755, true);
-                }
-                $file->move($destinationPath, $filename);
-                $data[$field] = $filename;
-            }
-        }
+        return method_exists($this->model, 'getQueryParams')
+            ? $this->model::getQueryParams()
+            : [];
     }
 
-    protected function normalizeDateFields(array $data): array
+    protected function getSuccessMessage(string $action): string
     {
-        foreach ($data as $key => $value) {
-            if (is_string($value) && preg_match('/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $value)) {
-                try {
-                    $date = Carbon::parse($value);
-                    $data[$key] = $date->format('Y-m-d H:i:s');
-                } catch (\Exception $e) {
-                    // Log opcional
-                }
-            }
-        }
-        return $data;
-    }
-
-    /**
-     * ⚡ Normaliza cualquier campo multi-array para guardarlo en la BD como JSON
-     */
-    protected function normalizeMultiValueFields(array $data): array
-    {
-        foreach ($data as $key => $value) {
-            if (is_array($value)) {
-                $data[$key] = json_encode($value);
-            }
-        }
-        return $data;
+        return match ($action) {
+            'create' => 'Registro creado exitosamente.',
+            'update' => 'Registro actualizado exitosamente.',
+            'delete' => 'Registro eliminado exitosamente.',
+            default  => 'Acción realizada exitosamente.',
+        };
     }
 }

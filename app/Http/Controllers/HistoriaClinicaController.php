@@ -16,21 +16,23 @@ class HistoriaClinicaController extends BaseController
     }
 
     protected function extraFormData($record, string $action): array
-    {
-        return [
-            // Campos modales
-            'modalFields'         => HistoriaClinicaSeguimiento::getModalFields(),
-            'procedimientoFields' => HistoriaClinicaProcedimiento::getModalFields(),
-            'medicamentoFields'   => HistoriaClinicaMedicamento::getModalFields(),
-            'anamnesisFields'     => HistoriaClinicaAnamnesis::getModalFields(),
+{
+    return [
+        // ⚡️ Generar los campos modales igual que formFields
+        'modalFields' => HistoriaClinicaSeguimiento::getModalFields($this->listaController, $record, $action),
+        'procedimientoFields' => HistoriaClinicaProcedimiento::getModalFields($this->listaController, $record, $action),
+        'medicamentoFields'   => HistoriaClinicaMedicamento::getModalFields($this->listaController, $record, $action),
+        'anamnesisFields'     => HistoriaClinicaAnamnesis::getModalFields($this->listaController, $record, $action),
 
-            // Datos relacionados
-            'seguimientos'  => $record ? $record->historia_seguimientos()->orderBy('created_at', 'asc')->get() : [],
-            'procedimientos'=> $record ? $record->historia_procedimientos()->orderBy('created_at', 'asc')->get() : [],
-            'medicamentos'  => $record ? $record->historia_medicamentos()->orderBy('created_at', 'asc')->get() : [],
-            'anamnesis'     => $record ? $record->historia_anamnesis()->orderBy('created_at', 'asc')->get() : [],
-        ];
-    }
+        // Datos relacionados
+        'seguimientos'  => $record ? $record->historia_seguimientos()->orderBy('created_at', 'asc')->get() : collect(),
+        'procedimientos'=> $record ? $record->historia_procedimientos()->orderBy('created_at', 'asc')->get() : collect(),
+        'medicamentos'  => $record ? $record->historia_medicamentos()->orderBy('created_at', 'asc')->get() : collect(),
+        'anamnesis'     => $record ? $record->historia_anamnesis()->orderBy('created_at', 'asc')->get() : collect(),
+    ];
+}
+
+
     public function generatePDF($id)
 {
     // Cargamos historia clínica con relaciones necesarias

@@ -10,18 +10,13 @@ class ModelRegistry
             'mascota'   => M\Mascota::class,
             'cita'   => M\Cita::class,
             'historia_clinica'   => M\HistoriaClinica::class,
+            'especie'   => M\Especie::class,
             'raza'   => M\Raza::class,
-            'vacuna'   => M\Vacuna::class,
+            'motivo_cita'   => M\MotivoCita::class,
+            'motivo_historia_clinica'   => M\MotivoHistoriaClinica::class,
             'medicamento'   => M\Medicamento::class,
             'procedimiento'   => M\Procedimiento::class,
         ];
-        if ($view === 'itemsimple') {
-            $allowedTipos = ['motivo_cita', 'especie', 'motivo_historia_clinica'];
-            if (!$tipo || !in_array($tipo, $allowedTipos)) {
-                throw new \InvalidArgumentException("Tipo 'itemsimple' no permitido o no especificado");
-            }
-            return M\ItemSimple::forTipo($tipo);
-        }
         if (!array_key_exists($view, $modelMap)) {
             throw new \InvalidArgumentException("Vista '$view' no soportada");
         }

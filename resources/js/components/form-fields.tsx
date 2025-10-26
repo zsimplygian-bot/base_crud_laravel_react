@@ -1,45 +1,158 @@
-import { useState, useRef } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Link } from "@inertiajs/react";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import InputError from "@/components/input-error";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { MultiSelect } from "@/components/ui/multi-select";
-import { Textarea } from "@/components/ui/textarea";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { Plus } from "lucide-react";
-import { useCreateButtonLink } from "@/hooks/use-create-button-link";
-
-// 👇 importamos el hook del ApiButton
-import { useFetchWithButton } from "@/hooks/use-fetch-with-button";
+import { Link } from "@inertiajs/react";
+import { Combobox } from "@/components/ui/combobox";
+import { DatePicker } from "@/components/ui/datepicker";
+import { TimePicker } from "@/components/ui/timepicker";
 
 type Props = {
-  formFields: any;
-  data: any;
+  formFields: Record<string, any>;
+  data: Record<string, any>;
   setData: (field: string, value: any) => void;
-  errors: any;
+  errors: Record<string, string>;
   readonly: boolean;
   configReadonly: boolean;
   hiddenFields: string[];
   isMobile: boolean;
   inputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>;
-  view: string;
-  apiConfig?: {
-    inputKey: string;
-    type: "text" | "file";
-    endpoint: string;
-    fields: Record<string, string>;
-    emptyValue?: any;
-  };
+  view?: string; // ← Subcarpeta opcional
 };
+
+// ---------- Wrapper ----------
+const FieldWrapper = ({ label, required, htmlFor, children }: any) =>
+  label ? (
+    <div className="group relative w-full">
+      <Label
+        htmlFor={htmlFor}
+        className="bg-background text-foreground absolute top-0 left-2 -translate-y-1/2 px-1 text-xs z-10 flex items-center gap-1"
+      >
+        {label}
+        {required && <span className="text-destructive text-xs">*</span>}
+      </Label>
+      {children}
+    </div>
+  ) : (
+    <>{children}</>
+  );
+
+// ---------- Inputs ----------
+const FieldInput = ({ id, type, value, disabled, setData, inputRefs, placeholder, maxlength, readonly }: any) => (
+  <Input
+    id={id}
+    type={type || "text"}
+    value={value || ""}
+    onChange={(e) => setData(id.replace("field-", ""), e.target.value)}
+    readOnly={readonly}
+    disabled={disabled}
+    maxLength={maxlength}
+    placeholder={placeholder || " "}
+    className="w-full"
+    ref={(el) => {
+      if (inputRefs?.current) inputRefs.current[id.replace("field-", "")] = el;
+    }}
+  />
+);
+
+const FieldTextarea = ({ id, value, disabled, setData, placeholder, rows = 3 }: any) => (
+  <Textarea
+    id={id}
+    value={value || ""}
+    onChange={(e) => setData(id.replace("field-", ""), e.target.value)}
+    rows={rows}
+    disabled={disabled}
+    placeholder={placeholder || " "}
+    className="w-full"
+  />
+);
+
+const FieldButton = ({ field }: any) => (
+  <Link
+    href={field.url || "#"}
+    className={`inline-block px-4 py-2 rounded text-white text-center ${
+      field.color === "blue" ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-600 hover:bg-gray-700"
+    }`}
+    target="_blank"
+    rel="noopener noreferrer"
+  >
+    {field.label}
+  </Link>
+);
+
+const FieldCombobox = ({ value, field, disabled, setData }: any) => {
+  const options = useMemo(
+    () =>
+      Array.isArray(field.options?.data)
+        ? field.options.data
+        : Array.isArray(field.options)
+        ? field.options
+        : [],
+    [field.options]
+  );
+
+  const createUrl = useMemo(() => {
+    if (!field.key) return "#";
+    const key = field.key.replace(/^id_/, "");
+    return `/${key}/form/create`;
+  }, [field.key]);
+
+  return (
+    <Combobox
+      value={value?.toString() || ""}
+      fieldKey={field.key}
+      options={options}
+      disabled={disabled}
+      placeholder={field.placeholder}
+      onChange={(val) => setData(field.key, val)}
+      createUrl={createUrl}
+    />
+  );
+};
+
+// ---------- File ----------
+const FieldFile = ({ id, value, setData, disabled, view }: any) => {
+  const [preview, setPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fieldName = id.replace("field-", "");
+
+    if (fieldName.toLowerCase().includes("imagen") && typeof value === "string") {
+      const imageUrl = value.startsWith("http")
+        ? value
+        : view
+        ? `${window.location.origin}/images/${view}/${value}`
+        : `${window.location.origin}/images/${value}`;
+      setPreview(imageUrl);
+    }
+  }, [value, id, view]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setData(id.replace("field-", ""), file);
+    const reader = new FileReader();
+    reader.onload = () => setPreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Input type="file" id={id} onChange={handleChange} disabled={disabled} accept="image/*" />
+      {preview && value && (
+  <img
+    src={preview}
+    alt="Vista previa"
+    className="h-24 w-24 object-cover rounded-md border border-gray-400"
+  />
+)}
+
+    </div>
+  );
+};
+
+// ---------- Render Principal ----------
 export const FormFieldsRenderer: React.FC<Props> = ({
   formFields,
   data,
@@ -51,283 +164,62 @@ export const FormFieldsRenderer: React.FC<Props> = ({
   isMobile,
   inputRefs,
   view,
-  apiConfig,
 }) => {
   if (!formFields || typeof formFields !== "object") return null;
-  const { shouldRenderCreateButton, getCreateLink } = useCreateButtonLink();
-  const [searchTerms, setSearchTerms] = useState<Record<string, string>>({});
-  const [firstKeyPressed, setFirstKeyPressed] = useState<string | null>(null);
-  const searchInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
-  // 👇 inicializamos el ApiButton desde el hook
-  const ApiButton = useFetchWithButton({ data, setData, apiConfig, view });
-  const handleValueChange = (fieldKey: string, value: string) => {
-    setData(fieldKey, value);
-    setSearchTerms((prev) => ({ ...prev, [fieldKey]: "" }));
-  };
-  const handleOpenChange = (
-    open: boolean,
-    key: string | null,
-    setKey: (key: string | null) => void
-  ) => {
-    if (!open) setKey(null);
-  };
-  const clearSearch = () => setSearchTerms({});
-  const handleKeyDown = (
-    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
-    fieldKey: string,
-    value: string
-  ) => {
-    if (fieldKey === "correo") {
-      if (e.key === "@" && value.includes("@")) e.preventDefault();
-      if ([" ", "'", "%"].includes(e.key)) e.preventDefault();
-    } else if (fieldKey === "direccion") {
-      if (["'", "%"].includes(e.key)) e.preventDefault();
-    } else if (fieldKey === "ruc") {
-      if ([".", "+", "-"].includes(e.key)) e.preventDefault();
-    }
-  };
+
   return (
     <>
-      {Object.entries(formFields).map(([fieldKey, field]: any) => {
-        const f = field.form ?? field;
-        if (f.hidden || hiddenFields.includes(fieldKey)) return null;
-        const isReadonly = f.readonly || readonly || configReadonly;
-        const disabled = f.disabled || isReadonly;
-        const value = data[fieldKey] ?? f.value ?? f.default ?? "";
-        const width = typeof f.width === "number" ? `${f.width * 120}px` : "200px";
-        const style = { width: isMobile ? "100%" : width };
-        const searchTerm = searchTerms[fieldKey] || "";
-        const inputProps: any = {
-          readOnly: isReadonly,
-          disabled,
-          required: f.required,
-          maxLength: f.maxlength,
-          pattern: f.pattern,
-          ...(f.type === "number" && f.step && { step: f.step }),
-          onKeyDown: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-            handleKeyDown(e, fieldKey, value),
+      {Object.entries(formFields).map(([key, rawField]) => {
+        const field = rawField.form ?? rawField;
+        if (field.hidden || hiddenFields.includes(key)) return null;
+
+        const id = `field-${key}`;
+        const disabled = field.disabled || field.readonly || readonly || configReadonly;
+        const value = data[key] ?? field.value ?? field.default ?? "";
+        const width =
+          isMobile ? "100%" : typeof field.width === "number" ? `${field.width * 120}px` : "200px";
+
+        const fieldProps = { id, value, disabled, setData, field: { ...field, key } };
+
+        const renderField = () => {
+          switch (field.type) {
+            case "button":
+              return <FieldButton field={field} />;
+            case "textarea":
+              return <FieldTextarea {...fieldProps} placeholder={field.placeholder} rows={field.rows} />;
+            case "select":
+              return <FieldCombobox {...fieldProps} />;
+            case "date":
+              return <DatePicker {...fieldProps} onChange={(v: string) => setData(key, v)} />;
+            case "time":
+              return <TimePicker {...fieldProps} onChange={(v: string) => setData(key, v)} />;
+            case "file":
+              return <FieldFile {...fieldProps} view={view} />;
+            default:
+              return (
+                <FieldInput
+                  {...fieldProps}
+                  type={field.type}
+                  placeholder={field.placeholder}
+                  maxlength={field.maxlength}
+                  readonly={field.readonly}
+                  inputRefs={inputRefs}
+                />
+              );
+          }
         };
-        if (f.placeholder) {
-          inputProps.placeholder = f.placeholder;
-        }
-        const opcionesSelect = Array.isArray(f.options?.data)
-          ? f.options.data
-          : Array.isArray(f.options)
-          ? f.options
-          : [];
-        if (f.type === "button") {
-          return (
-            <div key={fieldKey} className="flex flex-col space-y-1.5" style={style}>
-              <Label>{f.label}</Label>
-              <Link
-                href={f.url || "#"}
-                className={`inline-block px-4 py-2 rounded text-white text-center ${
-                  f.color === "blue"
-                    ? "bg-blue-600 hover:bg-blue-700"
-                    : "bg-gray-600 hover:bg-gray-700"
-                }`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {f.label}
-              </Link>
-            </div>
-          );
-        }
+
         return (
-          <div key={fieldKey} className="flex flex-col space-y-1.5" style={style}>
-            <Label htmlFor={fieldKey}>{f.label}</Label>
-            {f.type === "multiselect" ? (
-              <div className="flex items-center">
-                <MultiSelect
-                  options={opcionesSelect}
-                  value={value}
-                  onChange={(val) => setData(fieldKey, val)}
-                  disabled={disabled}
-                  className="w-full"
-                />
-                {ApiButton && <ApiButton fieldKey={fieldKey} />}
-              </div>
-            ) : f.type === "select" ? (
-              <div className="flex items-center">
-                <Select
-                  name={fieldKey}
-                  value={value?.toString()}
-                  onValueChange={(v) => handleValueChange(fieldKey, v)}
-                  onOpenChange={(open) => {
-                    handleOpenChange(open, firstKeyPressed, setFirstKeyPressed);
-                    if (!open) clearSearch();
-                  }}
-                  required={f.required}
-                  disabled={disabled}
-                >
-                  <SelectTrigger
-                    id={fieldKey}
-                    className="w-full truncate overflow-hidden whitespace-nowrap"
-                    onKeyDownCapture={(e) => {
-                      if (
-                        !searchTerm &&
-                        e.key.length === 1 &&
-                        !e.ctrlKey &&
-                        !e.metaKey &&
-                        !e.altKey
-                      ) {
-                        setFirstKeyPressed(e.key);
-                        setTimeout(() => {
-                          searchInputRefs.current[fieldKey]?.focus();
-                        }, 150);
-                      }
-                    }}
-                  >
-                    <SelectValue placeholder="-" />
-                  </SelectTrigger>
-                  <SelectContent
-  onMouseDown={(e) => e.preventDefault()} // evita perder foco
-  onClick={(e) => e.stopPropagation()} // evita que Radix cierre el menú
->
-  <div className="p-2 flex items-center gap-2">
-    <div className="relative w-full">
-      <input
-        ref={(el) => (searchInputRefs.current[fieldKey] = el)}
-        type="text"
-        className={`w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none ${
-          shouldRenderCreateButton(fieldKey) ? "pr-10" : "pr-6"
-        }`}
-        placeholder="Buscar..."
-        value={searchTerm}
-        onChange={(e) =>
-          setSearchTerms((prev) => ({
-            ...prev,
-            [fieldKey]: e.target.value,
-          }))
-        }
-        onKeyDown={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()} // <- evita que se cierre al hacer clic
-        autoFocus
-      />
-      {searchTerm && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSearchTerms((prev) => ({ ...prev, [fieldKey]: "" }));
-            searchInputRefs.current[fieldKey]?.focus();
-          }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-black"
-          tabIndex={-1}
-        >
-          &times;
-        </button>
-      )}
-    </div>
-
-    {shouldRenderCreateButton(fieldKey) && (
-      <Link
-        href={getCreateLink(fieldKey)}
-        onMouseDown={(e) => e.stopPropagation()} // <- mantiene el menú abierto
-        className="flex-shrink-0 p-1 rounded bg-blue-500 hover:bg-blue-600 text-white"
-        title={`Agregar nuevo ${f.label}`}
-      >
-        <Plus size={16} />
-      </Link>
-    )}
-  </div>
-
-  {Array.isArray(opcionesSelect) && opcionesSelect.length > 0 ? (
-    opcionesSelect
-      .filter((option: any) =>
-        option.label?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      .map((option: any) => (
-        <SelectItem
-          key={option.id}
-          value={option.id?.toString()}
-          onMouseDown={(e) => e.preventDefault()}
-        >
-          {option.label}
-        </SelectItem>
-      ))
-  ) : (
-    <div className="px-3 py-2 text-sm text-muted-foreground">
-      {!f.options?.data?.length
-        ? f.options?.message
-          ? `⚠️ ${f.options.message}`
-          : "No hay opciones disponibles"
-        : null}
-    </div>
-  )}
-</SelectContent>
-
-                </Select>
-                {ApiButton && <ApiButton fieldKey={fieldKey} />}
-              </div>
-            ) : f.type === "textarea" ? (
-              <div className="flex items-center">
-                <Textarea
-                  id={fieldKey}
-                  value={value}
-                  onChange={(e) => setData(fieldKey, e.target.value)}
-                  disabled={disabled}
-                  className="w-full"
-                  rows={f.rows || 3}
-                  onKeyDown={(e) => handleKeyDown(e, fieldKey, value)}
-                />
-                {ApiButton && <ApiButton fieldKey={fieldKey} />}
-              </div>
-            ) : f.type === "date" ? (
-  <div className="flex items-center">
-    <Popover>
-      <PopoverTrigger asChild>
-        <Input
-          id={fieldKey}
-          type="text"
-          value={
-            value
-              ? format(
-                  new Date(value + "T00:00:00"), // evita el offset UTC
-                  "dd/MM/yyyy"
-                )
-              : ""
-          }
-          readOnly
-          disabled={disabled}
-          className="w-full cursor-pointer"
-        />
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
-        <Calendar
-          mode="single"
-          selected={value ? new Date(value + "T00:00:00") : undefined}
-          onSelect={(date) =>
-            setData(fieldKey, date ? format(date, "yyyy-MM-dd") : "")
-          }
-          disabled={disabled}
-        />
-      </PopoverContent>
-    </Popover>
-    {ApiButton && <ApiButton fieldKey={fieldKey} />}
-  </div>
-)
- : (
-              <div className="flex items-center">
-                <Input
-                  id={fieldKey}
-                  type={f.type || "text"}
-                  value={value}
-                  onChange={(e) => setData(fieldKey, e.target.value)}
-                  className="w-full"
-                  {...inputProps}
-                  ref={(el) => {
-                    inputRefs?.current && (inputRefs.current[fieldKey] = el);
-                  }}
-                />
-                {ApiButton && <ApiButton fieldKey={fieldKey} />}
-              </div>
-            )}
-            <InputError message={errors[fieldKey]} />
+          <div key={key} className="flex flex-col space-y-1.5" style={{ width }}>
+            <FieldWrapper label={field.label} required={field.required} htmlFor={id}>
+              {renderField()}
+            </FieldWrapper>
+            <InputError message={errors[key]} />
           </div>
         );
       })}
     </>
   );
 };
+
+export default FormFieldsRenderer;

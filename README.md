@@ -1,2 +1,0 @@
-﻿# base_crud_laravel_react
-

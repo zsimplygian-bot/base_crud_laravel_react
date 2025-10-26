@@ -16,13 +16,11 @@ import {
   FileTextIcon,
 } from "lucide-react";
 import { Link } from "@inertiajs/react";
-
 interface ActionButtonsProps {
   rowId: string;
   view: string;
   queryString: string;
 }
-
 export const ActionButtons: React.FC<ActionButtonsProps> = ({
   rowId,
   view,
@@ -30,7 +28,6 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
 }) => {
   const isHonora = view === "detalle_liquidacion";
   const basePath = isHonora ? `/liquidacion/form` : `/${view}/form`;
-
   const handleCopyId = async () => {
     try {
       await navigator.clipboard.writeText(rowId);
@@ -38,7 +35,6 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
       console.error("Error copying ID:", error);
     }
   };
-
   const actions = [
     {
       label: "Detalle",
@@ -105,7 +101,6 @@ export const ActionButtons: React.FC<ActionButtonsProps> = ({
       )}
     </DropdownMenuItem>
   );
-
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

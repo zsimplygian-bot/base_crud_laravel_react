@@ -7,53 +7,49 @@ use Inertia\Inertia;
 
 abstract class BaseSeguimientoController extends Controller
 {
-    /**
-     * Modelo padre (ej: HistoriaClinica)
-     */
     protected string $parentModel;
-
-    /**
-     * Modelo seguimiento (ej: HistoriaClinicaSeguimiento)
-     */
     protected string $seguimientoModel;
-
-    /**
-     * Nombre de la vista principal (para Inertia)
-     */
     protected string $view;
-
-    /**
-     * Título de la sección
-     */
     protected string $title;
+    protected $listaController;
 
-    /**
-     * Retorna los campos del modal para crear/editar seguimiento
-     */
+    public function __construct()
+    {
+        $this->listaController = app(ListaController::class);
+    }
+
     protected function getModalFields(): array
     {
-        return $this->seguimientoModel::getModalFields();
+        if (!method_exists($this->seguimientoModel, 'getModalFields')) {
+            return [];
+        }
+
+        $fields = $this->seguimientoModel::getModalFields($this->listaController);
+        if (!is_array($fields)) return [];
+
+        if (array_is_list($fields) && count($fields) > 0 && is_array($fields[0])) {
+            return $fields;
+        }
+
+        $normalized = [];
+        foreach ($fields as $key => $value) {
+            if (is_array($value)) {
+                $normalized[] = $value;
+            } else {
+                $normalized[] = [
+                    $key,
+                    strtoupper(str_replace('_', ' ', $key)),
+                    is_string($value) ? $value : ''
+                ];
+            }
+        }
+
+        return $normalized;
     }
 
-    /**
-     * Reglas de validación al crear un seguimiento
-     */
-    protected function storeRules(): array
-    {
-        return [];
-    }
+    protected function storeRules(): array { return []; }
+    protected function updateRules(): array { return []; }
 
-    /**
-     * Reglas de validación al actualizar un seguimiento
-     */
-    protected function updateRules(): array
-    {
-        return [];
-    }
-
-    /**
-     * Obtener todos los seguimientos del registro padre
-     */
     public function index($parentId)
     {
         return $this->seguimientoModel::where($this->getParentForeignKey(), $parentId)
@@ -61,10 +57,7 @@ abstract class BaseSeguimientoController extends Controller
             ->get();
     }
 
-    /**
-     * Mostrar el formulario de acción (create/edit) con modalFields y seguimientos
-     */
-    public function handleAction($action, $parentId = null)
+    public function handleAction(string $action, ?int $parentId = null)
     {
         $parent = $parentId ? $this->parentModel::findOrFail($parentId) : null;
 
@@ -72,64 +65,78 @@ abstract class BaseSeguimientoController extends Controller
             ? $this->seguimientoModel::where($this->getParentForeignKey(), $parent->id)
                 ->orderBy('fecha', 'desc')
                 ->get()
-            : [];
+            : collect();
 
         return Inertia::render("{$this->view}/form", [
-            'form_data'    => $parent,
+            'form_data'    => $parent ? $parent->toArray() : [],
             'modalFields'  => $this->getModalFields(),
-            'seguimientos' => $seguimientos,
+            'seguimientos' => $seguimientos->toArray(),
             'action'       => $action,
             'custom_title' => $this->title,
-            'title'        => $action === 'create' ? "Nuevo {$this->title}" : "Editar {$this->title}",
+            'title'        => $action === 'create'
+                ? "Nuevo {$this->title}"
+                : "Editar {$this->title}",
             'view'         => $this->view,
         ]);
     }
 
-    /**
-     * Guardar nuevo seguimiento
-     */
     public function store(Request $request)
     {
         $request->validate($this->storeRules());
 
-        $data = $request->all();
-        $data['creater_id'] = auth()->id();
+        $data = $request->input('data', $request->all());
+        if (isset($data['data'])) {
+            $data = $data['data'];
+        }
+
+        $data['creater_id'] = auth()?->id();
 
         $this->seguimientoModel::create($data);
 
         return back()->with('success', "{$this->title} registrado correctamente.");
     }
 
-    /**
-     * Actualizar seguimiento
-     */
-    public function update(Request $request, $id)
+    public function update(Request $request, int $id)
     {
         $request->validate($this->updateRules());
 
-        $seguimiento = $this->seguimientoModel::findOrFail($id);
-        $seguimiento->update($request->all());
+        $modelClass = $this->seguimientoModel;
+        $modelInstance = new $modelClass();
+
+        $primaryKey = $modelInstance->getKeyName();
+
+        $data = $request->input('data', $request->all());
+        if (isset($data['data'])) {
+            $data = $data['data'];
+        }
+
+        $registro = $modelClass::where($primaryKey, $id)->firstOrFail();
+        $registro->update($data);
 
         return back()->with('success', "{$this->title} actualizado correctamente.");
     }
 
-    /**
-     * Eliminar seguimiento
-     */
-    public function destroy($id)
+    public function destroy(int $id)
     {
-        $seguimiento = $this->seguimientoModel::findOrFail($id);
-        $seguimiento->delete();
+        $modelClass = $this->seguimientoModel;
+        $modelInstance = new $modelClass();
+        $primaryKey = $modelInstance->getKeyName();
+
+        $registro = $modelClass::where($primaryKey, $id)->first();
+
+        if (!$registro) {
+            abort(404, "{$this->title} no encontrado.");
+        }
+
+        $registro->delete();
 
         return back()->with('success', "{$this->title} eliminado correctamente.");
     }
 
-    /**
-     * Nombre del campo FK hacia el padre
-     */
     protected function getParentForeignKey(): string
     {
-        // Por convención: id_{nombre_tabla_padre}
-        return 'id_' . strtolower((new $this->parentModel)->getTable());
+        return property_exists($this->seguimientoModel, 'parentForeignKey')
+            ? (new $this->seguimientoModel())->parentForeignKey
+            : 'id_historia_clinica';
     }
 }

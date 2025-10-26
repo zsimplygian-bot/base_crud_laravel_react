@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-@plugin 'tailwindcss-animate';
+@import "tw-animate-css";
 
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -9,7 +9,9 @@
 
 @theme {
     --font-sans:
-        'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+        'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
+        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+        'Noto Color Emoji';
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -59,27 +61,9 @@
     --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-    *,
-    ::after,
-    ::before,
-    ::backdrop,
-    ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
-    }
-}
-
 :root {
     --background:
-        oklch(99.461% 0.00274 285.738);
+        oklch(1 0 0);
     --foreground:
         oklch(0.145 0 0);
     --card:
@@ -128,7 +112,7 @@
     --radius:
         0.625rem;
     --sidebar:
-        oklch(89.699% 0.05451 243.43);
+        oklch(0.985 0 0);
     --sidebar-foreground:
         oklch(0.145 0 0);
     --sidebar-primary:
@@ -136,7 +120,7 @@
     --sidebar-primary-foreground:
         oklch(0.985 0 0);
     --sidebar-accent:
-        oklch(86.585% 0.07165 243.677);
+        oklch(0.97 0 0);
     --sidebar-accent-foreground:
         oklch(0.205 0 0);
     --sidebar-border:
@@ -151,7 +135,7 @@
     --foreground:
         oklch(0.985 0 0);
     --card:
-        oklch(0.205 0 0);
+       oklch(0.145 0 0);
     --card-foreground:
         oklch(0.985 0 0);
     --popover:
@@ -194,7 +178,7 @@
     --chart-5:
         oklch(0.645 0.246 16.439);
     --sidebar:
-        oklch(21.676% 0.05814 247.852);
+        oklch(0.205 0 0);
     --sidebar-foreground:
         oklch(0.985 0 0);
     --sidebar-primary:
@@ -202,42 +186,13 @@
     --sidebar-primary-foreground:
         oklch(0.985 0 0);
     --sidebar-accent:
-        oklch(27.709% 0.07911 250.33);
+        oklch(0.269 0 0);
     --sidebar-accent-foreground:
         oklch(0.985 0 0);
     --sidebar-border:
         oklch(1 0 0 / 10%);
     --sidebar-ring:
         oklch(0.556 0 0);
-}
-/* Scrollbars claros por defecto */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent; /* gris claro */
-}
-
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-*::-webkit-scrollbar-thumb {
-  background-color: #d1d5db; /* gris claro */
-  border-radius: 6px;
-}
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* Scrollbars oscuros cuando hay dark mode */
-.dark * {
-  scrollbar-color: #4b5563 transparent; /* gris oscuro */
-}
-.dark *::-webkit-scrollbar-thumb {
-  background-color: #4b5563;
-}
-.table-scroll-container {
-  max-height: 545px;
-  overflow-y: auto;
 }
 
 @layer base {
@@ -249,10 +204,6 @@
         @apply bg-background text-foreground;
     }
 }
-
-/*
-  ---break---
-*/
 
 @theme inline {
     --radius-sm:
@@ -326,10 +277,6 @@
     --color-sidebar-ring:
         var(--sidebar-ring);
 }
-
-/*
-  ---break---
-*/
 
 @layer base {
   * {

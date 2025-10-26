@@ -1,93 +1,113 @@
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { PhoneIcon, Mars, Venus, DropletIcon } from "lucide-react"; // 👈 Íconos válidos
+import { PhoneIcon, Mars, Venus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
-// Utilidad para acceder a campos anidados tipo "docu.docu"
+// Utilidad: obtener valores anidados tipo "docu.docu"
 const getNestedValue = (obj: any, path: string): any =>
   path.split(".").reduce((acc, key) => acc?.[key], obj);
 
-type RenderFunction = (value: any, row?: any, view?: string) => React.ReactNode;
-
+// Badge dinámico para estado
 const EstadoBadge = (value: any) => {
   const estado = String(value || "").toUpperCase();
 
-  let classes = "";
+  const colorMap: Record<string, string> = {
+    ACTIVO: "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100",
+    ATENDIDO: "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100",
+    ABIERTO: "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100",
+    REFERIDO: "bg-yellow-100 text-yellow-900 dark:bg-yellow-900 dark:text-yellow-100",
+    CERRADO: "bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
+    "EN OBSERVACIÓN": "bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
+  };
 
-  if (["ACTIVO", "ATENDIDO", "ABIERTO"].includes(estado)) {
-    classes = "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100";
-  } else if (estado === "REFERIDO") {
-    classes = "bg-yellow-100 text-yellow-900 dark:bg-yellow-900 dark:text-yellow-100";
-  } else if (["CERRADO", "EN OBSERVACIÓN"].includes(estado)) {
-    classes = "bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
-  } else {
-    classes = "bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-100";
-  }
+  const colorClass =
+    colorMap[estado] ||
+    "bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-100";
 
   return (
-    <span className={`px-2 py-1 rounded text-sm font-medium ${classes}`}>
+    <Badge className={`px-2 py-1 text-xs font-medium ${colorClass}`}>
       {estado || "—"}
-    </span>
+    </Badge>
   );
 };
 
+// Render de imagen con Dialog para vista ampliada
 const ImageCell = (value: any, view?: string) => {
   if (!value || !view) return "—";
   const imagePath = `/images/${view}/${value}`;
   return (
-    <img
-      src={imagePath}
-      alt="Imagen"
-      className="h-12 w-12 object-cover rounded-md border"
-      onError={(e) => {
-        e.currentTarget.style.display = "none";
-      }}
-    />
+    <Dialog>
+      <DialogTrigger asChild>
+        <img
+          src={imagePath}
+          alt="Imagen"
+          className="h-12 w-12 object-cover rounded-md border cursor-pointer hover:opacity-80 transition-opacity"
+          onError={(e) => (e.currentTarget.style.display = "none")}
+        />
+      </DialogTrigger>
+      <DialogContent className="max-h-[150vh] max-h-[150vh] p-0">
+        <img
+          src={imagePath}
+          alt="Imagen ampliada"
+          className="w-full h-full object-contain rounded-md"
+        />
+      </DialogContent>
+    </Dialog>
   );
 };
 
-const renderMap: Record<string, RenderFunction> = {
+// Mapa de renderizadores
+type RenderFunction = (value: any, row?: any, view?: string) => React.ReactNode;
+
+export const renderMap: Record<string, RenderFunction> = {
   telefono: (value: any) => {
     const phone = value?.replace(/\D/g, "");
-    return phone ? (
-      <Button
-        asChild
-        size="sm"
-        className="bg-green-600 text-white hover:bg-green-700 dark:bg-green-800 dark:hover:bg-green-900"
+    if (!phone) {
+      return (
+        <Badge
+          variant="outline"
+          className="border-gray-300 text-gray-500 dark:border-gray-600 dark:text-gray-300 cursor-not-allowed"
+        >
+          <span className="inline-flex items-center gap-2 text-sm">
+            <PhoneIcon className="w-4 h-4" />
+            —
+          </span>
+        </Badge>
+      );
+    }
+    return (
+      <Badge
+        variant="outline"
+        className="border-green-600 text-green-600 dark:border-green-400 dark:text-green-400 hover:bg-green-600/10 dark:hover:bg-green-400/10"
       >
         <a
           href={`https://wa.me/51${phone}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2"
+          className="inline-flex items-center gap-2 text-sm"
         >
           <PhoneIcon className="w-4 h-4" />
           {value}
         </a>
-      </Button>
-    ) : (
-      <Button
-        size="sm"
-        disabled
-        className="bg-muted text-muted-foreground opacity-80 cursor-not-allowed"
-      >
-        <PhoneIcon className="w-4 h-4 mr-1" />
-        —
-      </Button>
+      </Badge>
     );
   },
 
   valor: (v: any) => <span>S/. {Number(v).toFixed(2)}</span>,
   total: (v: any) => <span>S/. {Number(v).toFixed(2)}</span>,
   precio: (v: any) => <span>S/. {Number(v).toFixed(2)}</span>,
-  peso: (v: any) => (
-    <span>{v !== null && v !== undefined ? `${Number(v).toFixed(2)} kg` : "—"}</span>
-  ),
+  peso: (v: any) => (v != null ? `${Number(v).toFixed(2)} kg` : "—"),
+
   estado: EstadoBadge,
   estado_delega: EstadoBadge,
   imagen: (v: any, _r, view) => ImageCell(v, view),
+
   raza: (v: any) => {
     if (!v) return "—";
-
     const especies = [
       { key: "canino", icon: "🐶" },
       { key: "felino", icon: "🐱" },
@@ -95,10 +115,8 @@ const renderMap: Record<string, RenderFunction> = {
       { key: "ave", icon: "🐦" },
     ];
     const text = String(v).trim();
-    const lowerText = text.toLowerCase();
-    const especie = especies.find((e) => lowerText.startsWith(e.key));
+    const especie = especies.find((e) => text.toLowerCase().startsWith(e.key));
     const icon = especie ? especie.icon : "🐾";
-    // Remueve "Especie -" dejando solo la raza
     const cleanText = especie
       ? text.replace(new RegExp(`^${especie.key}\\s*-\\s*`, "i"), "").trim()
       : text;
@@ -109,83 +127,92 @@ const renderMap: Record<string, RenderFunction> = {
       </span>
     );
   },
-  // 👇 Nuevo render de campo "sexo" con íconos
+
   sexo: (v: any) => {
-  if (!v) return "—";
+    if (!v) return "—";
     const isMale = v.toLowerCase().includes("macho");
+    const Icon = isMale ? Mars : Venus;
     const color = isMale
       ? "text-blue-600 dark:text-blue-400"
       : "text-pink-600 dark:text-pink-400";
-    const Icon = isMale ? Mars : Venus;
     return (
       <span className={`inline-flex items-center gap-2 font-medium ${color}`}>
-        <Icon className="w-4 h-4" />
-        
+        <Icon className="" />
       </span>
     );
   },
-  color: (v: any) => {
-    if (!v) return "—";
-    const colorMap: Record<string, string> = {
-      negro: "#000000",
-      marrón: "#7B3F00",
-      marron: "#7B3F00",
-      acero: "#A8A9AD",
-      ceniza: "#B2BEB5",
-      crema: "#fffcd0ff",
-      blanco: "#FFFFFF",
-      gris: "#808080",
-      dorado: "#DAA520",
-      rojo: "#FF0000",
-      azul: "#0000FF",
-      verde: "#008000",
-    };
-    const text = v.trim();
-    const [firstWord, ...rest] = text.split(" ");
-    const firstKey = firstWord
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "");
-    const baseColor = colorMap[firstKey] ?? "#999999";
-    const borderColor =
-    baseColor.toLowerCase() === "#000000" ? "#FFFFFF" : "#000000";
-    const dropletIcon = (
-      <svg
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        <path
-          d="M12 2C12 2 6 9 6 14a6 6 0 0012 0c0-5-6-12-6-12z"
-          fill={baseColor}
-          stroke={borderColor}
-          strokeWidth="0.6"
-        />
-      </svg>
-    );
-    const remainingText = rest.join(" ").trim();
-    return (
-      <span className="inline-flex items-center gap-2 font-medium text-foreground">
-        {dropletIcon}
-        {remainingText || ""}
-      </span>
-    );
-  },
+
+color: (v: any) => {
+  if (!v) return "—";
+
+  const colorMap: Record<string, string> = {
+    negro: "#000000",
+    negras: "#000000",
+    marrón: "#7B3F00",
+    marron: "#7B3F00",
+    acero: "#A8A9AD",
+    cenizo: "#B2BEB5",
+    crema: "#fff0bfff",
+    blanco: "#FFFFFF",
+    gris: "#808080",
+    plomo: "#808080",
+    dorado: "#DAA520",
+    rojo: "#FF0000",
+    azul: "#0000FF",
+    verde: "#008000",
+    rosa: "#FFC0CB",
+    naranja: "#FFA500",
+    morado: "#800080",
+    caramelo: "#FF7F50",
+    beige: "#F5F5DC",
+    fuego: "#FF4500",
+  };
+
+  const ignoreWords = ["con", "y", "de", "manchas", "claro", "oscuro"];
+  const parts = v
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(word => word && !ignoreWords.includes(word));
+
+  const colors: string[] = parts.map(p => colorMap[p] ?? "#999999");
+  const background = colors.length > 1
+    ? `linear-gradient(to right, ${colors.join(", ")})`
+    : colors[0];
+
+  return (
+    <div className="inline-flex items-center gap-2" style={{ lineHeight: 1 }}>
+      <Badge
+        className="w-8 h-7 rounded-full border border-gray-600 p-0"
+        style={{ background, color: "#000000" }}
+      />
+      
+    </div>
+  );
+},
+
+
+
   stock: (v: any, row?: any) => {
-    if (v === null || v === undefined) return "—";
+    if (v == null) return "—";
     const stock = Number(v);
     const min = Number(row?.stock_min ?? 0);
     const max = Number(row?.stock_max ?? Infinity);
-    let style = "text-sm font-medium px-2 py-1 rounded";
+
+    let classes =
+      "px-2 py-1 rounded text-xs font-medium border border-transparent";
+
     if (stock <= min)
-      style += " bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-100";
+      classes += " bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-100";
     else if (stock >= max)
-      style +=
+      classes +=
         " bg-yellow-100 text-yellow-900 dark:bg-yellow-900 dark:text-yellow-100";
-    else style += " text-foreground dark:text-white";
-    return <span className={style}>{stock}</span>;
+    else
+      classes +=
+        " bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100";
+
+    return <Badge className={classes}>{stock}</Badge>;
   },
+
   edad: (v: any) => {
     if (!v) return "—";
     const match = String(v).match(/^(\d+)\s*(AÑO|MES)$/i);
@@ -197,6 +224,8 @@ const renderMap: Record<string, RenderFunction> = {
     return v;
   },
 };
+
+// Hook: renderizador principal
 export const useRenderCellContent = () => {
   const renderCellContent = (
     accessor: string,
@@ -204,7 +233,7 @@ export const useRenderCellContent = () => {
     view?: string
   ): React.ReactNode => {
     const value = getNestedValue(row, accessor);
-    const isEmpty = value === null || value === undefined || value === "";
+    const isEmpty = value == null || value === "";
     if (renderMap[accessor]) return renderMap[accessor](value, row, view);
     if (accessor.toLowerCase().includes("imagen") && view && !isEmpty)
       return ImageCell(value, view);

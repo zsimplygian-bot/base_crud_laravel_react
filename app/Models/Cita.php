@@ -3,37 +3,54 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Carbon\Carbon;
 class Cita extends BaseModel
 {
     use HasFactory;
     protected $table = 'cita';
-    public function cita_seguimientos(): HasMany
-    {
-        return $this->hasMany(CitaSeguimiento::class, 'id_cita');
-    }
     public static string $title = 'Citas';
     protected static $simpleFormFieldDefinitions = [
         ['id_mascota', 'MASCOTA - DUEÑO', 'select'],
         ['fecha', 'FECHA', 'date'],
         ['hora', 'HORA', 'time'],
         ['id_motivo_cita', 'MOTIVO', 'select'],
-        ['precio', 'PRECIO S/.', 'number'],
         ['observaciones', 'OBSERVACIONES', 'textarea'],
         ['id_estado_cita', 'ESTADO', 'select'],
     ];
+    public static function getFieldDefinitions(string $type, string $action = 'create', $data = null): array
+    {
+        // Usa el método genérico del padre para obtener las definiciones base
+        $fields = parent::getFieldDefinitions($type, $action, $data);
+        // Si es formulario de creación, excluir campos específicos
+        if ($type === 'form' && $action === 'create') {
+            unset($fields['observaciones'], $fields['id_estado_cita']);
+        }
+        return $fields;
+    }
     protected static $validationRules = [
         'id_mascota' => 'required|int',
         'fecha' => 'required|date',
         'hora' => 'required',
         'id_motivo_cita' => 'required|int',
-        'precio' => 'required|numeric',
         'observaciones' => 'nullable|string',
         'id_estado_cita' => 'required|int',
     ];
-    protected static $toolbarfieldDefinitions = [
-        'id_mascota' => ['label' => 'MASCOTA - DUEÑO', 'type' => 'select', 'width' => 3],
-        'id_motivo_cita' => ['label' => 'MOTIVO CITA', 'type' => 'select', 'width' => 2],
-        'id_estado_cita' => ['label' => 'ESTADO CITA', 'type' => 'select', 'width' => 2],
+    public static function getValidationRules(string $action = 'create'): array
+{
+    $rules = parent::getValidationRules();
+
+    // Si es creación, eliminar validación de estado
+    if ($action === 'create') {
+        unset($rules['id_estado_cita']);
+    }
+
+    return $rules;
+}
+
+    protected static $simpleToolbarFieldDefinitions = [
+        ['id_mascota', 'MASCOTA - DUEÑO', 'select'],
+        ['id_motivo_cita', 'MOTIVO', 'select'],
+        ['id_estado_cita', 'ESTADO', 'select'],
     ];
     public static array $allowedFilters = ['id_mascota', 'id_motivo_cita', 'id_estado_cita'];
     public static function getQuery()
@@ -57,9 +74,26 @@ class Cita extends BaseModel
                 "{$alias4}.motivo_cita",
                 "{$alias3}.estado_cita as estado",
                 "{$alias}.created_at",
-                
             ]);
+
         return ['query' => $query, 'alias' => $alias];
+    }
+    public static function proximas()
+    {
+        return DB::table('cita')
+            ->join('mascota', 'cita.id_mascota', '=', 'mascota.id_mascota')
+            ->join('cliente', 'mascota.id_cliente', '=', 'cliente.id_cliente')
+            ->join('motivo_cita', 'cita.id_motivo_cita', '=', 'motivo_cita.id_motivo_cita')
+            ->select(
+                'cita.id_cita as id',
+                'mascota.mascota',
+                'cliente.cliente',
+                'motivo_cita.motivo_cita',
+                DB::raw("CONCAT(cita.fecha, ' ', cita.hora) as fecha_hora")
+            )
+            ->whereRaw("CONCAT(cita.fecha, ' ', cita.hora) >= NOW()")
+            ->orderByRaw("CONCAT(cita.fecha, ' ', cita.hora) ASC") // ← cita más cercana arriba
+            ->get();
     }
     protected static $tableColumns = [
         ['ID', 'id'],

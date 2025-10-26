@@ -1,6 +1,5 @@
 import React from "react";
 import { ActionButtons } from "./datatable_actionbuttons";
-import { Progress } from "@/components/ui/progress";
 import {
   Table,
   TableBody,
@@ -70,16 +69,16 @@ export const DataTable: React.FC<DataTableProps> = ({
   return (
     <div className="w-full">
       <div className="rounded-md border overflow-x-auto max-h-[545px]">
-        <Table className="min-w-max w-full bg-white dark:bg-gray-900">
+        <Table className="min-w-max w-full ">
           <TableHeader>
             <TableRow>
-              <TableHead className="sticky left-0 z-20 bg-white dark:bg-background font-semibold bg-white dark:bg-gray-900" />
+              <TableHead className="sticky left-0 z-20 bg-white dark:bg-background font-semibold " />
               {columns
                 .filter((col) => col.accessor && columnVisibility?.[col.accessor] !== false)
                 .map((col) => (
                   <TableHead
                     key={col.accessor}
-                    className="sticky top-0 bg-white dark:bg-background bg-white dark:bg-gray-900"
+                    className="sticky top-0 bg-white dark:bg-background "
                   >
                     <button
                       onClick={() => handleSort(col.accessor)}
@@ -114,7 +113,7 @@ export const DataTable: React.FC<DataTableProps> = ({
               <>
                 <TableRow>
                   <TableCell colSpan={(columns?.length ?? 0) + 1} className="pt-6 pb-2">
-                    <Progress value={70} className="w-1/2 mx-auto" />
+                    
                   </TableCell>
                 </TableRow>
                 <TableRow />
@@ -122,7 +121,7 @@ export const DataTable: React.FC<DataTableProps> = ({
             ) : data.length > 0 ? (
               data.map((row, rowIndex) => (
                 <TableRow key={rowIndex}>
-                  <TableCell className="sticky left-0 z-10 dark:bg-background bg-white dark:bg-gray-900">
+                  <TableCell className="sticky left-0 z-10 dark:bg-background ">
                     <ActionButtons
                       rowId={row.id}
                       view={view}

@@ -1,13 +1,19 @@
 <?php
 namespace App\Http\Controllers;
+
 use App\Models\Cita;
-use App\Models\CitaSeguimiento;
-use App\Http\Controllers\BaseController;
+
 class CitaController extends BaseController
 {
     public function __construct() {
-        $this->model = Cita::class; 
+        $this->model = Cita::class;
         parent::__construct();
     }
 
+    // Endpoint para próximas citas
+    public function proximas()
+    {
+        $citas = Cita::proximas();
+        return response()->json($citas);
+    }
 }

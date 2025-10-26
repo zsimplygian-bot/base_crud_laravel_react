@@ -59,10 +59,10 @@ const rawSidebar: RawItem[] = [
     children: [
                { title: "Medicamentos", href: "/medicamento", icon: Syringe,},
                { title: "Procedimientos", href: "/procedimiento", icon: ClipboardList,},
-               { title: "Especie", href: "/itemsimple?tipo=especie", icon: PawPrint,},
+               { title: "Especie", href: "/especie", icon: PawPrint,},
                { title: "Raza", href: "/raza", icon: PawPrint,},
-               { title: "Motivo cita", href: "/itemsimple?tipo=motivo_cita", icon: Calendar,},
-               { title: "Motivo historia", href: "/itemsimple?tipo=motivo_historia_clinica", icon: Calendar,},
+               { title: "Motivo cita", href: "/motivo_cita", icon: Calendar,},
+               { title: "Motivo historia", href: "/motivo_historia_clinica", icon: Calendar,},
     ],
   },
 ];

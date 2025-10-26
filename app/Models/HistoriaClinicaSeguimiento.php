@@ -1,7 +1,9 @@
 <?php
 namespace App\Models;
-class HistoriaClinicaSeguimiento extends BaseSeguimiento
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+class HistoriaClinicaSeguimiento extends BaseModel
 {
+    use HasFactory;
     protected $table = 'historia_clinica_seguimiento';
     protected $primaryKey = 'id_historia_clinica_seguimiento';
     protected $parentForeignKey = 'id_historia_clinica';
@@ -12,16 +14,13 @@ class HistoriaClinicaSeguimiento extends BaseSeguimiento
         'fecha',
         'creater_id',
     ];
+    protected static $simpleModalFormFieldDefinitions = [
+        ['detalle', 'DETALLE', 'textarea',  3,'required', ],
+        ['observaciones', 'OBSERVACIONES', 'textarea',  3],
+        ['fecha', 'FECHA', 'date',  3, 'required'],
+    ];
     public function parent()
     {
         return $this->belongsTo(HistoriaClinica::class, $this->parentForeignKey, 'id');
-    }
-    public static function getCustomFields(): array
-    {
-        return [
-            ['detalle', 'DETALLE', 'textarea'],
-            ['observaciones', 'OBSERVACIONES', 'textarea'],
-            ['fecha', 'FECHA', 'date'],
-        ];
     }
 }

@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
-import { format } from "date-fns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Link } from "@inertiajs/react";
 import {
@@ -22,10 +21,16 @@ import {
   EyeIcon,
   DownloadIcon,
   SearchIcon,
+  FileTextIcon,
+  FileSpreadsheetIcon,
+  FileDownIcon,
+  EraserIcon,
 } from "lucide-react";
 import { es } from "date-fns/locale";
+import { format } from "date-fns";
 import { useDataExport } from "@/hooks/use-datatable-export";
 import { FormFieldsRenderer } from "@/components/form-fields";
+
 interface DataTableToolbarProps {
   columns: { header: string; accessor: string }[];
   selectedColumn: string | null;
@@ -50,6 +55,7 @@ interface DataTableToolbarProps {
     filterValues: Record<string, string>;
   }) => void;
 }
+
 export const DataTableToolbar: React.FC<DataTableToolbarProps> = ({
   columns,
   selectedColumn,
@@ -63,7 +69,6 @@ export const DataTableToolbar: React.FC<DataTableToolbarProps> = ({
   setColumnVisibility,
   data,
   view,
-  queryString,
   toolbarfields,
   filterValues,
   setFilterValues,
@@ -71,109 +76,80 @@ export const DataTableToolbar: React.FC<DataTableToolbarProps> = ({
   onFilterApply,
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
-  const selectedColumnTemp = useRef<string | null>(null);
   const [inputVisible, setInputVisible] = useState(false);
-  const [localSearchTerm, setLocalSearchTerm] = useState("");
-  const [localSelectedColumn, setLocalSelectedColumn] = useState<string | null>(null);
+  const [localSearchTerm, setLocalSearchTerm] = useState(searchTerm);
+  const [localSelectedColumn, setLocalSelectedColumn] = useState<string | null>(selectedColumn);
   const [localFilterValues, setLocalFilterValues] = useState<Record<string, string>>(filterValues || {});
   const isMobile = useIsMobile();
-  // Sincronizar props con estados locales
-  useEffect(() => {
-    setLocalSearchTerm(searchTerm);
-  }, [searchTerm]);
-  useEffect(() => {
-    setLocalSelectedColumn(selectedColumn);
-  }, [selectedColumn]);
-  useEffect(() => {
-    setLocalFilterValues(filterValues || {});
-  }, [filterValues]);
-  // Log para depuración
-  useEffect(() => {
-    if (queryparams && Object.keys(queryparams).length > 0) {
-      updateQueryParams(queryparams);
-    }
-  }, [queryparams]);
-  const handleLocalFilterChange = (key: string, value: string) => {
-    setLocalFilterValues((prev) => ({ ...prev, [key]: value }));
-  };
-  const updateQueryParams = (params: Record<string, string | number | null | undefined>) => {
+  const { exportToCSV, exportToExcel, exportToPDF } = useDataExport(view, columns, data);
+
+  useEffect(() => setLocalSearchTerm(searchTerm), [searchTerm]);
+  useEffect(() => setLocalSelectedColumn(selectedColumn), [selectedColumn]);
+  useEffect(() => setLocalFilterValues(filterValues || {}), [filterValues]);
+
+  const updateQueryParams = (params: Record<string, any>) => {
     const url = new URL(window.location.href);
-    Object.entries(params).forEach(([key, value]) => {
-      if (value != null && value !== "") {
-        url.searchParams.set(key, String(value));
-      } else {
-        url.searchParams.delete(key);
-      }
-    });
+    Object.entries(params).forEach(([k, v]) =>
+      v ? url.searchParams.set(k, String(v)) : url.searchParams.delete(k)
+    );
     window.history.replaceState({}, "", url.toString());
   };
+
   const handleFilterClick = () => {
+    const term = localSearchTerm.trim() || null;
     setSelectedColumn(localSelectedColumn);
-    const finalSearchTerm = localSearchTerm.trim() !== "" ? localSearchTerm : null;
-    setAppliedSearchTerm(finalSearchTerm);
-    setPageIndex(0);
+    setAppliedSearchTerm(term);
     setFilterValues?.(localFilterValues);
-    const updatedParams = {
-      ...(queryparams || {}),
-      ...localFilterValues,
-    };
-    updateQueryParams(updatedParams);
-    if (onFilterApply) {
-      onFilterApply({
-        selectedColumn: localSelectedColumn,
-        searchTerm: finalSearchTerm,
-        filterValues: localFilterValues,
-      });
-    }
+    setPageIndex(0);
+    updateQueryParams({ ...(queryparams || {}), ...localFilterValues });
+    onFilterApply?.({ selectedColumn: localSelectedColumn, searchTerm: term, filterValues: localFilterValues });
   };
-  const { exportToCSV, exportToExcel, exportToPDF } = useDataExport(view, columns, data);
-  const handleColumnVisibilityChange = (column: string, isVisible: boolean) => {
-    setColumnVisibility((prev) => ({
-      ...prev,
-      [column]: isVisible,
-    }));
+
+  const clearFilters = () => {
+    setLocalSearchTerm("");
+    setLocalSelectedColumn(null);
+    setLocalFilterValues({});
+    setDateRange(undefined);
+    setAppliedSearchTerm(null);
+    setSelectedColumn(null);
+    setFilterValues?.({});
+    setPageIndex(0);
+    window.history.replaceState({}, "", window.location.pathname);
+    onFilterApply?.({ selectedColumn: null, searchTerm: null, filterValues: {} });
   };
-  const formattedDateRange = dateRange?.from
-    ? dateRange.to
-      ? `${format(dateRange.from, "LLL dd, yyyy")} - ${format(dateRange.to, "LLL dd, yyyy")}`
-      : format(dateRange.from, "LLL dd, yyyy")
-    : "";
-  // Construir query string desde queryparams para el botón Nuevo
-  const queryStringFromParams = queryparams
+
+  const formattedDateRange =
+    dateRange?.from
+      ? dateRange.to
+        ? `${format(dateRange.from, "LLL dd, yyyy")} - ${format(dateRange.to, "LLL dd, yyyy")}`
+        : format(dateRange.from, "LLL dd, yyyy")
+      : "";
+
+  const queryString = queryparams
     ? "?" + new URLSearchParams(queryparams as Record<string, string>).toString()
     : "";
+
   return (
     <div className="flex flex-col md:flex-row w-full justify-between gap-4 py-2">
-      {/* Grupo Izquierdo */}
-      <div
-        className="flex items-center gap-2 whitespace-nowrap overflow-x-auto"
-        style={{ WebkitOverflowScrolling: "touch" }}
-      >
-        {/* Buscar por columna */}
+      {/* === IZQUIERDA === */}
+      <div className="flex items-center gap-2 overflow-x-auto">
+        {/* Buscar */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
-              <SearchIcon />
+            <Button variant="outline" size="sm">
+              <SearchIcon className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="start"
-            onCloseAutoFocus={(e) => {
-              e.preventDefault();
-              setTimeout(() => {
-                inputRef.current?.focus();
-              }, 50);
-            }}
-          >
-            <DropdownMenuLabel>Buscar según:</DropdownMenuLabel>
+          <DropdownMenuContent align="start">
+            <DropdownMenuLabel>Buscar por:</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {columns.map((col) => (
               <DropdownMenuItem
                 key={col.accessor}
                 onClick={() => {
-                  selectedColumnTemp.current = col.accessor;
-                  setInputVisible(true);
                   setLocalSelectedColumn(col.accessor);
+                  setInputVisible(true);
+                  setTimeout(() => inputRef.current?.focus(), 50);
                 }}
               >
                 {col.header}
@@ -181,22 +157,16 @@ export const DataTableToolbar: React.FC<DataTableToolbarProps> = ({
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        {/* Input búsqueda */}
+
         {inputVisible && (
-          <div className="relative w-40 flex-shrink-0">
+          <div className="relative w-36">
             <Input
               ref={inputRef}
-              placeholder={`Buscar ${
-                columns.find((c) => c.accessor === localSelectedColumn)?.header.toLowerCase() || ""
-              }`}
+              placeholder={`Buscar ${columns.find((c) => c.accessor === localSelectedColumn)?.header || ""}`}
               value={localSearchTerm}
               onChange={(e) => setLocalSearchTerm(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleFilterClick();
-                }
-              }}
+              onKeyDown={(e) => e.key === "Enter" && handleFilterClick()}
+              className="text-sm"
             />
             {localSearchTerm && (
               <button
@@ -205,47 +175,52 @@ export const DataTableToolbar: React.FC<DataTableToolbarProps> = ({
                   setLocalSearchTerm("");
                   setLocalSelectedColumn(null);
                   setInputVisible(false);
-                  selectedColumnTemp.current = null;
                 }}
                 className="absolute right-2 top-1/2 -translate-y-1/2"
               >
-                <XIcon className="w-4 h-4" />
+                <XIcon className="w-3 h-3" />
               </button>
             )}
           </div>
         )}
-        {/* Botón Nuevo */}
-        {!["honora", "pagomen", "consultasan"].includes(view) && (
-          <Link href={`/${view}/form/create${queryStringFromParams}`}>
-            <Button variant="outline" className="flex items-center gap-2">
-              <PlusIcon className="w-4 h-4" />
-              Nuevo
-            </Button>
-          </Link>
-        )}
-        {/* Exportar */}
+
+        {/* Nuevo */}
+        <Link href={`/${view}/form/create${queryString}`}>
+          <Button size="sm" variant="outline" className="gap-1 text-sm">
+            <PlusIcon className="w-3 h-3" /> Nuevo
+          </Button>
+        </Link>
+
+        {/* Exportar con íconos */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="default">
-              <DownloadIcon />
-              Exportar
+            <Button variant="outline" size="sm" className="gap-1">
+              <DownloadIcon className="w-3 h-3" /> Exportar
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Exportar a:</DropdownMenuLabel>
+            <DropdownMenuLabel>Exportar:</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={exportToCSV}>📄 CSV</DropdownMenuItem>
-            <DropdownMenuItem onClick={exportToExcel}>📊 Excel</DropdownMenuItem>
-            <DropdownMenuItem onClick={exportToPDF}>📕 PDF</DropdownMenuItem>
+            <DropdownMenuItem onClick={exportToCSV}>
+              <FileDownIcon className="w-4 h-4 text-blue-500" />
+              <span className="text-blue-600">CSV</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportToExcel}>
+              <FileSpreadsheetIcon className="w-4 h-4 text-green-600" />
+              <span className="text-green-700">Excel</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={exportToPDF}>
+              <FileTextIcon className="w-4 h-4 text-red-600" />
+              <span className="text-red-700">PDF</span>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Columnas visibles */}
+        {/* Columnas */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="default">
-              <EyeIcon />
-              Vista
+            <Button variant="outline" size="sm" className="gap-1">
+              <EyeIcon className="w-3 h-3" /> Vista
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -255,23 +230,19 @@ export const DataTableToolbar: React.FC<DataTableToolbarProps> = ({
               <DropdownMenuCheckboxItem
                 key={col.accessor}
                 checked={columnVisibility[col.accessor] !== false}
-                onCheckedChange={(val) => handleColumnVisibilityChange(col.accessor, val)}
-                onSelect={(e) => e.preventDefault()}
+                onCheckedChange={(val) => setColumnVisibility({ ...columnVisibility, [col.accessor]: val })}
               >
                 {col.header}
               </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
+
         {/* Calendario */}
         <Popover>
           <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              size="default"
-              className="flex items-center gap-2 whitespace-nowrap"
-            >
-              <CalendarIcon className="w-4 h-4" />
+            <Button variant="outline" size="sm" className="gap-1">
+              <CalendarIcon className="w-3 h-3" />
               <span>{formattedDateRange || "Fecha"}</span>
             </Button>
           </PopoverTrigger>
@@ -279,75 +250,41 @@ export const DataTableToolbar: React.FC<DataTableToolbarProps> = ({
             <Calendar
               mode="range"
               selected={dateRange}
-              onSelect={(range) => {
-                setDateRange(range);
+              onSelect={(r) => {
+                setDateRange(r);
                 setPageIndex(0);
               }}
-              initialFocus
               locale={es}
             />
           </PopoverContent>
         </Popover>
       </div>
-      {/* Grupo derecho (Filtros avanzados) */}
-<div className="flex flex-wrap items-end gap-4 w-full md:w-auto">
-  {toolbarfields && Object.keys(toolbarfields).length > 0 && (
-    <>
-      <FormFieldsRenderer
-        formFields={toolbarfields}
-        data={localFilterValues}
-        setData={(f, v) => handleLocalFilterChange(f, v)}
-        errors={{}}
-        readonly={false}
-        configReadonly={false}
-        hiddenFields={[]}
-        isMobile={isMobile}
-      />
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          className="whitespace-nowrap h-10 self-end"
-          onClick={handleFilterClick}
-        >
-          Filtrar
-        </Button>
 
-        {/* 🔹 Nuevo botón LIMPIAR */}
-        <Button
-          variant="secondary"
-          className="whitespace-nowrap h-10 self-end"
-          onClick={() => {
-            // 1️⃣ Limpiar estados locales
-            setLocalSearchTerm("");
-            setLocalSelectedColumn(null);
-            setLocalFilterValues({});
-            setDateRange(undefined);
-            // 2️⃣ Limpiar estados globales
-            setAppliedSearchTerm(null);
-            setSelectedColumn(null);
-            setFilterValues?.({});
-            setPageIndex(0);
-            // 3️⃣ Quitar query params de la URL
-            const url = new URL(window.location.href);
-            url.search = "";
-            window.history.replaceState({}, "", url.toString());
-            // 4️⃣ Ejecutar callback opcional
-            if (onFilterApply) {
-              onFilterApply({
-                selectedColumn: null,
-                searchTerm: null,
-                filterValues: {},
-              });
-            }
-          }}
-        >
-          Limpiar
-        </Button>
-      </div>
-    </>
-  )}
-</div>
-
+      {/* === DERECHA === */}
+      {toolbarfields && Object.keys(toolbarfields).length > 0 && (
+        <div className="flex flex-wrap items-end gap-2 w-full md:w-auto">
+          <FormFieldsRenderer
+            formFields={toolbarfields}
+            data={localFilterValues}
+            setData={(f, v) => setLocalFilterValues((p) => ({ ...p, [f]: v }))}
+            errors={{}}
+            readonly={false}
+            configReadonly={false}
+            hiddenFields={[]}
+            isMobile={isMobile}
+          />
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" className="gap-1" onClick={handleFilterClick}>
+              <SearchIcon className="w-4 h-4" />
+              Filtrar
+            </Button>
+            <Button size="sm" variant="secondary" className="gap-1" onClick={clearFilters}>
+              <EraserIcon className="w-4 h-4" />
+              Limpiar
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

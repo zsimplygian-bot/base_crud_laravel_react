@@ -4,98 +4,81 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar';
-import { type NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
-import { useState, useMemo } from 'react';
+} from "@/components/ui/sidebar";
+import { Link, usePage } from "@inertiajs/react";
+import { useState, useEffect } from "react";
+import type { NavItem } from "@/types";
+
+
 export function NavMain({ items = [] }: { items: NavItem[] }) {
   const page = usePage();
-  const isActive = (href: string | undefined): boolean => {
-    if (!href) return false;
-    const [hrefPath, hrefQuery] = href.split('?');
-    const [currentPath] = page.url.split('?');
-    const queryParams = new URLSearchParams(page.url.split('?')[1] || '');
-    const hrefParams = new URLSearchParams(hrefQuery || '');
-    const pathMatch = currentPath.startsWith(hrefPath);
-    const allParamsMatch = Array.from(hrefParams.entries()).every(
-      ([key, value]) => queryParams.get(key) === value
-    );
-    return pathMatch && allParamsMatch;
-  };
-  // Estado inicial: menús abiertos si alguna subruta está activa
-  const initialOpenMenus = useMemo(() => {
-    const open: Record<string, boolean> = {};
-    items.forEach((item) => {
-      if (item.children?.some((child) => isActive(child.href))) {
-        open[item.title] = true;
-      }
-    });
-    return open;
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+
+  const isActive = (href?: string) => href && page.url.startsWith(href.split("?")[0]);
+  const toggleMenu = (title: string) =>
+    setOpenMenus((p) => ({ ...p, [title]: !p[title] }));
+
+  useEffect(() => {
+    const initial: Record<string, boolean> = {};
+    for (const i of items) {
+      if (i.children?.some((c) => isActive(c.href))) initial[i.title] = true;
+    }
+    setOpenMenus(initial);
   }, [items]);
-  const [openMenus, setOpenMenus] = useState(initialOpenMenus);
-  const toggleMenu = (title: string) => {
-    setOpenMenus((prev) => ({
-      ...prev,
-      [title]: !prev[title],
-    }));
-  };
+
   return (
     <SidebarGroup className="px-2 py-0">
       <SidebarGroupLabel>Plataforma</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
-        const hasChildren = item.children && item.children.length > 0;
-        const isOpen = openMenus[item.title] || false;
-        return (
-          <SidebarMenuItem key={item.title}>
-            <SidebarMenuButton
-              asChild={true}
-              onClick={() => hasChildren && toggleMenu(item.title)}
-              isActive={isActive(item.href)}
-              tooltip={{ children: item.title }}
-            >
-              {hasChildren ? (
-                // Botón padre: icono + texto a la izquierda, flecha a la derecha
-                <div className="w-full flex items-center justify-between cursor-pointer select-none">
-                  <div className="flex items-center gap-2">
+          const hasChildren = !!item.children?.length;
+          const open = openMenus[item.title];
+          return (
+            <SidebarMenuItem key={item.title}>
+              <SidebarMenuButton
+                asChild
+                onClick={() => hasChildren && toggleMenu(item.title)}
+                isActive={isActive(item.href)}
+                tooltip={{ children: item.title }}
+              >
+                {hasChildren ? (
+                  <div className="flex justify-between w-full items-center">
+                    <div className="flex gap-2 items-center">
+                      {item.icon && <item.icon className="w-4 h-4" />}
+                      <span>{item.title}</span>
+                    </div>
+                    <span className="text-xs">{open ? "▾" : "▸"}</span>
+                  </div>
+                ) : (
+                  <Link href={item.href} prefetch className="flex gap-2 w-full items-center">
                     {item.icon && <item.icon className="w-4 h-4" />}
                     <span>{item.title}</span>
-                  </div>
-                  <span className="text-xs">{isOpen ? '▾' : '▸'}</span>
-                </div>
-              ) : (
-                // Botón sin hijos
-                <Link href={item.href} prefetch className="w-full flex items-center gap-2">
-                  {item.icon && <item.icon className="w-4 h-4" />}
-                  <span>{item.title}</span>
-                </Link>
-              )}
-            </SidebarMenuButton>
-            {hasChildren && isOpen && (
-              <div className="submenu-wrapper mt-1 space-y-1">
-                {item.children.map((child) => (
-                  <SidebarMenuButton
-                    key={child.title}
-                    asChild
-                    isActive={isActive(child.href)}
-                    tooltip={{ children: child.title }}
-                  >
-                    <Link
-                      href={child.href}
-                      prefetch
-                      className="w-full flex items-center gap-2 text-sm pl-6" // <-- aquí agregas padding-left
+                  </Link>
+                )}
+              </SidebarMenuButton>
+
+              {hasChildren && open && (
+                <div className="mt-1 space-y-1">
+                  {item.children.map((c) => (
+                    <SidebarMenuButton
+                      key={c.title}
+                      asChild
+                      isActive={isActive(c.href)}
+                      tooltip={{ children: c.title }}
                     >
-                      {child.icon && <child.icon className="w-4 h-4" />}
-                      <span>{child.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                ))}
-              </div>
-            )}
-          </SidebarMenuItem>
-        );
-      })}
+                      <Link href={c.href} prefetch className="flex gap-2 text-sm pl-6">
+                        {c.icon && <c.icon className="w-4 h-4" />}
+                        <span>{c.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  ))}
+                </div>
+              )}
+            </SidebarMenuItem>
+          );
+        })}
       </SidebarMenu>
+
     </SidebarGroup>
   );
 }

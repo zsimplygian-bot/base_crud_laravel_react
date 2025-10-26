@@ -1,25 +1,31 @@
 <?php
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
-class MotivoHistoriaClinica extends Model
+use Illuminate\Support\Facades\DB;
+class MotivoHistoriaClinica extends BaseModel
 {
     use HasFactory;
-
-    protected $table = 'motivo_historia_clinica'; // Nombre de la tabla
-    protected $primaryKey = 'id_motivo_historia_clinica'; // Ajusta según tu DB
-    public $timestamps = false; // Si no tienes created_at / updated_at
-
-    protected $fillable = [
-        'motivo_historia_clinica',
+    protected $table = 'motivo_historia_clinica';
+    public static string $title = 'Motivo Historia Clinica';
+    protected static $simpleFormFieldDefinitions = [
+        ['motivo_historia_clinica', 'Motivo cita', 'text'],
+    ];
+    protected static $validationRules = [
+        'motivo_historia_clinica' => 'required|string|max:100',
+    ];
+    public static function getQuery()
+    {
+        $alias = (new self)->getTable();
+        $query = DB::table($alias)
+            ->select([
+                "{$alias}.id_{$alias} as id",
+                "{$alias}.{$alias}",
+            ]);
+        return ['query' => $query, 'alias' => $alias];
+    }
+    protected static $tableColumns = [
+        ['ID', 'id'],
+        ['MOTIVO HISTORIA CLÍNICA', 'motivo_historia_clinica'],
     ];
 
-    // Relación inversa: una historia pertenece a un motivo
-    public function historias(): HasMany
-    {
-        return $this->hasMany(HistoriaClinica::class, 'id_motivo_historia_clinica');
-    }
 }

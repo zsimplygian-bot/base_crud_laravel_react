@@ -27,7 +27,7 @@ export const ListPage: React.FC<Props> = ({
     <AppLayout breadcrumbs={[{ title, href: view }]}>
       <Head title={title} />
       <div className="flex h-full flex-1 flex-col rounded-xl p-4">
-        <h1 className="text-2xl font-semibold mb-0">
+        <h1 className="font-semibold mb-0">
           LISTADO DE {custom_title.toUpperCase()}
         </h1>
         <div className="overflow-x-auto w-full sm:w-[1580px] px-0 sm:px-4 md:px-0">

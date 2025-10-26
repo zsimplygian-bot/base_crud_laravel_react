@@ -8,16 +8,16 @@ class Mascota extends BaseModel
     protected $table = 'mascota';
     public static string $title = 'Mascotas';
     protected static $simpleFormFieldDefinitions = [
-        ['mascota', 'NOMBRE', 'text', 'placeholder:NADA'],
-        ['id_cliente', 'DUEÑO', 'select'],
-        ['id_raza', 'ESPECIE - RAZA', 'select'],
-        ['id_sexo', 'SEXO', 'select'],
-        ['id_unidad_tiempo', 'UNIDAD EDAD', 'select'],
-        ['edad', 'EDAD', 'number'],
-        ['color', 'COLOR', 'text'],
-        ['peso', 'PESO (KG)', 'number'],
+        ['mascota', 'MASCOTA', 'text', 'required'],
+        ['id_cliente', 'DUEÑO', 'select', 'required'],
+        ['id_raza', 'ESPECIE - RAZA', 'select', 'required'],
+        ['id_sexo', 'SEXO', 'select', 'required'],
+        ['id_unidad_tiempo', 'UNIDAD EDAD', 'select', 'required'],
+        ['edad', 'EDAD', 'number', 'required'],
+        ['color', 'COLOR', 'text', 'required'],
+        ['peso', 'PESO (KG)', 'number', 'required'],
         ['observaciones', 'OBSERVACIONES', 'textarea'],
-        //['imagen', 'IMAGEN', 'file'],
+        ['imagen', 'IMAGEN', 'file'],
     ];
     protected static $validationRules = [
         'mascota' => 'required|string|max:255',
@@ -29,12 +29,12 @@ class Mascota extends BaseModel
         'color' => 'nullable|string|max:100',
         'peso' => 'nullable|numeric',
         'observaciones' => 'nullable|string',
-        //'imagen' => 'nullable|string|max:255',
+        'imagen' => 'nullable|string|max:255',
     ];
-    protected static $toolbarfieldDefinitions = [
-        'id_cliente' => ['label' => 'DUEÑO', 'type' => 'select', 'width' => 2],
-        'id_raza' => ['label' => 'ESPECIE - RAZA', 'type' => 'select', 'width' => 2],
-        'id_sexo' => ['label' => 'SEXO', 'type' => 'select', 'width' => 2],
+    protected static $simpleToolbarFieldDefinitions = [
+        ['id_cliente', 'DUEÑO', 'select'],
+        ['id_raza', 'RAZA', 'select'],
+        ['id_sexo', 'SEXO', 'select'],
     ];
     public static array $allowedFilters = ['id_cliente', 'id_raza', 'id_sexo'];
     protected static array $apiConfig = [
@@ -55,7 +55,6 @@ class Mascota extends BaseModel
         $alias4 = 'especie';
         $alias5 = 'sexo';
         $alias6 = 'unidad_tiempo';
-
         $query = DB::table($alias)
             ->leftJoin($alias2, "{$alias}.id_{$alias2}", '=', "{$alias2}.id_{$alias2}")
             ->leftJoin($alias3, "{$alias}.id_{$alias3}", '=', "{$alias3}.id_{$alias3}")
@@ -75,7 +74,6 @@ class Mascota extends BaseModel
                 "{$alias}.imagen",
                 "{$alias}.created_at",
             ]);
-
         return ['query' => $query, 'alias' => $alias];
     }
     protected static $tableColumns = [
@@ -87,6 +85,7 @@ class Mascota extends BaseModel
         ['EDAD', 'edad'],
         ['COLOR', 'color'],
         ['PESO', 'peso'],
+        ['IMAGEN', 'imagen'],
         ['FECHA REGISTRO', 'created_at'],
     ];
     public function cliente()

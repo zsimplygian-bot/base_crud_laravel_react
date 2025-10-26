@@ -1,4 +1,4 @@
-import { ListPage } from "@/layouts/pages/list-page";
-export default function Listado(props) {
-  return <ListPage {...props} />;
+import { DataTableLayout } from "@/layouts/datatable-layout";
+export default function DatatablePage(props: any) {
+  return <DataTableLayout {...props} />;
 }
