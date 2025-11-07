@@ -1,5 +1,5 @@
+// FormPage.tsx
 import { Head } from "@inertiajs/react";
-import { router } from "@inertiajs/react";  // ← Agregado para control directo
 import AppLayout from "@/layouts/app-layout";
 import { useRef } from "react";
 import { useForm } from "@inertiajs/react";
@@ -19,7 +19,6 @@ import { ApiConfigEntry, useFetchWithButton } from "@/hooks/use-fetch-with-butto
 interface FormProps {
   form_data: any;
   formFields: any;
-  sheetFields?: any;
   action: string;
   custom_title: string;
   view: string;
@@ -35,7 +34,6 @@ interface FormProps {
 export const FormPage: React.FC<FormProps> = ({
   form_data,
   formFields,
-  sheetFields,
   action,
   custom_title,
   view,
@@ -71,76 +69,12 @@ export const FormPage: React.FC<FormProps> = ({
     processing,
     recentlySuccessful,
     queryparams,
-    sheetFields,
     data,
-    setData
+    setData,
+    reset
   );
   const { hiddenFields, ToggleUI } = useToggleForm(toggleOptions, setData, data, view, action);
   const FetchButton = useFetchWithButton({ data, setData, apiConfig, view });
-  // Detecta si hay archivos en data
-  const hasFile = Object.values(data).some((v) => v instanceof File);
-  // Handler personalizado: Usa router.post con FormData manual para orden garantizado
-  const handleSubmitWithFiles: React.FormEventHandler = (e) => {
-    e.preventDefault();
-    if (debug) {
-      console.log("📤 Datos que se enviarán:", data);
-      console.log("🔍 ¿Hay archivo?", hasFile);
-    }
-    const url = action === "create" 
-      ? route(`${view}.store`) 
-      : route(`${view}.update`, { [view]: data.id ?? data[`id_${view}`] });
-    if (hasFile) {
-      // Construir FormData: _method y _token PRIMERO para spoofing
-      const formData = new FormData();
-      // _token desde meta (estándar en Laravel)
-      const tokenElement = document.querySelector('meta[name="csrf-token"]');
-      const token = tokenElement?.getAttribute('content');
-      if (!token) {
-        console.error("❌ No se encontró CSRF token. Verifica <meta name='csrf-token'> en tu layout.");
-        return;
-      }
-      formData.append('_token', token);
-      // _method PRIMERO (usa 'PATCH' para resource routes default)
-      if (action !== "create") {
-        formData.append('_method', 'PATCH');  // ← Cambiado a PATCH
-      }
-      // Luego, append campos del data
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== null && value !== undefined && key !== 'id' && key !== '_method') {  // Evita duplicados
-          if (value instanceof File) {
-            formData.append(key, value);
-          } else {
-            formData.append(key, String(value));
-          }
-        }
-      });
-      // Debug: Log FormData (verifica orden en consola)
-      if (debug) {
-        console.log("🔍 Contenido de FormData (orden de append):");
-        for (let [key, value] of formData.entries()) {
-          console.log(key, typeof value === 'object' ? '[File]' : value);
-        }
-      }
-      // Enviar con router.post + forceFormData (envía FormData as-is)
-      router.post(url, formData, {
-        forceFormData: true,
-        preserveState: true,  // Preserva estado en errors
-        preserveScroll: true,
-        onSuccess: () => {
-          reset();  // Limpia form en éxito
-        },
-        onError: (err) => {
-          // Maneja errors manual (setea en data si usas)
-          setData(prev => ({ ...prev, errors: err }));
-        },
-      });
-    } else {
-      // Sin archivo: Usa handler estándar (put para update)
-      handleSubmit(e);
-    }
-  };
-  // Usa el handler con archivos si aplica, sino original
-  const finalSubmitHandler = submitForm ?? (hasFile ? handleSubmitWithFiles : handleSubmit);
   return (
     <AppLayout breadcrumbs={[{ title, href: view }]}>
       <Head title={title} />
@@ -157,13 +91,13 @@ export const FormPage: React.FC<FormProps> = ({
           </CardHeader>
           <CardContent>
             {debug && (
-    <>
-      {console.log("📋 formFields:", formFields)}
-      {console.log("📤 data actual:", data)}
-    </>
-  )}
+              <>
+                {console.log("📋 formFields:", formFields)}
+                {console.log("📤 data actual:", data)}
+              </>
+            )}
             <form
-              onSubmit={finalSubmitHandler}
+              onSubmit={submitForm ?? handleSubmit}
               action={route(`${view}.form`, { id: form_data?.id, action })}
               method="POST"
               className="space-y-2"

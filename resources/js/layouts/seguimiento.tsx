@@ -1,311 +1,212 @@
-import { useState, useRef, useEffect, useMemo } from "react";
-import { router } from "@inertiajs/react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useForm } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ButtonGroup } from "@/components/ui/button-group";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FormFieldsRenderer } from "@/components/form-fields";
-import { PencilIcon, TrashIcon, PlusIcon } from "lucide-react";
+import { PencilIcon, TrashIcon, Save, Loader2 } from "lucide-react";
 
-interface Registro {
-  id?: number;
-  [key: string]: any;
-}
+interface Field { label: string; key: string; value: any }
+interface Props { view: string; formId: number; action?: string }
 
-interface SeguimientoSectionProps {
-  view: string;
-  formId: number;
-  action?: string;
-  seguimientos?: Registro[];
-  procedimientos?: Registro[];
-  medicamentos?: Registro[];
-  anamnesis?: Registro[];
-  modalFields?: any;
-  procedimientoFields?: any;
-  medicamentoFields?: any;
-  anamnesisFields?: any;
-}
+const CONFIG = {
+  seguimientos: "SEGUIMIENTO",
+  procedimientos: "PROCEDIMIENTO",
+  medicamentos: "MEDICAMENTO",
+  anamnesis: "ANAMNESIS",
+} as const;
 
-const tiposMap = {
-  seguimiento: "seguimientos",
-  procedimiento: "procedimientos",
-  medicamento: "medicamentos",
-  anamnesis: "anamnesis",
+type Action = "create" | "update" | "delete";
+
+const ACTION: Record<Action, {
+  title: string;
+  btn: string;
+  cls: string;
+  icon: JSX.Element;
+  border: string;
+  readonly?: true;
+}> = {
+  create: { title: "REGISTRAR", btn: "Guardar", cls: "bg-blue-600 hover:bg-blue-700 text-white", icon: <Save className="w-4 h-4" />, border: "border-l border-blue-500" },
+  update: { title: "ACTUALIZAR", btn: "Actualizar", cls: "bg-green-600 hover:bg-green-700 text-white", icon: <PencilIcon className="w-4 h-4" />, border: "border-l border-green-500" },
+  delete: { title: "ELIMINAR", btn: "Eliminar", cls: "bg-red-600 hover:bg-red-700 text-white", icon: <TrashIcon className="w-4 h-4" />, border: "border-l border-red-500", readonly: true },
 };
 
-export default function SeguimientoSection({
-  view,
-  formId,
-  action = "view",
-  seguimientos = [],
-  procedimientos = [],
-  medicamentos = [],
-  anamnesis = [],
-  modalFields = [],
-  procedimientoFields = [],
-  medicamentoFields = [],
-  anamnesisFields = [],
-}: SeguimientoSectionProps) {
-  const [modal, setModal] = useState<{ open: boolean; registro: Registro | null; tipo: string | null }>({
-    open: false,
-    registro: null,
-    tipo: null,
+const singular = (t: string) => t.endsWith("is") ? t : t.replace(/s$/, "");
+const idKey = (t: string) => `id_historia_clinica_${singular(t)}`;
+const route = (t: string, id?: number) => id ? `/historia_clinica_${singular(t)}/${id}` : `/historia_clinica_${singular(t)}/form`;
+const extractId = (f: Field[], t: string) => f.find(x => x.key.startsWith("id_") || x.label.toLowerCase().includes(singular(t)))?.value ?? null;
+
+// Primera letra mayúscula, resto minúscula
+const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+export default function SeguimientoSection({ view, formId, action = "update" }: Props) {
+  const canEdit = action === "update";
+  const parentId = useMemo(() => window.location.pathname.match(/\/update\/(\d+)/)?.[1] ?? formId, [formId]);
+
+  const [modal, setModal] = useState<{ open: boolean; tipo: string | null; reg: Field[] | null; act: Action }>({
+    open: false, tipo: null, reg: null, act: "update"
   });
-  const [confirm, setConfirm] = useState<{ open: boolean; registro: Registro | null; tipo: string }>({
-    open: false,
-    registro: null,
-    tipo: "",
-  });
-  const [formData, setFormData] = useState<Record<string, any>>({});
-  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const [fields, setFields] = useState<Record<string, any[]>>({});
+  const [data, setData] = useState<Record<string, any>>({});
+  const [records, setRecords] = useState<Record<string, Field[][]>>({});
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const { post, put, delete: del, processing, errors, setData: setInertia } = useForm({});
 
-  const normalizeFields = (fields: any): any[] => {
-    if (Array.isArray(fields)) return fields;
-    if (fields && typeof fields === "object")
-      return Object.entries(fields).map(([key, def]: any) => [
-        key,
-        def.label ?? key.toUpperCase(),
-        def.type ?? "text",
-        def.options ?? null,
-        def.width ?? 1,
-      ]);
-    return [];
-  };
+  const load = useCallback(() => {
+    fetch(`/api/historia/${parentId}/records`).then(r => r.json()).then(setRecords).catch(() => {});
+  }, [parentId]);
 
-  const modalFieldsArr = useMemo(() => normalizeFields(modalFields), [modalFields]);
-  const procedimientoFieldsArr = useMemo(() => normalizeFields(procedimientoFields), [procedimientoFields]);
-  const medicamentoFieldsArr = useMemo(() => normalizeFields(medicamentoFields), [medicamentoFields]);
-  const anamnesisFieldsArr = useMemo(() => normalizeFields(anamnesisFields), [anamnesisFields]);
-
-  const todosRegistros = useMemo(() => {
-    const all: Registro[] = [
-      ...anamnesis.map((r) => ({ ...r, tipo: "Anamnesis", fields: anamnesisFieldsArr })),
-      ...seguimientos.map((r) => ({ ...r, tipo: "Seguimiento", fields: modalFieldsArr })),
-      ...procedimientos.map((r) => ({ ...r, tipo: "Procedimiento", fields: procedimientoFieldsArr })),
-      ...medicamentos.map((r) => ({ ...r, tipo: "Medicamento", fields: medicamentoFieldsArr })),
-    ];
-    return all.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-  }, [anamnesis, seguimientos, procedimientos, medicamentos]);
-
-  const currentFieldArray = useMemo(() => {
-    switch (modal.tipo) {
-      case "procedimientos":
-        return procedimientoFieldsArr;
-      case "medicamentos":
-        return medicamentoFieldsArr;
-      case "anamnesis":
-        return anamnesisFieldsArr;
-      default:
-        return modalFieldsArr;
-    }
-  }, [modal.tipo, procedimientoFieldsArr, medicamentoFieldsArr, anamnesisFieldsArr, modalFieldsArr]);
-
-  const currentFormFieldsObj = useMemo(() => {
-    const obj: Record<string, any> = {};
-    currentFieldArray.forEach((f) => {
-      if (Array.isArray(f) && f[0])
-        obj[f[0]] = {
-          form: { key: f[0], label: f[1], type: f[2], options: f[3], placeholder: "", width: 1 },
-        };
-    });
-    return obj;
-  }, [currentFieldArray]);
+  useEffect(load, [load]);
 
   useEffect(() => {
-    if (!modal.open) return;
-    setErrors({});
+    if (!modal.open || !modal.tipo || fields[modal.tipo]) return;
+    fetch(`/api/historia/${modal.tipo}/fields`)
+      .then(r => r.json())
+      .then(d => setFields(p => ({
+        ...p,
+        [modal.tipo!]: Object.entries(d).map(([k, v]: any) => [k, v.label ?? k, v.type ?? "text", v.options ?? null])
+      })));
+  }, [modal.open, modal.tipo, fields]);
+
+  useEffect(() => {
+    if (!modal.open || !modal.tipo || !fields[modal.tipo]) return;
     const base: Record<string, any> = {};
-    currentFieldArray.forEach((f) => {
-      if (Array.isArray(f) && f[0]) base[f[0]] = modal.registro?.[f[0]] ?? "";
-    });
-    setFormData(base);
-  }, [modal.open, modal.registro, currentFieldArray]);
+    fields[modal.tipo].forEach(([k]) => base[k] = modal.reg?.find(f => f.key === k)?.value ?? "");
+    const id = modal.reg ? extractId(modal.reg, modal.tipo) : null;
+    if (id) base[idKey(modal.tipo)] = id;
+    if (modal.act === "create") base.id_historia_clinica = parentId;
+    setData(base);
+  }, [modal.open, modal.tipo, modal.reg, fields, parentId]);
 
-  const getRegistroId = (registro: Registro, tipo: string) => {
-    const singular = tipo === "anamnesis" ? tipo : tipo.replace(/s$/, "");
-    const posibles = [
-      registro[`id_historia_clinica_${singular}`],
-      registro[`id_${singular}`],
-      registro.id,
-    ];
-    return posibles.find((v) => v !== undefined && v !== null);
-  };
+  useEffect(() => setInertia(data), [data, setInertia]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const submit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!modal.tipo) return;
-    const tipoKey = modal.tipo === "anamnesis" ? "anamnesis" : modal.tipo.replace(/s$/, "");
-    const routeName = `${view}.${tiposMap[tipoKey] ?? "anamnesis"}`;
-    const registroId = modal.registro ? getRegistroId(modal.registro, modal.tipo) : null;
-    const url = modal.registro
-      ? route(`${routeName}.update`, { [tipoKey]: registroId })
-      : route(`${routeName}.store`);
-    const dataPayload = { ...formData, id_historia_clinica: formId };
-    router[modal.registro ? "put" : "post"](url, {
-      data: dataPayload,
-      onError: setErrors,
-      onSuccess: () => setModal({ open: false, registro: null, tipo: null }),
-    });
-  };
+    const id = data[idKey(modal.tipo)];
+    const onSuccess = () => { setModal(m => ({ ...m, open: false })); load(); };
+    const opts = { onSuccess };
+    modal.act === "create" ? post(route(modal.tipo), { data, ...opts })
+      : modal.act === "update" ? put(route(modal.tipo, id), { data, ...opts })
+      : del(route(modal.tipo, id), opts);
+  }, [modal, data, post, put, del, load]);
 
-  const handleDelete = () => {
-    if (!confirm.registro) return;
-    const tipoKey = confirm.tipo === "anamnesis" ? "anamnesis" : confirm.tipo.replace(/s$/, "");
-    const routeName = `${view}.${tiposMap[tipoKey] ?? "anamnesis"}`;
-    const registroId = getRegistroId(confirm.registro, confirm.tipo);
-    if (!registroId) return;
-    const delUrl = route(`${routeName}.destroy`, { [tipoKey]: registroId });
-    router.delete(delUrl, {
-      onSuccess: () => setConfirm({ open: false, registro: null, tipo: "" }),
-    });
-  };
+  const open = (tipo: string, reg: Field[] | null, act: Action) => setModal({ open: true, tipo, reg, act });
+  const close = () => setModal({ open: false, tipo: null, reg: null, act: "update" });
 
-  const canEdit = action === "update";
+  const all = useMemo(() => Object.entries(records)
+    .flatMap(([t, items]) => items.map(f => ({
+      k: t,
+      tipo: CONFIG[t as keyof typeof CONFIG],
+      f,
+      fecha: f.find(x => x.key === "fecha")?.value ?? null,
+      id: extractId(f, t)
+    })))
+    .sort((a, b) => (a.fecha ? +new Date(a.fecha) : 0) - (b.fecha ? +new Date(b.fecha) : 0))
+  , [records]);
+
+  const cfg = modal.tipo ? ACTION[modal.act] : null;
+  const label = modal.tipo ? CONFIG[modal.tipo as keyof typeof CONFIG] : "";
 
   return (
-    <div className="flex flex-col gap-4 mt-0">
+    <div className="flex flex-col gap-4">
+      {/* // Título: Botones para crear nuevos registros */}
       {canEdit && (
-        <div className="flex flex-wrap gap-2">
-          {Object.entries({
-            anamnesis: "Anamnesis",
-            seguimientos: "Seguimiento",
-            procedimientos: "Procedimiento",
-            medicamentos: "Medicamento",
-          }).map(([tipo, label]) => (
-            <Button
-              key={tipo}
-              variant="outline"
-              size="sm"
-              onClick={() => setModal({ open: true, registro: null, tipo })}
-            >
-              <PlusIcon className="w-4 h-4 mr-1" /> {label}
-            </Button>
-          ))}
-        </div>
+        <ButtonGroup className="gap-1 flex flex-wrap">
+  {Object.keys(CONFIG).map(t => (
+    <Button
+      key={t}
+      size="sm"
+      variant="outline"
+      className="text-xs font-medium min-w-0 px-2"
+      onClick={() => open(t, null, "create")}
+    >
+      {capitalize(CONFIG[t as keyof typeof CONFIG])}
+    </Button>
+  ))}
+</ButtonGroup>
       )}
 
-      {todosRegistros.map((r) => {
-        const tipoLower = tiposMap[r.tipo.toLowerCase()] || "anamnesis";
-        const recordId = getRegistroId(r, tipoLower);
-        return (
-          <div
-            key={`${r.tipo}-${recordId}`}
-            className="p-3 rounded-lg border bg-gray-50 dark:bg-gray-900 flex justify-between items-start"
-          >
-            <div className="flex-1">
-              <p className="font-semibold text-gray-800 dark:text-white">
-                {r.tipo} — {r.fecha}
-              </p>
-              {Array.isArray(r.fields) &&
-                r.fields
-                  .filter((f: any[]) => Array.isArray(f) && f[0] !== "fecha")
-                  .map((f: any[], i: number) => {
-                    const key = f[0];
-                    const label = f[1];
-                    let value = r[key] ?? "-";
-                    if (/^id_/.test(key)) {
-                      const nombreKey = key.replace(/^id_/, "nombre_");
-                      if (r[nombreKey] !== undefined && r[nombreKey] !== null) {
-                        value = r[nombreKey];
-                      }
-                    }
-                    return (
-                      <p key={i} className="text-sm text-gray-700 dark:text-gray-300">
-                        {label}: {value}
-                      </p>
-                    );
-                  })}
-            </div>
-
-            {canEdit && (
-              <div className="flex flex-col gap-1 ml-2">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  onClick={() => setModal({ open: true, registro: r, tipo: tipoLower })}
-                >
-                  <PencilIcon className="w-4 h-4" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant="destructive"
-                  onClick={() => setConfirm({ open: true, registro: r, tipo: tipoLower })}
-                >
-                  <TrashIcon className="w-4 h-4" />
-                </Button>
-              </div>
-            )}
+      {/* // Título: Lista de todos los registros */}
+      {all.map(r => (
+        <div
+          key={`${r.k}-${r.id}`}
+          className="border rounded-lg p-3 flex justify-between bg-muted/40"
+        >
+          <div>
+            <p className="font-semibold text-purple-600 dark:text-purple-400">
+  {r.tipo}
+  {r.fecha ? (
+    <span className="ml-2 text-purple-600 dark:text-purple-400">
+      — {new Date(r.fecha).toLocaleDateString("es-PE")}
+    </span>
+  ) : (
+    <span className="ml-2 text-gray-400 dark:text-gray-500">— Sin fecha</span>
+  )}
+</p>
+            {r.f
+              .filter(x => !["id_", "fecha", "created_at", "updated_at"].some(p => x.key.startsWith(p) || x.key === p))
+              .map((f, i) => <p key={i} className="text-sm">{f.label}: {f.value ?? "-"}</p>)}
           </div>
-        );
-      })}
 
-      {/* Modal Form */}
-      {modal.open && (
-        <Dialog open={modal.open} onOpenChange={() => setModal({ open: false, registro: null, tipo: null })}>
-          <DialogContent className="max-w-lg w-full">
-            <DialogHeader>
-              <DialogTitle>
-                {modal.registro
-                  ? `Editar ${modal.tipo?.replace(/s$/, "")}`
-                  : `Nuevo ${modal.tipo?.replace(/s$/, "")}`}
-              </DialogTitle>
-            </DialogHeader>
-
-            <form onSubmit={handleSubmit} className="space-y-3 w-full">
-              <div className="flex flex-col gap-3">
-                {Object.entries(currentFormFieldsObj).map(([key, field]: any) => (
-                  <div key={key} className="w-full">
-                    <FormFieldsRenderer
-                      formFields={{ [key]: field }}
-                      data={formData}
-                      setData={(k, v) => setFormData((p) => ({ ...p, [k]: v }))}
-                      errors={errors}
-                      readonly={false}
-                      configReadonly={false}
-                      hiddenFields={[]}
-                      isMobile={true}
-                      inputRefs={inputRefs}
-                      view={view}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setModal({ open: false, registro: null, tipo: null })}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit">Guardar</Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Confirm Delete */}
-      {confirm.open && (
-        <Dialog open={confirm.open} onOpenChange={() => setConfirm({ open: false, registro: null, tipo: "" })}>
-          <DialogContent className="max-w-md w-full">
-            <DialogHeader>
-              <DialogTitle>¿Eliminar {confirm.registro?.tipo ?? "registro"}?</DialogTitle>
-            </DialogHeader>
-            <div className="flex justify-end gap-2 pt-3">
-              <Button
-                variant="outline"
-                onClick={() => setConfirm({ open: false, registro: null, tipo: "" })}
-              >
-                Cancelar
+          {canEdit && (
+            <div className="flex flex-col gap-1 ml-2">
+              <Button size="icon" variant="outline" onClick={() => open(r.k, r.f, "update")}>
+                <PencilIcon className="w-4 h-4" />
               </Button>
-              <Button variant="destructive" onClick={handleDelete}>
-                Eliminar
+              <Button size="icon" variant="destructive" onClick={() => open(r.k, r.f, "delete")}>
+                <TrashIcon className="w-4 h-4" />
               </Button>
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
+          )}
+        </div>
+      ))}
+
+      {/* // Título: Modal */}
+      <Dialog open={modal.open} onOpenChange={close}>
+        <DialogContent className={`max-w-lg p-6 ${cfg?.border || ""}`}>
+          {cfg && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-lg font-bold">
+                  
+                  {cfg.title} {label}
+                </DialogTitle>
+              </DialogHeader>
+              <DialogDescription className="sr-only">
+                Formulario para {cfg.title.toLowerCase()} {label.toLowerCase()}.
+              </DialogDescription>
+            </>
+          )}
+
+          <form onSubmit={submit} className="space-y-3">
+            {(fields[modal.tipo ?? ""] ?? [])
+              .filter(([k]) => k !== "id_historia_clinica")
+              .map(([k, l, t, o]) => (
+                <FormFieldsRenderer
+                  key={k}
+                  formFields={{ [k]: { form: { key: k, label: l, type: t, options: o } } }}
+                  data={data}
+                  setData={(k, v) => setData(p => ({ ...p, [k]: v }))}
+                  errors={errors}
+                  readonly={cfg?.readonly}
+                  hiddenFields={[]}
+                  isMobile
+                  inputRefs={inputRefs}
+                  view={view}
+                />
+              ))}
+
+            <div className="flex justify-end">
+              <Button type="submit" disabled={processing} className={`${cfg?.cls} flex items-center gap-2`}>
+                {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : cfg?.icon}
+                {cfg?.btn}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

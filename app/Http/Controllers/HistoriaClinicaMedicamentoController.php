@@ -1,13 +1,11 @@
 <?php
 namespace App\Http\Controllers;
-
-use App\Models\HistoriaClinica;
 use App\Models\HistoriaClinicaMedicamento;
-
-class HistoriaClinicaMedicamentoController extends BaseSeguimientoController
+class HistoriaClinicaMedicamentoController extends BaseController
 {
-    protected string $parentModel = HistoriaClinica::class;
-    protected string $seguimientoModel = HistoriaClinicaMedicamento::class;
-    protected string $view = 'historia_clinica';
-    protected string $title = 'Medicamento';
+    public function __construct()
+    {
+        $this->model = HistoriaClinicaMedicamento::class;
+        parent::__construct();
+    }
 }

@@ -8,9 +8,9 @@ class Cliente extends BaseModel
     protected $table = 'cliente';
     public static string $title = 'Dueños';
     protected static $simpleFormFieldDefinitions = [
-        ['cliente', 'CLIENTE',  'text'], 
+        ['cliente', 'CLIENTE',  'text', 'required'], 
         ['dni', 'DNI', 'tel', 'maxlength:8'],
-        ['telefono', 'TELÉFONO', 'tel', 'maxlength:9'],
+        ['telefono', 'TELÉFONO', 'tel', 'maxlength:9', 'required'],
         //['email', 'EMAIL', 'email'],
         ['direccion', 'DIRECCIÓN', 'textarea'], 
     ];

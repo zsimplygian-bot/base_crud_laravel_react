@@ -2,6 +2,7 @@ import { Head, Link } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import { type BreadcrumbItem } from "@/types";
 import * as LucideIcons from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const breadcrumbs: BreadcrumbItem[] = [
   { title: "Dashboard", href: "/dashboard" },
@@ -26,6 +27,8 @@ type DashboardProps = {
 };
 
 export default function Dashboard({ menus, stats }: DashboardProps) {
+  const DatabaseIcon = LucideIcons.Database;
+
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Dashboard" />
@@ -45,15 +48,13 @@ export default function Dashboard({ menus, stats }: DashboardProps) {
                   </div>
                   <p className="mt-2 text-center text-lg font-medium">{titulo}</p>
                 </div>
-                <div className="mt-4 flex justify-center">
+                <div className="mt-4 flex justify-center gap-2">
                   <Link
                     href={url_create}
                     className="text-sm text-gray-700 hover:underline dark:text-gray-200"
                   >
                     Crear Nuevo
                   </Link>
-                </div>
-                <div className="mt-2 text-center">
                   <Link
                     href={url_detail}
                     className="text-sm text-gray-600 hover:underline dark:text-gray-400"
@@ -65,14 +66,19 @@ export default function Dashboard({ menus, stats }: DashboardProps) {
             );
           })}
         </div>
-        <div className="flex justify-end">
-  <button
-    onClick={() => window.location.href = route('export.db')}
-    className="rounded-lg bg-indigo-600 px-4 py-2 text-white font-medium shadow hover:bg-indigo-700 transition"
-  >
-    Exportar Base de Datos
-  </button>
-</div>
+
+        {/* Botón elegante de exportar */}
+        <div className="flex justify-end mt-0">
+          <Button
+            variant="default"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={() => window.location.href = route('export.db')}
+          >
+            <DatabaseIcon className="w-4 h-4" />
+            Exportar Base de Datos
+          </Button>
+        </div>
       </div>
     </AppLayout>
   );

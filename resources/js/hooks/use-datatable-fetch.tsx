@@ -30,13 +30,14 @@ export const useDataTableFetch = ({
   const [data, setData] = useState<any[]>([]);
   const [totalRows, setTotalRows] = useState(0);
   const [loading, setLoading] = useState(false);
-  const memoizedDateRange = useMemo(() => {
-    return {
+  const memoizedDateRange = useMemo(
+    () => ({
       from: dateRange?.from?.toISOString(),
       to: dateRange?.to?.toISOString(),
-    };
-  }, [dateRange?.from, dateRange?.to]);
-  const memoizedFilterValues = useMemo(() => JSON.stringify(filterValues), [filterValues]);
+    }),
+    [dateRange?.from, dateRange?.to]
+  );
+  const memoizedFilters = useMemo(() => JSON.stringify(filterValues), [filterValues]);
   useEffect(() => {
     if (dateRange && (!memoizedDateRange.from || !memoizedDateRange.to)) return;
     const fetchData = async () => {
@@ -45,14 +46,12 @@ export const useDataTableFetch = ({
         let realView = view;
         if (typeof window !== "undefined") {
           const parts = window.location.pathname.split("/");
-          if (view === "itemsimple" && parts[1] === "itemsimple" && parts[2]) {
-            realView = parts[2];
-          }
         }
-        const params = new URLSearchParams();
-        params.set("page", (pageIndex + 1).toString());
-        params.set("limit", pageSize.toString());
-        params.set("view", realView);
+        const params = new URLSearchParams({
+          page: (pageIndex + 1).toString(),
+          limit: pageSize.toString(),
+          view: realView,
+        });
         if (sortBy) {
           params.set("sortBy", sortBy);
           params.set("sortOrder", sortOrder);
@@ -62,33 +61,26 @@ export const useDataTableFetch = ({
           params.set("to", memoizedDateRange.to);
         }
         if (selectedColumn && searchTerm) {
-          params.set("search", searchTerm);
           params.set("column", selectedColumn);
+          params.set("search", searchTerm);
         }
-        // Obtener todos los queryparams desde la URL
-        const urlQueryParams: Record<string, string> = {};
+        // Obtener queryparams de la URL
+        const urlParams: Record<string, string> = {};
         if (typeof window !== "undefined") {
-          const searchParams = new URLSearchParams(window.location.search);
-          searchParams.forEach((value, key) => {
-            urlQueryParams[key] = value;
+          new URLSearchParams(window.location.search).forEach((v, k) => {
+            urlParams[k] = v;
           });
         }
-        // Fusionar queryparams proporcionados con los de la URL (prioriza explícitos)
-        const mergedQueryParams = { ...urlQueryParams, ...queryparams };
-        // Agregar los queryparams fusionados, con lógica condicional
-        Object.entries(mergedQueryParams).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== "") {
-            // Solo permitir 'tipo' si la vista es 'itemsimple'
-            if (key === "tipo" && view !== "itemsimple") return;
-            params.set(key, value.toString());
-          }
+        // Fusionar queryparams explícitos
+        const merged = { ...urlParams, ...queryparams };
+        Object.entries(merged).forEach(([k, v]) => {
+          if (v === undefined || v === null || v === "") return;
+          params.set(k, v.toString());
         });
         // Agregar filtros
-        const parsedFilterValues: Record<string, string> = JSON.parse(memoizedFilterValues);
-        Object.entries(parsedFilterValues).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== "") {
-            params.set(key, value);
-          }
+        const parsedFilters = JSON.parse(memoizedFilters);
+        Object.entries(parsedFilters).forEach(([k, v]) => {
+          if (v) params.set(k, v);
         });
         const url = `/api/index?${params.toString()}`;
         const res = await fetch(url);
@@ -114,7 +106,7 @@ export const useDataTableFetch = ({
     memoizedDateRange,
     selectedColumn,
     searchTerm,
-    memoizedFilterValues,
+    memoizedFilters,
     queryparams,
   ]);
   return { data, totalRows, loading };

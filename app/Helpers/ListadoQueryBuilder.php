@@ -10,7 +10,7 @@ class ListadoQueryBuilder
         if ($col === 'id') {
             $col = 'id_' . $viewName;
         }
-        $tipoParaQuery = $req->input('tipo') ?? $req->input('view');
+        $tipoParaQuery = $req->input('view');
         $meta = ListadoHelper::extractSelectMeta(
             $instance::getQuery($req->input('search'), $tipoParaQuery)['query']
         );
@@ -32,7 +32,7 @@ class ListadoQueryBuilder
                 Carbon::parse($req->input('to'))->endOfDay()
             ]);
         }
-        $reserved = ['page', 'limit', 'view', 'tipo', 'sortOrder', 'sortBy', 'column', 'search', 'from', 'to'];
+        $reserved = ['page', 'limit', 'view', 'sortOrder', 'sortBy', 'column', 'search', 'from', 'to'];
         $allowed = property_exists($instance, 'allowedFilters') ? $instance::$allowedFilters : [];
         foreach ($req->all() as $param => $value) {
             if (!in_array($param, $reserved) && in_array($param, $allowed) && $value !== null && $value !== '') {
@@ -42,9 +42,7 @@ class ListadoQueryBuilder
         }
         $sort = $req->input('sortBy', 'id');
         if ($sort === 'id') {
-            $sort = ($viewName === 'itemsimple' && $req->filled('tipo'))
-                ? 'id_' . $req->input('tipo')
-                : 'id_' . $viewName;
+            $sort = 'id_' . $viewName;
         }
         $sortAlias = $colMap[$sort] ?? $alias;
         $order = $req->input('sortOrder', 'desc');

@@ -1,5 +1,4 @@
 import { Head } from "@inertiajs/react";
-import { router } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import { useRef } from "react";
 import { useForm } from "@inertiajs/react";
@@ -16,8 +15,8 @@ import useToggleForm from "@/hooks/use-form-toggle";
 import { useFormAction } from "@/hooks/use-form-action";
 import { FormFieldsRenderer } from "@/components/form-fields";
 import { ApiConfigEntry, useFetchWithButton } from "@/hooks/use-fetch-with-button";
-import SeguimientoSection from "@/layouts/seguimiento"; // ✅ Aquí se importa la funcionalidad separada
-interface FormProps {
+import SeguimientoSection from "@/layouts/seguimiento";
+interface FormPageProps {
   form_data: any;
   formFields: any;
   modalFields?: any[];
@@ -31,7 +30,7 @@ interface FormProps {
   width_form?: string;
   readonly?: boolean;
   toggleOptions?: any;
-  queryparams?: any;
+  queryparams?: string | Record<string, any>;
   apiConfig?: ApiConfigEntry;
   seguimientos?: any[];
   procedimientos?: any[];
@@ -39,13 +38,9 @@ interface FormProps {
   anamnesis?: any[];
   debug?: boolean;
 }
-export const FormPage: React.FC<FormProps> = ({
+export const FormPage: React.FC<FormPageProps> = ({
   form_data,
   formFields,
-  modalFields = [],
-  procedimientoFields = [],
-  medicamentoFields = [],
-  anamnesisFields = [],
   action,
   custom_title,
   view,
@@ -55,18 +50,13 @@ export const FormPage: React.FC<FormProps> = ({
   toggleOptions,
   queryparams,
   apiConfig,
-  seguimientos = [],
-  procedimientos = [],
-  medicamentos = [],
-  anamnesis = [],
   debug = false,
 }) => {
-  const { data, setData, post, put, delete: inertiaDelete, processing, errors, recentlySuccessful, reset } = useForm(form_data);
+  const { data, setData, post, put, delete: inertiaDelete, processing, errors, recentlySuccessful, reset } =
+    useForm(form_data);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const isMobile = useIsMobile();
-
   useFormCalculate({ view, data, setData });
-
   const {
     title: formTitle,
     description,
@@ -85,47 +75,12 @@ export const FormPage: React.FC<FormProps> = ({
     processing,
     recentlySuccessful,
     queryparams,
-    [],
     data,
-    setData
+    setData,
+    reset
   );
-
   const { hiddenFields, ToggleUI } = useToggleForm(toggleOptions, setData, data, view, action);
   const FetchButton = useFetchWithButton({ data, setData, apiConfig, view });
-
-  // Detecta si hay archivos
-  const hasFile = Object.values(data).some((v) => v instanceof File);
-
-  const handleSubmitWithFiles: React.FormEventHandler = (e) => {
-    e.preventDefault();
-    const url =
-      action === "create"
-        ? route(`${view}.store`)
-        : route(`${view}.update`, { [view]: data.id ?? data[`id_${view}`] });
-
-    const formData = new FormData();
-    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
-    if (!token) return;
-
-    formData.append("_token", token);
-    if (action !== "create") formData.append("_method", "PATCH");
-
-    Object.entries(data).forEach(([key, value]) => {
-      if (value != null && key !== "id" && key !== "_method") {
-        formData.append(key, value instanceof File ? value : String(value));
-      }
-    });
-
-    router.post(url, formData, {
-      forceFormData: true,
-      preserveState: true,
-      preserveScroll: true,
-      onSuccess: () => reset(),
-    });
-  };
-
-  const finalSubmitHandler = hasFile ? handleSubmitWithFiles : handleSubmit;
-
   return (
     <AppLayout breadcrumbs={[{ title, href: view }]}>
       <Head title={title} />
@@ -141,10 +96,18 @@ export const FormPage: React.FC<FormProps> = ({
             </div>
           </CardHeader>
           <CardContent>
+            {debug && (
+              <>
+                {console.log("📋 formFields:", formFields)}
+                {console.log("📤 data actual:", data)}
+              </>
+            )}
             <form
-              onSubmit={finalSubmitHandler}
-              encType="multipart/form-data"
+              onSubmit={handleSubmit}
+              action={route(`${view}.form`, { id: form_data?.id, action })}
+              method="POST"
               className="space-y-2"
+              encType="multipart/form-data"
             >
               <div className="flex flex-wrap gap-4">
                 <FormFieldsRenderer
@@ -165,21 +128,12 @@ export const FormPage: React.FC<FormProps> = ({
             </form>
           </CardContent>
         </Card>
-
-        {/* ✅ Sección separada de registros, modal y eliminación */}
+        {/* Sección de seguimiento preservada */}
         {action !== "create" && (
           <SeguimientoSection
             view={view}
             action={action}
             formId={form_data?.[`id_${view}`]}
-            seguimientos={seguimientos}
-            procedimientos={procedimientos}
-            medicamentos={medicamentos}
-            anamnesis={anamnesis}
-            modalFields={modalFields}
-            procedimientoFields={procedimientoFields}
-            medicamentoFields={medicamentoFields}
-            anamnesisFields={anamnesisFields}
             debug={debug}
           />
         )}
@@ -187,5 +141,4 @@ export const FormPage: React.FC<FormProps> = ({
     </AppLayout>
   );
 };
-
 export default FormPage;

@@ -18,15 +18,24 @@ type Props = {
   hiddenFields: string[];
   isMobile: boolean;
   inputRefs: React.MutableRefObject<Record<string, HTMLInputElement | null>>;
-  view?: string; // ← Subcarpeta opcional
+  view?: string;
 };
 
 // ---------- Wrapper ----------
-const FieldWrapper = ({ label, required, htmlFor, children }: any) =>
-  label ? (
+const FieldWrapper = ({ label, required, htmlFor, children }: any) => {
+  // ✅ Si el campo es hidden → no renderizamos label ni wrapper
+  if (children?.props?.type === "hidden") {
+    return children;
+  }
+
+  const isSelect =
+    children?.type?.name === "FieldCombobox" ||
+    children?.type?.displayName === "FieldCombobox";
+
+  return label ? (
     <div className="group relative w-full">
       <Label
-        htmlFor={htmlFor}
+        {...(!isSelect ? { htmlFor } : {})}
         className="bg-background text-foreground absolute top-0 left-2 -translate-y-1/2 px-1 text-xs z-10 flex items-center gap-1"
       >
         {label}
@@ -37,6 +46,7 @@ const FieldWrapper = ({ label, required, htmlFor, children }: any) =>
   ) : (
     <>{children}</>
   );
+};
 
 // ---------- Inputs ----------
 const FieldInput = ({ id, type, value, disabled, setData, inputRefs, placeholder, maxlength, readonly }: any) => (
@@ -71,7 +81,7 @@ const FieldTextarea = ({ id, value, disabled, setData, placeholder, rows = 3 }: 
 const FieldButton = ({ field }: any) => (
   <Link
     href={field.url || "#"}
-    className={`inline-block px-4 py-2 rounded text-white text-center ${
+    className={`bg-background inline-block px-4 py-2 rounded text-white text-center ${
       field.color === "blue" ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-600 hover:bg-gray-700"
     }`}
     target="_blank"
@@ -81,7 +91,7 @@ const FieldButton = ({ field }: any) => (
   </Link>
 );
 
-const FieldCombobox = ({ value, field, disabled, setData }: any) => {
+const FieldCombobox = ({ id, value, field, disabled, setData }: any) => {
   const options = useMemo(
     () =>
       Array.isArray(field.options?.data)
@@ -99,15 +109,17 @@ const FieldCombobox = ({ value, field, disabled, setData }: any) => {
   }, [field.key]);
 
   return (
-    <Combobox
-      value={value?.toString() || ""}
-      fieldKey={field.key}
-      options={options}
-      disabled={disabled}
-      placeholder={field.placeholder}
-      onChange={(val) => setData(field.key, val)}
-      createUrl={createUrl}
-    />
+    <div id={id}>
+      <Combobox
+        value={value?.toString() || ""}
+        fieldKey={field.key}
+        options={options}
+        disabled={disabled}
+        placeholder={field.placeholder}
+        onChange={(val) => setData(field.key, val)}
+        createUrl={createUrl}
+      />
+    </div>
   );
 };
 
@@ -141,13 +153,8 @@ const FieldFile = ({ id, value, setData, disabled, view }: any) => {
     <div className="flex flex-col gap-2">
       <Input type="file" id={id} onChange={handleChange} disabled={disabled} accept="image/*" />
       {preview && value && (
-  <img
-    src={preview}
-    alt="Vista previa"
-    className="h-24 w-24 object-cover rounded-md border border-gray-400"
-  />
-)}
-
+        <img src={preview} alt="Vista previa" className="h-24 w-24 object-cover rounded-md border border-gray-400" />
+      )}
     </div>
   );
 };

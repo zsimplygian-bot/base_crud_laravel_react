@@ -11,11 +11,11 @@ class Mascota extends BaseModel
         ['mascota', 'MASCOTA', 'text', 'required'],
         ['id_cliente', 'DUEÑO', 'select', 'required'],
         ['id_raza', 'ESPECIE - RAZA', 'select', 'required'],
-        ['id_sexo', 'SEXO', 'select', 'required'],
-        ['id_unidad_tiempo', 'UNIDAD EDAD', 'select', 'required'],
-        ['edad', 'EDAD', 'number', 'required'],
+        ['id_sexo', 'SEXO', 'select', 1, 'required'],
+        ['id_unidad_tiempo', 'UNIDAD EDAD', 'select', 1, 'required'],
+        ['edad', 'EDAD', 'number', 1, 'required'],
         ['color', 'COLOR', 'text', 'required'],
-        ['peso', 'PESO (KG)', 'number', 'required'],
+        ['peso', 'PESO (KG)', 'number', 1, 'required'],
         ['observaciones', 'OBSERVACIONES', 'textarea'],
         ['imagen', 'IMAGEN', 'file'],
     ];
@@ -29,12 +29,11 @@ class Mascota extends BaseModel
         'color' => 'nullable|string|max:100',
         'peso' => 'nullable|numeric',
         'observaciones' => 'nullable|string',
-        'imagen' => 'nullable|string|max:255',
     ];
     protected static $simpleToolbarFieldDefinitions = [
         ['id_cliente', 'DUEÑO', 'select'],
         ['id_raza', 'RAZA', 'select'],
-        ['id_sexo', 'SEXO', 'select'],
+        ['id_sexo', 'SEXO', 'select', 1],
     ];
     public static array $allowedFilters = ['id_cliente', 'id_raza', 'id_sexo'];
     protected static array $apiConfig = [
@@ -66,7 +65,7 @@ class Mascota extends BaseModel
                 "{$alias}.mascota",
                 "{$alias2}.cliente",
                 DB::raw("CONCAT({$alias4}.especie, ' - ', {$alias3}.raza) as raza"),
-                "{$alias3}.raza as raza_original", // 👈 agregado para ordenamiento
+                "{$alias3}.raza as raza_original",
                 "{$alias5}.sexo",
                 DB::raw("CONCAT({$alias}.edad, ' ', {$alias6}.unidad_tiempo) as edad"),
                 "{$alias}.color",

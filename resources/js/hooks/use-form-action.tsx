@@ -1,14 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, FormEventHandler } from "react";
+import { router } from "@inertiajs/react";
 import { Link } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, Trash2, Loader2 } from "lucide-react";
 import { Transition } from "@headlessui/react";
-
 export type FormActionType = "create" | "update" | "delete" | "info";
-
-interface ActionConfigBase {
+interface ActionConfig {
   formAction: string;
-  method: "POST" | "PUT" | "DELETE";
+  method: "POST" | "PUT" | "PATCH" | "DELETE";
   buttonText: string;
   buttonClass: string;
   buttonIcon: JSX.Element;
@@ -16,8 +15,7 @@ interface ActionConfigBase {
   titlePrefix: string;
   readonly?: boolean;
 }
-
-const ACTION_CONFIGS: Record<FormActionType, ActionConfigBase> = {
+const ACTION_CONFIGS: Record<FormActionType, ActionConfig> = {
   create: {
     formAction: "store",
     method: "POST",
@@ -29,7 +27,7 @@ const ACTION_CONFIGS: Record<FormActionType, ActionConfigBase> = {
   },
   update: {
     formAction: "update",
-    method: "PUT",
+    method: "PATCH",
     buttonText: "Actualizar",
     buttonClass: "bg-green-600 hover:bg-green-500 text-white",
     buttonIcon: <Save className="w-4 h-4" />,
@@ -57,65 +55,89 @@ const ACTION_CONFIGS: Record<FormActionType, ActionConfigBase> = {
     readonly: true,
   },
 };
-
-const getFormDataId = (form_data: Record<string, any>, view: string, queryparams?: any) =>
-  form_data[`id_${view}`] ??
-  (view === "itemsimple" && queryparams?.tipo ? form_data[`id_${queryparams.tipo}`] : undefined);
-
+const cardBorderMap: Record<FormActionType, string> = {
+  create: "border-blue-300 dark:border-blue-900",
+  update: "border-green-300 dark:border-green-900",
+  delete: "border-red-300 dark:border-red-900",
+  info: "border-gray-300 dark:border-gray-700",
+};
+const getFormDataId = (
+  form_data: Record<string, any>,
+  view: string,
+  queryparams?: any
+) => {
+  if (form_data?.id) return form_data.id;
+  if (form_data[`id_${view}`]) return form_data[`id_${view}`];
+  return undefined;
+};
 export const useFormAction = (
   action: string,
   customTitle: string,
   form_data: Record<string, any>,
   view: string,
   post: any,
-  patch: any,
+  put: any,
   inertiaDelete: any,
   processing: boolean,
   recentlySuccessful: boolean,
-  queryparams?: Record<string, any> | string
+  queryparams: Record<string, any> | string | undefined,
+  data: Record<string, any>,      // <- CORRECTO
+  setData: (updater: any) => void,
+  reset: () => void
 ) =>
   useMemo(() => {
-    const safeAction = (action || "create") as FormActionType;
-    const config = ACTION_CONFIGS[safeAction];
+    const type = (action || "create") as FormActionType;
+    const config = ACTION_CONFIGS[type];
     const formDataId = getFormDataId(form_data, view, queryparams);
-
-    let cleanTitle = customTitle;
-    if (cleanTitle.endsWith("s") || cleanTitle.endsWith("S")) cleanTitle = cleanTitle.slice(0, -1);
-    const title = `${config.titlePrefix} ${cleanTitle.toUpperCase()}`;
-    const isDestructive = safeAction === "delete";
-
+    const singularTitle = customTitle.replace(/s$/i, "");
+    const title = `${config.titlePrefix} ${singularTitle.toUpperCase()}`;
+    const isDestructive = type === "delete";
+    const cardBorderClass = cardBorderMap[type];
     const queryString =
       typeof queryparams === "string"
         ? `?tipo=${queryparams}`
         : queryparams
-        ? `?${new URLSearchParams(Object.entries(queryparams).map(([k, v]) => [k, String(v)])).toString()}`
+        ? `?${new URLSearchParams(
+            Object.entries(queryparams).map(([k, v]) => [k, String(v)])
+          )}`
         : "";
-
-    // Bordes adaptados a modo claro/oscuro
-    const cardBorderMap: Record<FormActionType, string> = {
-      create: "border-blue-300 dark:border-blue-900",
-      update: "border-green-300 dark:border-green-900",
-      delete: "border-red-300 dark:border-red-900",
-      info: "border-gray-300 dark:border-gray-700",
-    };
-
-    const cardBorderClass = cardBorderMap[safeAction];
-
-    const handleSubmit: React.FormEventHandler = (e) => {
+    const handleSubmit: FormEventHandler = (e) => {
       e.preventDefault();
-      switch (config.method) {
-        case "POST":
-          post(route(`${view}.${config.formAction}`));
-          break;
-        case "PUT":
-          formDataId && patch(route(`${view}.${config.formAction}`, formDataId));
-          break;
-        case "DELETE":
-          formDataId && inertiaDelete(route(`${view}.${config.formAction}`, formDataId));
-          break;
+      console.log("📤 Formulario a enviar:", data); // <- Log agregado
+      const url =
+        config.method === "POST"
+          ? route(`${view}.store`)
+          : route(`${view}.update`, { [view]: formDataId });
+      const hasFile = Object.values(data ?? {}).some((v) => v instanceof File);
+      console.log(`🔹 Enviando formulario vía ${config.method} a ${url}`);
+      if (hasFile) {
+        const formData = new FormData();
+        const token = document
+          .querySelector('meta[name="csrf-token"]')
+          ?.getAttribute("content");
+        if (!token) return console.error("❌ No se encontró meta CSRF token");
+        formData.append("_token", token);
+        if (config.method !== "POST") formData.append("_method", config.method);
+        Object.entries(data).forEach(([key, value]) => {
+          if (value !== null && value !== undefined) {
+            if (value instanceof File) formData.append(key, value);
+            else formData.append(key, String(value));
+          }
+        });
+        router.post(url, formData, {
+          forceFormData: true,
+          preserveScroll: true,
+          preserveState: true,
+          onSuccess: () => reset(),
+          onError: (err) => setData((prev: any) => ({ ...prev, errors: err })),
+        });
+      } else {
+        if (config.method === "POST") post(url);
+        if (config.method === "PATCH" && formDataId) put(url);
+        if (config.method === "DELETE" && formDataId)
+          inertiaDelete(route(`${view}.destroy`, { [view]: formDataId }));
       }
     };
-
     const ActionButton = () =>
       config.buttonText ? (
         <Button
@@ -128,7 +150,6 @@ export const useFormAction = (
           {config.buttonText}
         </Button>
       ) : null;
-
     const FooterButtons = (
       <div className="flex items-center justify-between mt-4">
         <Link href={`/${view}${queryString}`}>
@@ -144,7 +165,11 @@ export const useFormAction = (
             leave="transition ease-in-out"
             leaveTo="opacity-0"
           >
-            <p className={`text-sm ${isDestructive ? "text-red-600" : "text-neutral-600"} dark:text-neutral-400`}>
+            <p
+              className={`text-sm ${
+                isDestructive ? "text-red-600" : "text-neutral-600"
+              } dark:text-neutral-400`}
+            >
               Guardado
             </p>
           </Transition>
@@ -152,16 +177,25 @@ export const useFormAction = (
         </div>
       </div>
     );
-
     return {
       config,
       title,
-      isDestructive,
       description: config.description,
-      readonly: config.readonly || false,
+      readonly: config.readonly ?? false,
+      cardBorderClass,
       handleSubmit,
       FooterButtons,
-      formDataId,
-      cardBorderClass,
     };
-  }, [action, customTitle, form_data, view, post, patch, inertiaDelete, processing, recentlySuccessful, queryparams]);
+  }, [
+    action,
+    customTitle,
+    form_data,
+    view,
+    post,
+    put,
+    inertiaDelete,
+    processing,
+    recentlySuccessful,
+    queryparams,
+    data,
+  ]);

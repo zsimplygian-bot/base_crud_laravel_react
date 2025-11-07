@@ -30,10 +30,6 @@ export function useCreateButtonLink() {
     fieldsWithCreateButton.includes(fieldKey);
   const getCreateLink = (fieldKey: string) => {
     const key = fieldKey.replace(/^id_/, "");
-    const special = ["especie", "motivo_cita", "motivo_historia_clinica"];
-    if (special.includes(key)) {
-      return `/itemsimple/form/create?tipo=${key}`;
-    }
     return `/${key}/form/create`;
   };
   return {

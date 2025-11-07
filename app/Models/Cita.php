@@ -2,7 +2,6 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Carbon\Carbon;
 class Cita extends BaseModel
 {
@@ -10,89 +9,81 @@ class Cita extends BaseModel
     protected $table = 'cita';
     public static string $title = 'Citas';
     protected static $simpleFormFieldDefinitions = [
-        ['id_mascota', 'MASCOTA - DUEÑO', 'select'],
-        ['fecha', 'FECHA', 'date'],
-        ['hora', 'HORA', 'time'],
-        ['id_motivo_cita', 'MOTIVO', 'select'],
+        ['id_mascota', 'MASCOTA - DUEÑO', 'select', 'required'],
+        ['fecha', 'FECHA', 'date', 1, 'required'],
+        ['hora', 'HORA', 'time', 1, 'required'],
+        ['id_motivo_cita', 'MOTIVO CITA', 'select', 'required'],
         ['observaciones', 'OBSERVACIONES', 'textarea'],
-        ['id_estado_cita', 'ESTADO', 'select'],
+        ['id_estado_cita', 'ESTADO CITA', 'select'],
     ];
-    public static function getFieldDefinitions(string $type, string $action = 'create', $data = null): array
+    public static function getFieldDefinitions(string $type, string $action = null, $data = null): array
     {
-        // Usa el método genérico del padre para obtener las definiciones base
-        $fields = parent::getFieldDefinitions($type, $action, $data);
-        // Si es formulario de creación, excluir campos específicos
-        if ($type === 'form' && $action === 'create') {
-            unset($fields['observaciones'], $fields['id_estado_cita']);
+        $defs = parent::getFieldDefinitions($type, $action, $data);
+        if ($action === 'create' && isset($defs['id_estado_cita'])) {
+            $defs['id_estado_cita']['type'] = 'hidden';
+            $defs['id_estado_cita']['value'] = 1;
         }
-        return $fields;
+        return $defs;
     }
     protected static $validationRules = [
-        'id_mascota' => 'required|int',
-        'fecha' => 'required|date',
-        'hora' => 'required',
-        'id_motivo_cita' => 'required|int',
-        'observaciones' => 'nullable|string',
-        'id_estado_cita' => 'required|int',
+        'id_mascota'       => 'required|integer',
+        'fecha'            => 'required|date|after_or_equal:today',
+        'hora'             => 'required',
+        'id_motivo_cita'   => 'required|integer',
+        'observaciones'    => 'nullable|string',
+        'id_estado_cita'   => 'required|integer',
     ];
-    public static function getValidationRules(string $action = 'create'): array
-{
-    $rules = parent::getValidationRules();
-
-    // Si es creación, eliminar validación de estado
-    if ($action === 'create') {
-        unset($rules['id_estado_cita']);
-    }
-
-    return $rules;
-}
-
     protected static $simpleToolbarFieldDefinitions = [
         ['id_mascota', 'MASCOTA - DUEÑO', 'select'],
-        ['id_motivo_cita', 'MOTIVO', 'select'],
-        ['id_estado_cita', 'ESTADO', 'select'],
+        ['id_motivo_cita', 'MOTIVO CITA', 'select'],
+        ['id_estado_cita', 'ESTADO CITA', 'select'],
     ];
     public static array $allowedFilters = ['id_mascota', 'id_motivo_cita', 'id_estado_cita'];
     public static function getQuery()
     {
-        $alias = (new self)->getTable();
-        $alias2 = 'mascota';
-        $alias3 = 'estado_cita';
-        $alias4 = 'motivo_cita';
-        $alias5 = 'cliente';
-        $query = DB::table($alias)
-            ->leftJoin($alias2, "{$alias}.id_{$alias2}", '=', "{$alias2}.id_{$alias2}")
-            ->leftJoin($alias3, "{$alias}.id_{$alias3}", '=', "{$alias3}.id_{$alias3}")
-            ->leftJoin($alias4, "{$alias}.id_{$alias4}", '=', "{$alias4}.id_{$alias4}")
-            ->leftJoin($alias5, "{$alias2}.id_{$alias5}", '=', "{$alias5}.id_{$alias5}")
+        $al1 = 'cita';
+        $al2 = 'mascota';
+        $al3 = 'estado_cita';
+        $al4 = 'motivo_cita';
+        $al5 = 'cliente';
+        $query = DB::table("$al1")
+            ->leftJoin("$al2", "$al1.id_$al2", '=', "$al2.id_$al2")
+            ->leftJoin("$al3", "$al1.id_$al3", '=', "$al3.id_$al3")
+            ->leftJoin("$al4", "$al1.id_$al4", '=', "$al4.id_$al4")
+            ->leftJoin("$al5", "$al2.id_$al5", '=', "$al5.id_$al5")
             ->select([
-                "{$alias}.id_{$alias} as id",
-                "{$alias2}.mascota as mascota",
-                "{$alias5}.cliente as cliente",
-                "{$alias}.fecha",
-                "{$alias}.hora",
-                "{$alias4}.motivo_cita",
-                "{$alias3}.estado_cita as estado",
-                "{$alias}.created_at",
+                "$al1.id_$al1 as id",
+                "$al2.mascota as mascota",
+                "$al5.cliente as cliente",
+                "$al1.fecha",
+                "$al1.hora",
+                "$al4.motivo_cita",
+                "$al3.estado_cita as estado",
+                "$al1.created_at",
             ]);
 
-        return ['query' => $query, 'alias' => $alias];
+        return ['query' => $query, 'alias' => $al1];
     }
     public static function proximas()
     {
-        return DB::table('cita')
-            ->join('mascota', 'cita.id_mascota', '=', 'mascota.id_mascota')
-            ->join('cliente', 'mascota.id_cliente', '=', 'cliente.id_cliente')
-            ->join('motivo_cita', 'cita.id_motivo_cita', '=', 'motivo_cita.id_motivo_cita')
+        $al1 = 'cita';
+        $al2 = 'mascota';
+        $al3 = 'cliente';
+        $al4 = 'motivo_cita';
+        return DB::table("$al1")
+            ->join("$al2", "$al1.id_$al2", '=', "$al2.id_$al2")
+            ->join("$al3", "$al2.id_$al3", '=', "$al3.id_$al3")
+            ->join("$al4", "$al1.id_$al4", '=', "$al4.id_$al4")
             ->select(
-                'cita.id_cita as id',
-                'mascota.mascota',
-                'cliente.cliente',
-                'motivo_cita.motivo_cita',
-                DB::raw("CONCAT(cita.fecha, ' ', cita.hora) as fecha_hora")
+                "$al1.id_$al1 as id",
+                "$al2.mascota",
+                "$al3.cliente",
+                "$al4.motivo_cita",
+                DB::raw("CONCAT($al1.fecha, ' ', $al1.hora) as fecha_hora")
             )
-            ->whereRaw("CONCAT(cita.fecha, ' ', cita.hora) >= NOW()")
-            ->orderByRaw("CONCAT(cita.fecha, ' ', cita.hora) ASC") // ← cita más cercana arriba
+            ->where("$al1.id_estado_cita", 1) // ← Filtro agregado
+            ->whereRaw("CONCAT($al1.fecha, ' ', $al1.hora) >= NOW()")
+            ->orderByRaw("CONCAT($al1.fecha, ' ', $al1.hora) ASC")
             ->get();
     }
     protected static $tableColumns = [

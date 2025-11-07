@@ -41,13 +41,22 @@ class HistoriaClinica extends BaseModel
     // 🔹 Configuración general
     public static string $title = 'Historias Clínicas';
     protected static $simpleFormFieldDefinitions = [
-        ['id_mascota', 'MASCOTA - DUEÑO', 'select'],
-        ['fecha', 'FECHA', 'date'],
-        ['id_motivo_historia_clinica', 'MOTIVO HISTORIA', 'select'],
+        ['id_mascota', 'MASCOTA - DUEÑO', 'select', 'required'],
+        ['fecha', 'FECHA', 'date', 'required'],
+        ['id_motivo_historia_clinica', 'MOTIVO HISTORIA', 'select', 'required'],
         ['detalle', 'DETALLE HISTORIA', 'textarea'],
         ['observaciones', 'OBSERVACIONES', 'textarea'],
         ['id_estado_historia_clinica', 'ESTADO HISTORIA', 'select'],
     ];
+    public static function getFieldDefinitions(string $type, string $action = null, $data = null): array
+    {
+        $defs = parent::getFieldDefinitions($type, $action, $data);
+        if ($action === 'create' && isset($defs['id_estado_historia_clinica'])) {
+            $defs['id_estado_historia_clinica']['type'] = 'hidden';
+            $defs['id_estado_historia_clinica']['value'] = 1;
+        }
+        return $defs;
+    }
     protected static $validationRules = [
         'id_mascota' => 'required|int',
         'fecha' => 'required|date',
@@ -62,7 +71,7 @@ class HistoriaClinica extends BaseModel
         ['id_estado_historia_clinica', 'ESTADO', 'select'],
     ];
     protected static $simpleFooterFieldDefinitions = [
-        ['precio', 'TOTAL', 'text'],
+        ['precio', 'TOTAL', 'text', 1],
     ];
     public static array $allowedFilters = ['id_mascota', 'id_estado_historia_clinica'];
     // Consulta principal
@@ -119,46 +128,4 @@ class HistoriaClinica extends BaseModel
         ['ESTADO', 'estado'],
         ['FECHA REGISTRO', 'created_at'],
     ];
-    public static function validateCustom(array $data)
-    {
-        $validator = Validator::make($data, static::$validationRules);
-        $validator->after(function ($validator) use ($data) {
-            try {
-                // 🔹 Usar directamente el payload recibido del formulario
-                $payload = [$data]; // Flask espera un array de objetos
-                // 🔹 Llamada al servidor Flask
-                $response = Http::withHeaders(['Content-Type' => 'application/json'])
-                    ->timeout(5)
-                    ->post('http://127.0.0.1:5000/predict', $payload);
-                if (!$response->successful()) {
-                    throw new \Exception("El servidor Flask no respondió correctamente ({$response->status()})");
-                }
-                // 🔹 Procesar respuesta Flask
-                $result = $response->json()[0] ?? $response->json();
-                $exactitud = round($result['exactitud_%'] ?? 0, 2);
-                $completitud = round($result['completitud_%'] ?? 0, 2);
-                $consistencia = round($result['consistencia_%'] ?? 0, 2);
-                $calidad = $result['calidad'] ?? 'Desconocida';
-                // 🔹 Adjuntar métricas al validador
-                $validator->metrics = [
-                    'exactitud' => $exactitud,
-                    'completitud' => $completitud,
-                    'consistencia' => $consistencia,
-                    'calidad' => $calidad
-                ];
-                // 🔹 Mensaje dinámico según métricas
-                if ($completitud < 80 || $consistencia < 80) {
-                    $validator->errors()->add('advertencia', 
-                        "⚠️ {$calidad} | Completitud: {$completitud}% | Consistencia: {$consistencia}% | Exactitud: {$exactitud}%"
-                    );
-                }
-            } catch (\Exception $e) {
-                $validator->errors()->add('flask', "❌ Error al comunicarse con Flask: " . $e->getMessage());
-            }
-        });
-        if ($validator->fails()) {
-            throw new ValidationException($validator);
-        }
-        return $validator->metrics ?? null;
-    }
 }

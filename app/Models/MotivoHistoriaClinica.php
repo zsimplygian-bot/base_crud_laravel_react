@@ -8,7 +8,7 @@ class MotivoHistoriaClinica extends BaseModel
     protected $table = 'motivo_historia_clinica';
     public static string $title = 'Motivo Historia Clinica';
     protected static $simpleFormFieldDefinitions = [
-        ['motivo_historia_clinica', 'Motivo cita', 'text'],
+        ['motivo_historia_clinica', 'MOTIVO HISTORIA CLÍNICA', 'text'],
     ];
     protected static $validationRules = [
         'motivo_historia_clinica' => 'required|string|max:100',

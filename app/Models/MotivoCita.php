@@ -8,7 +8,7 @@ class MotivoCita extends BaseModel
     protected $table = 'motivo_cita';
     public static string $title = 'Motivo cita';
     protected static $simpleFormFieldDefinitions = [
-        ['motivo_cita', 'Motivo cita', 'text'],
+        ['motivo_cita', 'MOTIVO CITA', 'text'],
     ];
     protected static $validationRules = [
         'motivo_cita' => 'required|string|max:100',

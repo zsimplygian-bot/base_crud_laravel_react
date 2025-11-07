@@ -8,7 +8,7 @@ class Especie extends BaseModel
     protected $table = 'especie';
     public static string $title = 'Especies';
     protected static $simpleFormFieldDefinitions = [
-        ['especie', 'Especie', 'text'],
+        ['especie', 'ESPECIE', 'text'],
     ];
     protected static $validationRules = [
         'especie' => 'required|string|max:100',
