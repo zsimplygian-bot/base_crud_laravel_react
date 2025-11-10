@@ -1,11 +1,11 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 
 interface DateRange {
   from?: Date;
   to?: Date;
 }
 
-interface FetchOptions {
+export interface FetchOptions {
   view: string;
   pageIndex: number;
   pageSize: number;
@@ -16,6 +16,7 @@ interface FetchOptions {
   searchTerm: string | null;
   filterValues?: Record<string, string>;
   queryparams?: Record<string, any>;
+  isRestored: boolean;
 }
 
 export const useDataTableFetch = ({
@@ -29,115 +30,111 @@ export const useDataTableFetch = ({
   searchTerm,
   filterValues = {},
   queryparams = {},
+  isRestored,
 }: FetchOptions) => {
+
+  const STORAGE_KEY = `datatable_state_${view}`;
+
+  useEffect(() => {
+    if (!isRestored) return;
+    const stateToSave = {
+      pageIndex,
+      pageSize,
+      sortBy,
+      sortOrder,
+      selectedColumn,
+      searchTerm,
+      filterValues,
+      queryparams,
+      dateRange: {
+        from: dateRange?.from?.toISOString() ?? null,
+        to: dateRange?.to?.toISOString() ?? null,
+      },
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [
+    isRestored,
+    pageIndex,
+    pageSize,
+    sortBy,
+    sortOrder,
+    selectedColumn,
+    searchTerm,
+    JSON.stringify(filterValues),
+    JSON.stringify(queryparams),
+    dateRange?.from,
+    dateRange?.to,
+  ]);
+
   const [data, setData] = useState<any[]>([]);
   const [totalRows, setTotalRows] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const memoizedDateRange = useMemo(
-    () => ({
-      from: dateRange?.from?.toISOString(),
-      to: dateRange?.to?.toISOString(),
-    }),
-    [dateRange?.from, dateRange?.to]
-  );
+  const memoizedDateRange = useMemo(() => ({
+    from: dateRange?.from ? dateRange.from.toISOString().split("T")[0] : undefined,
+    to: dateRange?.to ? dateRange.to.toISOString().split("T")[0] : undefined,
+  }), [dateRange?.from, dateRange?.to]);
 
-  const memoizedFilters = useMemo(() => JSON.stringify(filterValues), [filterValues]);
+  const fetchData = useCallback(async () => {
+    if (!isRestored) return;
 
-  useEffect(() => {
-    if (dateRange && (!memoizedDateRange.from || !memoizedDateRange.to)) return;
+    const params = new URLSearchParams();
+    params.set("view", view);
+    params.set("page", String(pageIndex + 1));
+    params.set("limit", String(pageSize)); // CORREGIDO: backend usa limit
 
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+    if (sortBy) params.set("column", sortBy); // CORREGIDO
+    if (sortOrder) params.set("sortOrder", sortOrder); // CORREGIDO
 
-        let realView = view;
+    if (memoizedDateRange.from) params.set("from", memoizedDateRange.from);
+    if (memoizedDateRange.to) params.set("to", memoizedDateRange.to);
 
-        const params = new URLSearchParams({
-          page: (pageIndex + 1).toString(),
-          limit: pageSize.toString(),
-          view: realView,
-        });
+    if (selectedColumn && searchTerm) {
+      params.set("column", selectedColumn);
+      params.set("search", searchTerm);
+    }
 
-        if (sortBy) {
-          params.set("sortBy", sortBy);
-          params.set("sortOrder", sortOrder);
-        }
+    Object.entries(filterValues).forEach(([k, v]) => {
+      if (v !== null && v !== "") params.set(k, String(v));
+    });
 
-        if (memoizedDateRange.from && memoizedDateRange.to) {
-          params.set("from", memoizedDateRange.from);
-          params.set("to", memoizedDateRange.to);
-        }
+    Object.entries(queryparams).forEach(([k, v]) => {
+      if (v !== null && v !== "") params.set(k, String(v));
+    });
 
-        if (selectedColumn && searchTerm) {
-          params.set("column", selectedColumn);
-          params.set("search", searchTerm);
-        }
+    const url = `/api/index?${params.toString()}`;
+    console.log("[FETCH]", url);
 
-        const urlParams: Record<string, string> = {};
-        if (typeof window !== "undefined") {
-          new URLSearchParams(window.location.search).forEach((v, k) => {
-            urlParams[k] = v;
-          });
-        }
-
-        const merged = { ...urlParams, ...queryparams };
-
-        Object.entries(merged).forEach(([k, v]) => {
-          if (v !== undefined && v !== null && v !== "") params.set(k, v.toString());
-        });
-
-        const parsedFilters = JSON.parse(memoizedFilters);
-        Object.entries(parsedFilters).forEach(([k, v]) => {
-          if (v) params.set(k, v);
-        });
-
-        const url = `/api/index?${params.toString()}`;
-
-        // ÚNICO LOG COMPLETO:
-        console.log("[DATA FETCH]", {
-          url,
-          view,
-          pageIndex,
-          pageSize,
-          sortBy,
-          sortOrder,
-          dateRange: memoizedDateRange,
-          selectedColumn,
-          searchTerm,
-          filterValues: parsedFilters,
-          queryparams,
-          mergedParams: merged,
-        });
-
-        const res = await fetch(url);
-        if (!res.ok) throw new Error(`Error fetching data: ${res.statusText}`);
-
-        const result = await res.json();
-        setData(result.data ?? []);
-        setTotalRows(result.total ?? 0);
-      } catch (err) {
-        console.error("[DATA FETCH ERROR]", err);
-        setData([]);
-        setTotalRows(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    try {
+      setLoading(true);
+      const res = await fetch(url);
+      const result = await res.json();
+      setData(result.data ?? []);
+      setTotalRows(result.total ?? 0);
+    } catch {
+      setData([]);
+      setTotalRows(0);
+    } finally {
+      setLoading(false);
+    }
   }, [
+    isRestored,
     view,
     pageIndex,
     pageSize,
     sortBy,
     sortOrder,
-    memoizedDateRange,
+    memoizedDateRange.from,
+    memoizedDateRange.to,
     selectedColumn,
     searchTerm,
-    memoizedFilters,
-    queryparams,
+    JSON.stringify(filterValues),
+    JSON.stringify(queryparams),
   ]);
 
-  return { data, totalRows, loading };
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  return { data, totalRows, loading, refetch: fetchData };
 };

@@ -29,9 +29,11 @@ export default function SidebarCitas({ collapsed = false }: { collapsed?: boolea
   const [citas, setCitas] = useState<Cita[]>([]);
   const notified = useRef<Set<number>>(new Set());
 
+  const baseUrl = import.meta.env.VITE_APP_URL || ""; // ← URL desde .env
+
   const fetchCitas = async () => {
     try {
-      const { data } = await axios.get<Cita[]>("/api/citas/proximas");
+      const { data } = await axios.get<Cita[]>(`${baseUrl}/api/citas/proximas`);
       setCitas(data);
 
       data.forEach((c) => {
@@ -65,7 +67,7 @@ export default function SidebarCitas({ collapsed = false }: { collapsed?: boolea
   }, []);
 
   const renderCitaItem = (c: Cita) => {
-    const citaUrl = `http://127.0.0.1:8000/cita/form/update/${c.id}`;
+    const citaUrl = `${baseUrl}/cita/form/update/${c.id}`; // ← URL dinámico
 
     const content = (
       <div className="flex flex-col gap-1 text-sm min-w-0 overflow-hidden">
@@ -107,13 +109,7 @@ export default function SidebarCitas({ collapsed = false }: { collapsed?: boolea
               <SidebarMenuItem className="min-w-0">
                 <SidebarMenuButton
                   asChild
-                  className={`
-                    !h-auto !items-start py-2 px-2 transition-colors rounded-md w-full min-w-0
-                    justify-center
-                    hover:bg-accent hover:text-accent-foreground
-                    focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-                    disabled:pointer-events-none disabled:opacity-50
-                  `}
+                  className="!h-auto !items-start py-2 px-2 transition-colors rounded-md w-full min-w-0 justify-center hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
                 >
                   {content}
                 </SidebarMenuButton>
@@ -133,13 +129,7 @@ export default function SidebarCitas({ collapsed = false }: { collapsed?: boolea
         <SidebarMenuItem className="min-w-0">
           <SidebarMenuButton
             asChild
-            className={`
-              !h-auto !items-start py-2 px-2 transition-colors rounded-md w-full min-w-0
-              justify-start
-              hover:bg-accent hover:text-accent-foreground
-              focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-              disabled:pointer-events-none disabled:opacity-50
-            `}
+            className="!h-auto !items-start py-2 px-2 transition-colors rounded-md w-full min-w-0 justify-start hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
           >
             {content}
           </SidebarMenuButton>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Head } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import { DataTableToolbar } from "@/components/datatable_toolbar";
@@ -6,21 +6,7 @@ import { DataTable } from "@/components/datatable_base";
 import { DataTableFooter } from "@/components/datatable_footer";
 import { useDataTableFetch } from "@/hooks/use-datatable-fetch";
 import { useIsMobile } from "@/hooks/use-mobile";
-interface Campo {
-  title: string;
-  column: string;
-}
-interface DataTableLayoutProps {
-  title: string;
-  custom_title: string;
-  view: string;
-  campos: Campo[];
-  width_index?: string;
-  toolbarfields?: Record<string, any>;
-  footerFields?: Record<string, any>;
-  queryparams?: Record<string, any>;
-}
-export const DataTableLayout: React.FC<DataTableLayoutProps> = ({
+export const DataTableLayout = ({
   title,
   custom_title,
   view,
@@ -31,27 +17,35 @@ export const DataTableLayout: React.FC<DataTableLayoutProps> = ({
   queryparams = {},
 }) => {
   const isMobile = useIsMobile();
+  const storageKey = `datatable_state_${view}`;
+  const [isRestored, setIsRestored] = useState(false);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({});
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>();
+  const [columnVisibility, setColumnVisibility] = useState({});
+  const [dateRange, setDateRange] = useState({});
   const [selectedColumn, setSelectedColumn] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedSearchTerm, setAppliedSearchTerm] = useState<string | null>(null);
-  const [filterValues, setFilterValues] = useState<Record<string, string>>(queryparams);
-  const firstSync = useRef(true);
-  // sincroniza filtros en la URL sin provocar render extra
+  const [filterValues, setFilterValues] = useState(queryparams);
+  // Restaurar solo una vez
   useEffect(() => {
-    if (typeof window === "undefined" || firstSync.current) {
-      firstSync.current = false;
-      return;
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      const s = JSON.parse(saved);
+      setPageIndex(s.pageIndex ?? 0);
+      setPageSize(s.pageSize ?? 10);
+      setSortBy(s.sortBy ?? null);
+      setSortOrder(s.sortOrder ?? "asc");
+      setColumnVisibility(s.columnVisibility ?? {});
+      setDateRange(s.dateRange ?? {});
+      setSelectedColumn(s.selectedColumn ?? null);
+      setAppliedSearchTerm(s.searchTerm ?? null);
+      setFilterValues(s.filterValues ?? {});
     }
-    const url = new URL(window.location.href);
-    url.search = new URLSearchParams(filterValues).toString();
-    window.history.replaceState(null, "", url.toString());
-  }, [filterValues]);
+    setIsRestored(true); // ← ahora sí se puede hacer fetch
+  }, []);
   const { data, totalRows, loading } = useDataTableFetch({
     view,
     pageIndex,
@@ -63,19 +57,14 @@ export const DataTableLayout: React.FC<DataTableLayoutProps> = ({
     searchTerm: appliedSearchTerm,
     filterValues,
     queryparams: filterValues,
+    isRestored, // NUEVO
   });
-  const widthClasses: Record<string, string> = {
-    "w-1/2": "sm:w-1/2",
-    "w-2/3": "sm:w-2/3",
-    "w-full": "sm:w-full",
-  };
   return (
     <AppLayout breadcrumbs={[{ title, href: view }]}>
       <Head title={title} />
-      <div className="flex flex-col h-full rounded-xl p-4">
+      <div className="p-4">
         <h1 className="text-lg font-semibold">LISTADO DE {custom_title.toUpperCase()}</h1>
-        <div className={`overflow-x-auto ${widthClasses[width_index]}`}>
-          <DataTableToolbar
+        <DataTableToolbar
             {...{
               campos,
               selectedColumn,
@@ -95,8 +84,7 @@ export const DataTableLayout: React.FC<DataTableLayoutProps> = ({
               queryparams: filterValues,
             }}
           />
-          <div className="overflow-x-auto max-w-full">
-            <DataTable
+        <DataTable
               {...{
                 campos,
                 view,
@@ -115,21 +103,19 @@ export const DataTableLayout: React.FC<DataTableLayoutProps> = ({
                 totalRows,
               }}
             />
-          </div>
-          <DataTableFooter
-            {...{
-              pageIndex,
-              setPageIndex,
-              pageSize,
-              setPageSize,
-              totalRows,
-              view,
-              data,
-              footerFields,
-              isMobile,
-            }}
-          />
-        </div>
+        <DataTableFooter
+          {...{
+            pageIndex,
+            setPageIndex,
+            pageSize,
+            setPageSize,
+            totalRows,
+            view,
+            data,
+            footerFields,
+            isMobile,
+          }}
+        />
       </div>
     </AppLayout>
   );
