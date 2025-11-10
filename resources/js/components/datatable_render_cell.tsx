@@ -6,15 +6,12 @@ import {
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
 // Utilidad: obtener valores anidados tipo "docu.docu"
 const getNestedValue = (obj: any, path: string): any =>
   path.split(".").reduce((acc, key) => acc?.[key], obj);
-
 // Badge dinámico para estado
 const EstadoBadge = (value: any) => {
   const estado = String(value || "").toUpperCase();
-
   const colorMap: Record<string, string> = {
     ACTIVO: "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100",
     ATENDIDO: "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100",
@@ -23,18 +20,15 @@ const EstadoBadge = (value: any) => {
     CERRADO: "bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
     "EN OBSERVACIÓN": "bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
   };
-
   const colorClass =
     colorMap[estado] ||
     "bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-100";
-
   return (
     <Badge className={`px-2 py-1 text-xs font-medium ${colorClass}`}>
       {estado || "—"}
     </Badge>
   );
 };
-
 // Render de imagen con Dialog para vista ampliada
 const ImageCell = (value: any, view?: string) => {
   if (!value || !view) return "—";
@@ -59,10 +53,8 @@ const ImageCell = (value: any, view?: string) => {
     </Dialog>
   );
 };
-
 // Mapa de renderizadores
 type RenderFunction = (value: any, row?: any, view?: string) => React.ReactNode;
-
 export const renderMap: Record<string, RenderFunction> = {
   telefono: (value: any) => {
     const phone = value?.replace(/\D/g, "");
@@ -96,16 +88,13 @@ export const renderMap: Record<string, RenderFunction> = {
       </Badge>
     );
   },
-
-  valor: (v: any) => <span>S/. {Number(v).toFixed(2)}</span>,
-  total: (v: any) => <span>S/. {Number(v).toFixed(2)}</span>,
-  precio: (v: any) => <span>S/. {Number(v).toFixed(2)}</span>,
-  peso: (v: any) => (v != null ? `${Number(v).toFixed(2)} kg` : "—"),
-
+  valor: (v: any) => <span>S/. {Number(v).toFixed(1)}</span>,
+  total: (v: any) => <span>S/. {Number(v).toFixed(1)}</span>,
+  precio: (v: any) => <span>S/. {Number(v).toFixed(1)}</span>,
+  peso: (v: any) => (v != null ? `${Number(v).toFixed(1)} kg` : "—"),
   estado: EstadoBadge,
   estado_delega: EstadoBadge,
   imagen: (v: any, _r, view) => ImageCell(v, view),
-
   raza: (v: any) => {
     if (!v) return "—";
     const especies = [
@@ -127,7 +116,6 @@ export const renderMap: Record<string, RenderFunction> = {
       </span>
     );
   },
-
   sexo: (v: any) => {
     if (!v) return "—";
     const isMale = v.toLowerCase().includes("macho");
@@ -141,66 +129,56 @@ export const renderMap: Record<string, RenderFunction> = {
       </span>
     );
   },
-
-color: (v: any) => {
-  if (!v) return "—";
-
-  const colorMap: Record<string, string> = {
-    negro: "#000000",
-    negras: "#000000",
-    marrón: "#7B3F00",
-    marron: "#7B3F00",
-    acero: "#A8A9AD",
-    cenizo: "#B2BEB5",
-    crema: "#fff0bfff",
-    blanco: "#FFFFFF",
-    gris: "#808080",
-    plomo: "#808080",
-    dorado: "#DAA520",
-    rojo: "#FF0000",
-    azul: "#0000FF",
-    verde: "#008000",
-    rosa: "#FFC0CB",
-    naranja: "#FFA500",
-    morado: "#800080",
-    caramelo: "#FF7F50",
-    beige: "#F5F5DC",
-    fuego: "#FF4500",
-  };
-
-  const ignoreWords = ["con", "y", "de", "manchas", "claro", "oscuro"];
-  const parts = v
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(word => word && !ignoreWords.includes(word));
-
-  const colors: string[] = parts.map(p => colorMap[p] ?? "#999999");
-  const background = colors.length > 1
-    ? `linear-gradient(to right, ${colors.join(", ")})`
-    : colors[0];
-
-  return (
-    <div className="inline-flex items-center gap-2" style={{ lineHeight: 1 }}>
-      <Badge
-        className="w-8 h-7 rounded-full border border-gray-600 p-0"
-        style={{ background, color: "#000000" }}
-      />
-      
-    </div>
-  );
-},
-
-
-
+  color: (v: any) => {
+    if (!v) return "—";
+    const colorMap: Record<string, string> = {
+      negro: "#000000",
+      negras: "#000000",
+      marrón: "#7B3F00",
+      marron: "#7B3F00",
+      acero: "#A8A9AD",
+      cenizo: "#B2BEB5",
+      crema: "#fff0bfff",
+      blanco: "#FFFFFF",
+      gris: "#808080",
+      plomo: "#808080",
+      dorado: "#DAA520",
+      rojo: "#FF0000",
+      azul: "#0000FF",
+      verde: "#008000",
+      rosa: "#FFC0CB",
+      naranja: "#FFA500",
+      morado: "#800080",
+      caramelo: "#FF7F50",
+      beige: "#F5F5DC",
+      fuego: "#FF4500",
+    };
+    const ignoreWords = ["con", "y", "de", "manchas", "claro", "oscuro"];
+    const parts = v
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(word => word && !ignoreWords.includes(word));
+    const colors: string[] = parts.map(p => colorMap[p] ?? "#999999");
+    const background = colors.length > 1
+      ? `linear-gradient(to right, ${colors.join(", ")})`
+      : colors[0];
+    return (
+      <div className="inline-flex items-center gap-2" style={{ lineHeight: 1 }}>
+        <Badge
+          className="w-8 h-7 rounded-full border border-gray-600 p-0"
+          style={{ background, color: "#000000" }}
+        />
+        
+      </div>
+    );
+  },
   stock: (v: any, row?: any) => {
     if (v == null) return "—";
     const stock = Number(v);
     const min = Number(row?.stock_min ?? 0);
     const max = Number(row?.stock_max ?? Infinity);
-
     let classes =
       "px-2 py-1 rounded text-xs font-medium border border-transparent";
-
     if (stock <= min)
       classes += " bg-red-100 text-red-900 dark:bg-red-900 dark:text-red-100";
     else if (stock >= max)
@@ -209,10 +187,8 @@ color: (v: any) => {
     else
       classes +=
         " bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100";
-
     return <Badge className={classes}>{stock}</Badge>;
   },
-
   edad: (v: any) => {
     if (!v) return "—";
     const match = String(v).match(/^(\d+)\s*(AÑO|MES)$/i);
@@ -224,7 +200,6 @@ color: (v: any) => {
     return v;
   },
 };
-
 // Hook: renderizador principal
 export const useRenderCellContent = () => {
   const renderCellContent = (

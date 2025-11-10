@@ -120,15 +120,21 @@ abstract class BaseController extends Controller
         ])->validate();
     }
     protected function normalizeData(array &$data): void
-    {
-        foreach ($data as $key => $value) {
-            if (is_string($value) && str_contains($value, 'T')) {
+{
+    $dateFields = ['created_at', 'updated_at', 'fecha', 'fecha_nacimiento', 'fecha_vencimiento']; // ← AÑADE TUS CAMPOS
+
+    foreach ($data as $key => $value) {
+        if (in_array($key, $dateFields) && is_string($value) && str_contains($value, 'T')) {
+            try {
                 $data[$key] = Carbon::parse($value)->format('Y-m-d H:i:s');
-            } elseif (is_array($value)) {
-                $data[$key] = json_encode($value);
+            } catch (\Exception $e) {
+                \Log::warning("Fecha inválida en {$key}: {$value}");
             }
+        } elseif (is_array($value)) {
+            $data[$key] = json_encode($value);
         }
     }
+}
     protected function processFileUploads(Request $request, $model): void
     {
         foreach ($request->files as $field => $file) {
