@@ -40,10 +40,10 @@ class ListadoQueryBuilder
                 $query->where("$tableAlias.$param", $value);
             }
         }
-        $sort = $req->input('sortBy', 'id');
-        if ($sort === 'id') {
-            $sort = 'id_' . $viewName;
-        }
+        $sort = $req->input('sortBy', $req->input('column', 'id'));
+if ($sort === 'id') {
+    $sort = 'id_' . $viewName;
+}
         $sortAlias = $colMap[$sort] ?? $alias;
         $order = $req->input('sortOrder', 'desc');
         $query->orderBy("$sortAlias.$sort", $order);

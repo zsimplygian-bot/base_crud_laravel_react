@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Head } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
-import { DataTableToolbar } from "@/components/datatable_toolbar";
-import { DataTable } from "@/components/datatable_base";
-import { DataTableFooter } from "@/components/datatable_footer";
+import { DataTableToolbar } from "@/components/datatable/toolbar/toolbar";
+import { DataTable } from "@/components/datatable/base/base";
+import { DataTableFooter } from "@/components/datatable/footer/footer";
 import { useDataTableFetch } from "@/hooks/use-datatable-fetch";
 import { useIsMobile } from "@/hooks/use-mobile";
 export const DataTableLayout = ({
@@ -117,6 +117,37 @@ export const DataTableLayout = ({
           }}
         />
       </div>
+      <div className="mt-4 p-4 border-t text-xs">
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+    <div>
+      <strong>Vista:</strong> {view} <br />
+      <strong>Restaurado:</strong> {isRestored ? "Sí" : "No"} <br />
+      <strong>Página actual:</strong> {pageIndex + 1} <br />
+      <strong>Filas por página:</strong> {pageSize} <br />
+      <strong>Total filas:</strong> {totalRows} <br />
+      
+    </div>
+    <div>
+      <strong>Ordenar por:</strong> {sortBy ?? "id"} <br />
+      <strong>Dirección sort:</strong> {sortOrder} <br />
+      <strong>Cargando:</strong> {loading ? "Sí" : "No"} <br />
+      <strong>Columnas visibles:</strong> <br />
+      <pre className="whitespace-pre-wrap break-words">{JSON.stringify(columnVisibility, null, 2)}</pre>
+      <strong>Date range:</strong> <br />
+      <pre className="whitespace-pre-wrap break-words">{JSON.stringify(dateRange, null, 2)}</pre>
+      
+    </div>
+    <div>
+      <strong>Columna seleccionada (búsqueda):</strong> {selectedColumn ?? "-"} <br />
+      <strong>Valor aplicado de búsqueda:</strong> {appliedSearchTerm ?? "-"} <br />
+      <strong>Valores de filtros:</strong> <br />
+      <pre className="whitespace-pre-wrap break-words">{JSON.stringify(filterValues, null, 2)}</pre>
+      <strong>Query params:</strong> <br />
+      <pre className="whitespace-pre-wrap break-words">{JSON.stringify(queryparams, null, 2)}</pre>
+    </div>
+  </div>
+</div>
+
     </AppLayout>
   );
 };
