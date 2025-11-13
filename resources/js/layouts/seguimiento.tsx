@@ -36,8 +36,22 @@ const idKey = (t: string) => `id_historia_clinica_${singular(t)}`;
 const route = (t: string, id?: number) => id ? `/historia_clinica_${singular(t)}/${id}` : `/historia_clinica_${singular(t)}/form`;
 const extractId = (f: Field[], t: string) => f.find(x => x.key.startsWith("id_") || x.label.toLowerCase().includes(singular(t)))?.value ?? null;
 
-// Primera letra mayúscula, resto minúscula
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
+// SOLUCIÓN FINAL: Interpretar YYYY-MM-DD como fecha LOCAL (Perú)
+const parseDateAsLocal = (dateStr: string): Date | null => {
+  if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
+  const [year, month, day] = dateStr.split("-").map(Number);
+  // Crea la fecha en hora LOCAL (no UTC)
+  return new Date(year, month - 1, day);
+};
+
+const formatDatePeru = (dateStr: string | null | undefined): string => {
+  if (!dateStr) return "Sin fecha";
+  const date = parseDateAsLocal(dateStr);
+  if (!date) return "Sin fecha";
+  return date.toLocaleDateString("es-PE");
+};
 
 export default function SeguimientoSection({ view, formId, action = "update" }: Props) {
   const canEdit = action === "update";
@@ -103,7 +117,11 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
       fecha: f.find(x => x.key === "fecha")?.value ?? null,
       id: extractId(f, t)
     })))
-    .sort((a, b) => (a.fecha ? +new Date(a.fecha) : 0) - (b.fecha ? +new Date(b.fecha) : 0))
+    .sort((a, b) => {
+      const da = a.fecha ? +parseDateAsLocal(a.fecha)! : 0;
+      const db = b.fecha ? +parseDateAsLocal(b.fecha)! : 0;
+      return db - da; // más reciente primero
+    })
   , [records]);
 
   const cfg = modal.tipo ? ACTION[modal.act] : null;
@@ -111,24 +129,24 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
 
   return (
     <div className="flex flex-col gap-4">
-      {/* // Título: Botones para crear nuevos registros */}
+      {/* Botones para crear nuevos registros */}
       {canEdit && (
         <ButtonGroup className="gap-1 flex flex-wrap">
-  {Object.keys(CONFIG).map(t => (
-    <Button
-      key={t}
-      size="sm"
-      variant="outline"
-      className="text-xs font-medium min-w-0 px-2"
-      onClick={() => open(t, null, "create")}
-    >
-      {capitalize(CONFIG[t as keyof typeof CONFIG])}
-    </Button>
-  ))}
-</ButtonGroup>
+          {Object.keys(CONFIG).map(t => (
+            <Button
+              key={t}
+              size="sm"
+              variant="outline"
+              className="text-xs font-medium min-w-0 px-2"
+              onClick={() => open(t, null, "create")}
+            >
+              {capitalize(CONFIG[t as keyof typeof CONFIG])}
+            </Button>
+          ))}
+        </ButtonGroup>
       )}
 
-      {/* // Título: Lista de todos los registros */}
+      {/* Lista de registros */}
       {all.map(r => (
         <div
           key={`${r.k}-${r.id}`}
@@ -136,15 +154,15 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
         >
           <div>
             <p className="font-semibold text-purple-600 dark:text-purple-400">
-  {r.tipo}
-  {r.fecha ? (
-    <span className="ml-2 text-purple-600 dark:text-purple-400">
-      — {new Date(r.fecha).toLocaleDateString("es-PE")}
-    </span>
-  ) : (
-    <span className="ml-2 text-gray-400 dark:text-gray-500">— Sin fecha</span>
-  )}
-</p>
+              {r.tipo}
+              {r.fecha ? (
+                <span className="ml-2 text-purple-600 dark:text-purple-400">
+                  — {formatDatePeru(r.fecha)}
+                </span>
+              ) : (
+                <span className="ml-2 text-gray-400 dark:text-gray-500">— Sin fecha</span>
+              )}
+            </p>
             {r.f
               .filter(x => !["id_", "fecha", "created_at", "updated_at"].some(p => x.key.startsWith(p) || x.key === p))
               .map((f, i) => <p key={i} className="text-sm">{f.label}: {f.value ?? "-"}</p>)}
@@ -163,14 +181,13 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
         </div>
       ))}
 
-      {/* // Título: Modal */}
+      {/* Modal */}
       <Dialog open={modal.open} onOpenChange={close}>
         <DialogContent className={`max-w-lg p-6 ${cfg?.border || ""}`}>
           {cfg && (
             <>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-lg font-bold">
-                  
                   {cfg.title} {label}
                 </DialogTitle>
               </DialogHeader>

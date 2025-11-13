@@ -11,19 +11,19 @@ class HistoriaClinicaAnamnesis extends BaseModel
         ['id_historia_clinica', 'HISTORIA', 'text'],
         ['fecha', 'FECHA', 'date', 'required'],
         ['hora', 'HORA', 'time'],
-        ['temperatura', 'TEMPERATURA (°C)', 'text'],
-        ['frecuencia_cardiaca', 'FRECUENCIA CARDIACA (lpm)', 'text'],
-        ['frecuencia_respiratoria', 'FRECUENCIA RESPIRATORIA (rpm)', 'text'],
-        ['tiempo_llenado_capilar', 'TIEMPO LLENADO CAPILAR (seg)', 'text'],
+        ['temperatura', 'TEMPERATURA (°C)', 'number'],
+        ['frecuencia_cardiaca', 'FRECUENCIA CARDIACA (lpm)', 'number'],
+        ['frecuencia_respiratoria', 'FRECUENCIA RESPIRATORIA (rpm)', 'number'],
+        ['tiempo_llenado_capilar', 'TIEMPO LLENADO CAPILAR (seg)', 'number'],
     ];
     protected static $validationRules = [
         'id_historia_clinica' => 'required|integer|exists:historia_clinica,id_historia_clinica',
         'fecha' => 'required|date',
         'hora' => 'nullable|string|max:10',
-        'temperatura' => 'nullable|string|max:10',
-        'frecuencia_cardiaca' => 'nullable|string|max:10',
-        'frecuencia_respiratoria' => 'nullable|string|max:10',
-        'tiempo_llenado_capilar' => 'nullable|string|max:50',
+        'temperatura' => 'nullable|integer',
+        'frecuencia_cardiaca' => 'nullable|integer',
+        'frecuencia_respiratoria' => 'nullable|integer',
+        'tiempo_llenado_capilar' => 'nullable|integer',
     ];
     protected static $tableColumns = [
         ['ID', 'id_historia_clinica_anamnesis'],
