@@ -11,19 +11,15 @@ import { edit } from '@/routes/profile';
 import { type User } from '@/types';
 import { Link, router } from '@inertiajs/react';
 import { LogOut, Settings } from 'lucide-react';
-
 interface UserMenuContentProps {
     user: User;
 }
-
 export function UserMenuContent({ user }: UserMenuContentProps) {
     const cleanup = useMobileNavigation();
-
     const handleLogout = () => {
         cleanup();
         router.flushAll();
     };
-
     return (
         <>
             <DropdownMenuLabel className="p-0 font-normal">

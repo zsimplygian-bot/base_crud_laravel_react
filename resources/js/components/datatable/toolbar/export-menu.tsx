@@ -2,23 +2,19 @@ import { memo, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import DropdownMenuBase from "@/components/dropdown-menu";
 import { DownloadIcon, FileDownIcon, FileSpreadsheetIcon, FileTextIcon } from "lucide-react";
-export const ExportMenu = memo(function ExportMenu({
-  exportToCSV,
-  exportToExcel,
-  exportToPDF,
-}: {
-  exportToCSV: () => void;
-  exportToExcel: () => void;
-  exportToPDF: () => void;
-}) {
-  const items = useMemo(
-    () => [
-      { label: "CSV", icon: FileDownIcon, action: exportToCSV },
-      { label: "Excel", icon: FileSpreadsheetIcon, action: exportToExcel },
-      { label: "PDF", icon: FileTextIcon, action: exportToPDF },
-    ],
-    [exportToCSV, exportToExcel, exportToPDF]
-  );
+import { useDataExport } from "@/hooks/use-datatable-export";
+interface ExportMenuProps {
+  view: string;
+  columns: any[];
+  data: any[];
+}
+export const ExportMenu = memo(function ExportMenu({ view, columns, data }: ExportMenuProps) {
+  const { exportToCSV, exportToExcel, exportToPDF } = useDataExport(view, columns, data);
+  const items = useMemo(() => [
+    { label: "CSV", icon: FileDownIcon, action: exportToCSV },
+    { label: "Excel", icon: FileSpreadsheetIcon, action: exportToExcel },
+    { label: "PDF", icon: FileTextIcon, action: exportToPDF },
+  ], [exportToCSV, exportToExcel, exportToPDF]);
   return (
     <DropdownMenuBase
       label="Exportar"

@@ -1,13 +1,18 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { ChevronsLeftIcon, ChevronLeftIcon, ChevronRightIcon, ChevronsRightIcon } from "lucide-react";
+import { FormFieldsRenderer } from "@/components/form-fields";
 import DropdownMenuBase, { DItem } from "@/components/dropdown-menu";
-import { usePagination, NavItem } from "@/hooks/datatable/footer/use-pagination";
+import { usePagination } from "@/hooks/usePagination";
+import { useFooterTotals } from "@/hooks/useFooterTotals";
 interface DataTableFooterProps {
   pageIndex: number;
   setPageIndex: (index: number) => void;
   pageSize: number;
   setPageSize: (size: number) => void;
   totalRows: number;
+  data?: Record<string, any>[];
+  footerFields?: Record<string, any>;
   isMobile?: boolean;
 }
 export const DataTableFooter: React.FC<DataTableFooterProps> = ({
@@ -16,15 +21,18 @@ export const DataTableFooter: React.FC<DataTableFooterProps> = ({
   pageSize,
   setPageSize,
   totalRows,
+  data = [],
+  footerFields,
+  isMobile = false,
 }) => {
-  // Obtener totalPages, botones de navegación y items de filas por página
+  const formData = useFooterTotals(data, footerFields);
   const { totalPages, nav, pageSizeItems } = usePagination(totalRows, pageIndex, setPageIndex, pageSize, setPageSize);
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-2">
-      {/* Controles de paginación */}
+      {/* Paginación */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 text-sm w-full sm:w-auto">
         <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-2">
-          {/* Selector de filas por página */}
+          {/* Filas por página */}
           <div className="flex items-center gap-2">
             <span>Filas:</span>
             <DropdownMenuBase
@@ -33,9 +41,9 @@ export const DataTableFooter: React.FC<DataTableFooterProps> = ({
               align="start"
             />
           </div>
-          {/* Botones de navegación */}
+          {/* Navegación */}
           <div className="flex items-center gap-1">
-            {nav.map((n: NavItem, i: number) => (
+            {nav.map((n, i) => (
               <Button
                 key={i}
                 variant="outline"
@@ -43,11 +51,13 @@ export const DataTableFooter: React.FC<DataTableFooterProps> = ({
                 onClick={n.fn}
                 disabled={n.disable}
               >
-                {n.icon}
+                {n.icon ?? (
+                  [<ChevronsLeftIcon />, <ChevronLeftIcon />, <ChevronRightIcon />, <ChevronsRightIcon />][i]
+                )}
               </Button>
             ))}
           </div>
-          {/* Información de página y total de registros */}
+          {/* Info de páginas */}
           <div className="text-center sm:text-right w-full sm:w-auto">
             Página <span className="font-medium">{pageIndex + 1}</span> de <span className="font-medium">{totalPages}</span>
             <br />

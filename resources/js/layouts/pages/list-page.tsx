@@ -1,4 +1,3 @@
-// layouts/pages/list-page.tsx
 import React from "react";
 import { Head } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";

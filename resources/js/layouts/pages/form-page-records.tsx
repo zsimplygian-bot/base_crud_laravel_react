@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import AppLayout from "@/layouts/app-layout";
 import LayoutForm from "@/layouts/form-layout";
 import { Button } from "@/components/ui/button";
-
 interface FormProps {
   form_data: any;
   formFields: any;
@@ -24,16 +23,13 @@ interface FormProps {
   medicamentos?: any[];
   anamnesis?: any[];
 }
-
 type Registro = Record<string, any>;
-
 const ModalBackdrop: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div className="absolute inset-0 bg-black/40" />
     <div className="relative z-10 w-full flex justify-center">{children}</div>
   </div>
 );
-
 const RegistroModal: React.FC<{
   open: boolean;
   onClose: () => void;
@@ -57,12 +53,10 @@ const RegistroModal: React.FC<{
   }
   return acc;
 }, {} as Record<string, any>);
-
   const { data, setData, post, put, reset } = useForm({
     id_historia_clinica: parentId,
     ...initialData,
   });
-
   useEffect(() => {
     const newData = modalFields.reduce((acc, field) => {
       acc[field[0]] = registro?.[field[0]] ?? (field[2] === "date" ? new Date().toISOString().slice(0, 10) : "");
@@ -70,7 +64,6 @@ const RegistroModal: React.FC<{
     }, {} as Record<string, any>);
     setData({ id_historia_clinica: parentId, ...newData });
   }, [registro, modalFields]);
-
   const getRouteParam = () => {
     if (!registro) return {};
     if (registro.id_historia_clinica_anamnesis) return { anamnesis: registro.id_historia_clinica_anamnesis };
@@ -80,7 +73,6 @@ const RegistroModal: React.FC<{
     const id = registro.id ?? registro.id_seguimiento ?? registro.id_procedimiento ?? registro.id_medicamento ?? registro.id_anamnesis;
     return id ? { id } : {};
   };
-
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (registro) {
@@ -92,9 +84,7 @@ const RegistroModal: React.FC<{
       post(url, { data, onSuccess: () => { reset(); onClose(); } });
     }
   };
-
   if (!open) return null;
-
   return (
     <ModalBackdrop>
       <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg p-6 w-full md:w-3/4 max-w-4xl">
@@ -132,7 +122,6 @@ const RegistroModal: React.FC<{
     </ModalBackdrop>
   );
 };
-
 const ConfirmDeleteModal = ({ open, onClose, onConfirm, itemName }: any) => {
   if (!open) return null;
   return (
@@ -148,7 +137,6 @@ const ConfirmDeleteModal = ({ open, onClose, onConfirm, itemName }: any) => {
     </ModalBackdrop>
   );
 };
-
 export const FormPage: React.FC<FormProps> = ({
   form_data,
   formFields,
@@ -171,10 +159,8 @@ export const FormPage: React.FC<FormProps> = ({
 }) => {
   const [modalConfig, setModalConfig] = useState<{ open: boolean; registro: Registro | null; tipo: "seguimientos" | "procedimientos" | "medicamentos" | "anamnesis" | null }>({ open: false, registro: null, tipo: null });
   const [deleteConfig, setDeleteConfig] = useState<{ open: boolean; registro: Registro | null; tipo: string }>({ open: false, registro: null, tipo: "" });
-
   const mainId = form_data?.[`id_${view}`] ?? Number(window.location.pathname.split("/").pop() ?? 0);
   const showActions = action !== "info" && action !== "delete";
-
   const tipoMap: Record<string, string> = {
     seguimiento: "seguimientos",
     procedimiento: "procedimientos",
@@ -182,7 +168,6 @@ export const FormPage: React.FC<FormProps> = ({
     anamnesis: "anamnesis",
     anamnesiss: "anamnesis",
   };
-
   const getRoute = (tipo: string) => {
     switch (tipo) {
       case "seguimientos": return `${view}.seguimientos`;
@@ -192,14 +177,12 @@ export const FormPage: React.FC<FormProps> = ({
       default: return `${view}.anamnesis`;
     }
   };
-
 const todosRegistros = [
   ...anamnesis.map((r) => ({ ...r, tipo: "Anamnesis", $displayFields: anamnesisFields.reduce((acc, f) => { acc[f[0]] = f[1]; return acc; }, {}) })),
   ...seguimientos.map((r) => ({ ...r, tipo: "Seguimiento", $displayFields: modalFields.reduce((acc, f) => { acc[f[0]] = f[1]; return acc; }, {}) })),
   ...procedimientos.map((r) => ({ ...r, tipo: "Procedimiento", $displayFields: procedimientoFields.reduce((acc, f) => { acc[f[0]] = f[1]; return acc; }, {}) })),
   ...medicamentos.map((r) => ({ ...r, tipo: "Medicamento", $displayFields: medicamentoFields.reduce((acc, f) => { acc[f[0]] = f[1]; return acc; }, {}) })),
 ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-
   return (
     <AppLayout breadcrumbs={[{ title, href: view }]}>
       <Head title={title} />
@@ -215,7 +198,6 @@ const todosRegistros = [
           toggleOptions={toggleOptions}
           apiConfig={apiConfig}
         />
-
         {showActions && action !== "create" && form_data?.[`id_${view}`] && (
           <div className="flex flex-wrap gap-3 mb-0">
             {[
@@ -230,7 +212,6 @@ const todosRegistros = [
             ))}
           </div>
         )}
-
         {action !== "create" && todosRegistros.length > 0 && (
           <div className="rounded-xl border bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 p-4 shadow">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Registro de Actividades</h2>
@@ -239,7 +220,6 @@ const todosRegistros = [
                 const tipoLower = tipoMap[r.tipo.toLowerCase()] || "anamnesis";
                 const routeName = getRoute(tipoLower);
                 const recordId = r.id ?? r.id_anamnesis ?? r.id_seguimiento ?? r.id_procedimiento ?? r.id_medicamento;
-
                 return (
                   <div key={`${r.tipo}-${recordId}`} className="p-3 rounded-lg border bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm flex justify-between items-start">
                     <div>
@@ -263,7 +243,6 @@ const todosRegistros = [
             </div>
           </div>
         )}
-
         <RegistroModal
           open={modalConfig.open}
           onClose={() => setModalConfig({ open: false, registro: null, tipo: null })}
@@ -278,7 +257,6 @@ const todosRegistros = [
     ? anamnesisFields
     : modalFields
 }
-
           routeName={getRoute(modalConfig.tipo ?? "anamnesis")}
           titulo={
   modalConfig.tipo === "procedimientos"
@@ -291,10 +269,8 @@ const todosRegistros = [
     ? "Seguimiento"
     : "Registro"
 }
-
           tipo={modalConfig.tipo as any}
         />
-
         <ConfirmDeleteModal
           open={deleteConfig.open}
           itemName={deleteConfig.registro?.tipo ?? "este registro"}

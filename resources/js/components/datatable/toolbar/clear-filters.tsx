@@ -36,9 +36,6 @@ export function TableFiltersButtons({
       <Button size="sm" variant="outline" onClick={handleFilterClick} disabled={!hasActiveFilters}>
         <SearchIcon className="w-4 h-4" /> Filtrar
       </Button>
-      <Button size="sm" variant="secondary" onClick={handleClearFilters} disabled={!hasActiveFilters}>
-        <EraserIcon className="w-4 h-4" /> Limpiar
-      </Button>
     </div>
   );
 }
