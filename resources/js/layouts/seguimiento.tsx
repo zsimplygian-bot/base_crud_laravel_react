@@ -3,21 +3,17 @@ import { useForm } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { FormFieldsRenderer } from "@/components/form-fields";
+import { FormFieldsRenderer } from "@/components/form/form-fields";
 import { PencilIcon, TrashIcon, Save, Loader2 } from "lucide-react";
-
 interface Field { label: string; key: string; value: any }
 interface Props { view: string; formId: number; action?: string }
-
 const CONFIG = {
   seguimientos: "SEGUIMIENTO",
   procedimientos: "PROCEDIMIENTO",
   medicamentos: "MEDICAMENTO",
   anamnesis: "ANAMNESIS",
 } as const;
-
 type Action = "create" | "update" | "delete";
-
 const ACTION: Record<Action, {
   title: string;
   btn: string;
@@ -30,49 +26,38 @@ const ACTION: Record<Action, {
   update: { title: "ACTUALIZAR", btn: "Actualizar", cls: "bg-green-600 hover:bg-green-700 text-white", icon: <PencilIcon className="w-4 h-4" />, border: "border-l border-green-500" },
   delete: { title: "ELIMINAR", btn: "Eliminar", cls: "bg-red-600 hover:bg-red-700 text-white", icon: <TrashIcon className="w-4 h-4" />, border: "border-l border-red-500", readonly: true },
 };
-
 const singular = (t: string) => t.endsWith("is") ? t : t.replace(/s$/, "");
 const idKey = (t: string) => `id_historia_clinica_${singular(t)}`;
 const route = (t: string, id?: number) => id ? `/historia_clinica_${singular(t)}/${id}` : `/historia_clinica_${singular(t)}/form`;
 const extractId = (f: Field[], t: string) => f.find(x => x.key.startsWith("id_") || x.label.toLowerCase().includes(singular(t)))?.value ?? null;
-
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-
-// SOLUCIÓN FINAL: Interpretar YYYY-MM-DD como fecha LOCAL (Perú)
+// Interpretar YYYY-MM-DD como fecha LOCAL (Perú)
 const parseDateAsLocal = (dateStr: string): Date | null => {
   if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
   const [year, month, day] = dateStr.split("-").map(Number);
-  // Crea la fecha en hora LOCAL (no UTC)
   return new Date(year, month - 1, day);
 };
-
 const formatDatePeru = (dateStr: string | null | undefined): string => {
   if (!dateStr) return "Sin fecha";
   const date = parseDateAsLocal(dateStr);
   if (!date) return "Sin fecha";
   return date.toLocaleDateString("es-PE");
 };
-
 export default function SeguimientoSection({ view, formId, action = "update" }: Props) {
   const canEdit = action === "update";
   const parentId = useMemo(() => window.location.pathname.match(/\/update\/(\d+)/)?.[1] ?? formId, [formId]);
-
   const [modal, setModal] = useState<{ open: boolean; tipo: string | null; reg: Field[] | null; act: Action }>({
     open: false, tipo: null, reg: null, act: "update"
   });
-
   const [fields, setFields] = useState<Record<string, any[]>>({});
   const [data, setData] = useState<Record<string, any>>({});
   const [records, setRecords] = useState<Record<string, Field[][]>>({});
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const { post, put, delete: del, processing, errors, setData: setInertia } = useForm({});
-
   const load = useCallback(() => {
     fetch(`/api/historia/${parentId}/records`).then(r => r.json()).then(setRecords).catch(() => {});
   }, [parentId]);
-
   useEffect(load, [load]);
-
   useEffect(() => {
     if (!modal.open || !modal.tipo || fields[modal.tipo]) return;
     fetch(`/api/historia/${modal.tipo}/fields`)
@@ -82,7 +67,6 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
         [modal.tipo!]: Object.entries(d).map(([k, v]: any) => [k, v.label ?? k, v.type ?? "text", v.options ?? null])
       })));
   }, [modal.open, modal.tipo, fields]);
-
   useEffect(() => {
     if (!modal.open || !modal.tipo || !fields[modal.tipo]) return;
     const base: Record<string, any> = {};
@@ -92,9 +76,7 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
     if (modal.act === "create") base.id_historia_clinica = parentId;
     setData(base);
   }, [modal.open, modal.tipo, modal.reg, fields, parentId]);
-
   useEffect(() => setInertia(data), [data, setInertia]);
-
   const submit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (!modal.tipo) return;
@@ -105,28 +87,28 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
       : modal.act === "update" ? put(route(modal.tipo, id), { data, ...opts })
       : del(route(modal.tipo, id), opts);
   }, [modal, data, post, put, del, load]);
-
   const open = (tipo: string, reg: Field[] | null, act: Action) => setModal({ open: true, tipo, reg, act });
   const close = () => setModal({ open: false, tipo: null, reg: null, act: "update" });
-
-  const all = useMemo(() => Object.entries(records)
-    .flatMap(([t, items]) => items.map(f => ({
-      k: t,
-      tipo: CONFIG[t as keyof typeof CONFIG],
-      f,
-      fecha: f.find(x => x.key === "fecha")?.value ?? null,
-      id: extractId(f, t)
-    })))
-    .sort((a, b) => {
-      const da = a.fecha ? +parseDateAsLocal(a.fecha)! : 0;
-      const db = b.fecha ? +parseDateAsLocal(b.fecha)! : 0;
-      return db - da; // más reciente primero
-    })
-  , [records]);
-
+  // AGRUPAR POR FECHA
+  const groupedByDate = useMemo(() => {
+    const map: Record<string, { tipo: string; f: Field[]; k: string }[]> = {};
+    Object.entries(records).forEach(([t, items]) => {
+      items.forEach(f => {
+        const fecha = f.find(x => x.key === "fecha")?.value ?? "Sin fecha";
+        if (!map[fecha]) map[fecha] = [];
+        map[fecha].push({ tipo: CONFIG[t as keyof typeof CONFIG], f, k: t });
+      });
+    });
+    return Object.fromEntries(
+      Object.entries(map).sort(([a], [b]) => {
+        const da = parseDateAsLocal(a)?.getTime() ?? 0;
+        const db = parseDateAsLocal(b)?.getTime() ?? 0;
+        return db - da;
+      })
+    );
+  }, [records]);
   const cfg = modal.tipo ? ACTION[modal.act] : null;
   const label = modal.tipo ? CONFIG[modal.tipo as keyof typeof CONFIG] : "";
-
   return (
     <div className="flex flex-col gap-4">
       {/* Botones para crear nuevos registros */}
@@ -145,42 +127,37 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
           ))}
         </ButtonGroup>
       )}
-
-      {/* Lista de registros */}
-      {all.map(r => (
-        <div
-          key={`${r.k}-${r.id}`}
-          className="border rounded-lg p-3 flex justify-between bg-muted/40"
-        >
-          <div>
-            <p className="font-semibold text-purple-600 dark:text-purple-400">
-              {r.tipo}
-              {r.fecha ? (
-                <span className="ml-2 text-purple-600 dark:text-purple-400">
-                  — {formatDatePeru(r.fecha)}
-                </span>
-              ) : (
-                <span className="ml-2 text-gray-400 dark:text-gray-500">— Sin fecha</span>
+      {/* Lista agrupada por fecha */}
+      {Object.entries(groupedByDate).map(([fecha, items]) => (
+        <div key={fecha} className="">
+          <h3 className="font-semibold text-gray-600 dark:text-gray-400 mb-2">
+            {fecha === "Sin fecha" ? fecha : formatDatePeru(fecha)}
+          </h3>
+          {items.map((r, idx) => (
+            <div
+              key={`${r.k}-${idx}`}
+              className="border rounded-lg p-3 flex justify-between bg-muted/40 mb-2"
+            >
+              <div>
+                <p className="font-semibold text-purple-600 dark:text-purple-400">{r.tipo}</p>
+                {r.f
+                  .filter(x => !["id_", "fecha", "created_at", "updated_at"].some(p => x.key.startsWith(p) || x.key === p))
+                  .map((f, i) => <p key={i} className="text-sm">{f.label}: {f.value ?? "-"}</p>)}
+              </div>
+              {canEdit && (
+                <div className="flex flex-col gap-1 ml-2">
+                  <Button size="icon" variant="outline" onClick={() => open(r.k, r.f, "update")}>
+                    <PencilIcon className="w-4 h-4" />
+                  </Button>
+                  <Button size="icon" variant="destructive" onClick={() => open(r.k, r.f, "delete")}>
+                    <TrashIcon className="w-4 h-4" />
+                  </Button>
+                </div>
               )}
-            </p>
-            {r.f
-              .filter(x => !["id_", "fecha", "created_at", "updated_at"].some(p => x.key.startsWith(p) || x.key === p))
-              .map((f, i) => <p key={i} className="text-sm">{f.label}: {f.value ?? "-"}</p>)}
-          </div>
-
-          {canEdit && (
-            <div className="flex flex-col gap-1 ml-2">
-              <Button size="icon" variant="outline" onClick={() => open(r.k, r.f, "update")}>
-                <PencilIcon className="w-4 h-4" />
-              </Button>
-              <Button size="icon" variant="destructive" onClick={() => open(r.k, r.f, "delete")}>
-                <TrashIcon className="w-4 h-4" />
-              </Button>
             </div>
-          )}
+          ))}
         </div>
       ))}
-
       {/* Modal */}
       <Dialog open={modal.open} onOpenChange={close}>
         <DialogContent className={`max-w-lg p-6 ${cfg?.border || ""}`}>
@@ -196,7 +173,6 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
               </DialogDescription>
             </>
           )}
-
           <form onSubmit={submit} className="space-y-3">
             {(fields[modal.tipo ?? ""] ?? [])
               .filter(([k]) => k !== "id_historia_clinica")
@@ -214,7 +190,6 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
                   view={view}
                 />
               ))}
-
             <div className="flex justify-end">
               <Button type="submit" disabled={processing} className={`${cfg?.cls} flex items-center gap-2`}>
                 {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : cfg?.icon}

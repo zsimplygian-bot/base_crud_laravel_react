@@ -15,25 +15,21 @@ class Raza extends BaseModel
         'id_especie' => 'required|int|max:255',
         'raza' => 'required|string|max:100',
     ];
-    public static function getQuery()
-    {
-        $alias = (new self)->getTable(); // raza
-        $alias2 = 'especie';
-        $query = DB::table($alias)
-            ->leftJoin($alias2, "{$alias}.id_{$alias2}", '=', "{$alias2}.id_{$alias2}")
+    public static function getQuery() {
+        $t1 = (new self)->getTable(); // raza
+        $t2 = 'especie';
+        $query = DB::table($t1)
+            ->leftJoin($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
             ->select([
-                "{$alias}.id_{$alias} as id",
-                "{$alias2}.especie",
-                DB::raw("CONCAT({$alias2}.especie, ' - ', {$alias}.raza) as raza"),
+                "$t1.id_$t1 as id",
+                "$t2.especie",
+                DB::raw("CONCAT($t2.especie, ' - ', $t1.raza) as raza"),
             ]);
-        return ['query' => $query, 'alias' => $alias];
+        return ['query' => $query, 'alias' => $t1];
     }
     protected static $tableColumns = [
         ['ID', 'id'],
         ['RAZA', 'raza'],
     ];
-    public function especie()
-    {
-        return $this->belongsTo(Especie::class, 'id_especie');
-    }
+    public function especie() { return $this->belongsTo(Especie::class, 'id_especie'); }
 }

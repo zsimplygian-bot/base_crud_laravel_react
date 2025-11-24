@@ -1,38 +1,36 @@
 import { useMemo, useCallback } from "react";
-interface Campo {
-  title: string;
-  column: string;
+interface ColumnDef {
+  header: string;
+  accessor: string;
 }
-export const useDataTableLogic = (
-  campos: Campo[],
-  view: string,
-  data: any[],
-  loading: boolean,
-  columnVisibility: Record<string, boolean>,
-  pageSize: number,
-  sortBy: string | null,
-  setSortBy: (v: string) => void,
-  sortOrder: "asc" | "desc",
-  setSortOrder: (v: "asc" | "desc") => void,
-  totalRows: number
-) => {
-  const columns = useMemo(
-    () => campos.filter(c => c?.column).map(c => ({ header: c.title, accessor: c.column })),
-    [campos]
-  );
+interface DataTableLogicProps {
+  columnsInput: ColumnDef[];
+  view: string;
+  data: any[];
+  loading: boolean;
+  columnVisibility: Record<string, boolean>;
+  sortBy: string;
+  setSortBy: (col: string) => void;
+  sortOrder: "asc" | "desc";
+  setSortOrder: (order: "asc" | "desc") => void;
+}
+export const useDataTableLogic = (props: DataTableLogicProps) => {
+  const { columnsInput, columnVisibility, sortBy, sortOrder, setSortBy, setSortOrder } = props;
+  const columns = useMemo(() => columnsInput, [columnsInput]);
   const visibleColumns = useMemo(
-    () => columns.filter(c => columnVisibility[c.accessor] !== false),
+    () => columns.filter(c => columnVisibility?.[c.accessor] !== false),
     [columns, columnVisibility]
   );
-  const totalPages = useMemo(() => Math.ceil(totalRows / pageSize), [totalRows, pageSize]);
   const handleSort = useCallback(
     (col: string) => {
-      sortBy === col ? setSortOrder(sortOrder === "asc" ? "desc" : "asc") : (setSortBy(col), setSortOrder("asc"));
+      if (sortBy === col) {
+        setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+      } else {
+        setSortBy(col);
+        setSortOrder("asc");
+      }
     },
     [sortBy, sortOrder, setSortBy, setSortOrder]
   );
-  return useMemo(
-    () => ({ columns, visibleColumns, totalPages, handleSort, data, loading, view }),
-    [columns, visibleColumns, totalPages, handleSort, data, loading, view]
-  );
+  return { ...props, columns, visibleColumns, handleSort };
 };

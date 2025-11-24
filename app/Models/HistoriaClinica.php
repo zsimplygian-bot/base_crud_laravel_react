@@ -2,43 +2,11 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 class HistoriaClinica extends BaseModel
 {
     use HasFactory;
     protected $table = 'historia_clinica';
-    public function historia_seguimientos(): HasMany
-    {
-        return $this->hasMany(HistoriaClinicaSeguimiento::class, 'id_historia_clinica');
-    }
-    public function historia_procedimientos(): HasMany
-    {
-        return $this->hasMany(HistoriaClinicaProcedimiento::class, 'id_historia_clinica');
-    }
-    public function historia_medicamentos(): HasMany
-    {
-        return $this->hasMany(HistoriaClinicaMedicamento::class, 'id_historia_clinica');
-    }
-    public function historia_anamnesis(): HasMany
-    {
-        return $this->hasMany(HistoriaClinicaAnamnesis::class, 'id_historia_clinica');
-    }
-    public function motivo_historia()
-    {
-        return $this->belongsTo(MotivoHistoriaClinica::class, 'id_motivo_historia_clinica');
-    }
-    public function mascota()
-    {
-        return $this->belongsTo(Mascota::class, 'id_mascota', 'id_mascota');
-    }
-    public function estado_historia_clinica()
-    {
-        return $this->belongsTo(EstadoHistoriaClinica::class, 'id_estado_historia_clinica', 'id_estado_historia_clinica');
-    }
-    // 🔹 Configuración general
     public static string $title = 'Historias Clínicas';
     protected static $simpleFormFieldDefinitions = [
         ['id_mascota', 'MASCOTA - DUEÑO', 'select', 'required'],
@@ -48,14 +16,14 @@ class HistoriaClinica extends BaseModel
         ['observaciones', 'OBSERVACIONES', 'textarea'],
         ['id_estado_historia_clinica', 'ESTADO HISTORIA', 'select'],
     ];
-    public static function getFieldDefinitions(string $type, string $action = null, $data = null): array
+    // Sobrescribimos el hook para acción create
+    protected static function adjustFieldForAction(array $fieldDef, string $fieldName, ?string $action): array
     {
-        $defs = parent::getFieldDefinitions($type, $action, $data);
-        if ($action === 'create' && isset($defs['id_estado_historia_clinica'])) {
-            $defs['id_estado_historia_clinica']['type'] = 'hidden';
-            $defs['id_estado_historia_clinica']['value'] = 1;
+        if ($fieldName === 'id_estado_historia_clinica' && $action === 'create') {
+            $fieldDef['type'] = 'hidden';
+            $fieldDef['value'] = 1;
         }
-        return $defs;
+        return $fieldDef;
     }
     protected static $validationRules = [
         'id_mascota' => 'required|int',
@@ -74,47 +42,45 @@ class HistoriaClinica extends BaseModel
         ['precio', 'TOTAL', 'text', 1],
     ];
     public static array $allowedFilters = ['id_mascota', 'id_estado_historia_clinica'];
-    // Consulta principal
-    public static function getQuery()
-    {
-        $alias = (new self)->getTable();
-        $alias2 = 'mascota';
-        $alias3 = 'cliente';
-        $alias4 = 'estado_historia_clinica';
-        $aliasMotivo = 'motivo_historia_clinica';
-        $procedimientoTable = 'historia_clinica_procedimiento';
-        $medicamentoTable = 'historia_clinica_medicamento';
-        $query = DB::table($alias)
-            ->leftJoin($alias2, "{$alias}.id_{$alias2}", '=', "{$alias2}.id_{$alias2}")
-            ->leftJoin($alias3, "{$alias2}.id_{$alias3}", '=', "{$alias3}.id_{$alias3}")
-            ->leftJoin($alias4, "{$alias}.id_{$alias4}", '=', "{$alias4}.id_{$alias4}")
-            ->leftJoin($aliasMotivo, "{$alias}.id_motivo_historia_clinica", '=', "{$aliasMotivo}.id_motivo_historia_clinica")
-            ->leftJoin($procedimientoTable . ' as p', "p.id_historia_clinica", '=', "{$alias}.id_{$alias}")
-            ->leftJoin($medicamentoTable . ' as m', "m.id_historia_clinica", '=', "{$alias}.id_{$alias}")
+    public static function getQuery() {
+        $t1 = (new self)->getTable(); // historia_clinica
+        $t2 = 'mascota';
+        $t3 = 'cliente';
+        $t4 = 'estado_historia_clinica';
+        $t5 = 'motivo_historia_clinica';
+        $t6 = 'historia_clinica_procedimiento';
+        $t7 = 'historia_clinica_medicamento';
+        $query = DB::table($t1)
+            ->leftJoin($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
+            ->leftJoin($t3, "$t2.id_$t3", '=', "$t3.id_$t3")
+            ->leftJoin($t4, "$t1.id_$t4", '=', "$t4.id_$t4")
+            ->leftJoin($t5, "$t1.id_$t5", '=', "$t5.id_$t5")
+            ->leftJoin($t6, "$t6.id_$t1", '=', "$t1.id_$t1")
+            ->leftJoin($t7, "$t7.id_$t1", '=', "$t1.id_$t1")
             ->select([
-                "{$alias}.id_{$alias} as id",
-                "{$alias2}.mascota as mascota",
-                "{$alias3}.cliente as cliente",
-                "{$alias}.fecha",
-                "{$aliasMotivo}.motivo_historia_clinica as motivo_historia_clinica",
-                "{$alias}.detalle",
-                "{$alias}.observaciones",
-                "{$alias4}.estado_historia_clinica as estado",
-                "{$alias}.created_at",
-                DB::raw("COALESCE(SUM(p.precio),0) + COALESCE(SUM(m.precio),0) as precio"),
+                "$t1.id_$t1 as id",
+                "$t2.mascota as mascota",
+                "$t3.cliente as cliente",
+                "$t1.fecha",
+                "$t5.motivo_historia_clinica as motivo_historia_clinica",
+                "$t1.detalle",
+                "$t1.observaciones",
+                "$t4.estado_historia_clinica as estado",
+                "$t1.created_at",
+                DB::raw("COALESCE(SUM($t6.precio),0) + COALESCE(SUM($t7.precio),0) as precio"),
             ])
             ->groupBy(
-                "{$alias}.id_{$alias}",
-                "{$alias2}.mascota",
-                "{$alias3}.cliente",
-                "{$alias}.fecha",
-                "{$aliasMotivo}.motivo_historia_clinica",
-                "{$alias}.detalle",
-                "{$alias}.observaciones",
-                "{$alias4}.estado_historia_clinica",
-                "{$alias}.created_at"
+                "$t1.id_$t1",
+                "$t2.mascota",
+                "$t3.cliente",
+                "$t1.fecha",
+                "$t5.motivo_historia_clinica",
+                "$t1.detalle",
+                "$t1.observaciones",
+                "$t4.estado_historia_clinica",
+                "$t1.created_at"
             );
-        return ['query' => $query, 'alias' => $alias];
+        return ['query' => $query, 'alias' => $t1];
     }
     protected static $tableColumns = [
         ['ID', 'id'],
@@ -128,4 +94,11 @@ class HistoriaClinica extends BaseModel
         ['ESTADO', 'estado'],
         ['FECHA REGISTRO', 'created_at'],
     ];
+    public function historia_seguimientos(): HasMany { return $this->hasMany(HistoriaClinicaSeguimiento::class, 'id_historia_clinica'); }
+    public function historia_procedimientos(): HasMany { return $this->hasMany(HistoriaClinicaProcedimiento::class, 'id_historia_clinica'); }
+    public function historia_medicamentos(): HasMany { return $this->hasMany(HistoriaClinicaMedicamento::class, 'id_historia_clinica'); }
+    public function historia_anamnesis(): HasMany { return $this->hasMany(HistoriaClinicaAnamnesis::class, 'id_historia_clinica'); }
+    public function motivo_historia() { return $this->belongsTo(MotivoHistoriaClinica::class, 'id_motivo_historia_clinica'); }
+    public function mascota() { return $this->belongsTo(Mascota::class, 'id_mascota'); }
+    public function estado_historia_clinica() { return $this->belongsTo(EstadoHistoriaClinica::class, 'id_estado_historia_clinica'); }
 }

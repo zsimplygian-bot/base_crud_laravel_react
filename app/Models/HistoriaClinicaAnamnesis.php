@@ -15,6 +15,7 @@ class HistoriaClinicaAnamnesis extends BaseModel
         ['frecuencia_cardiaca', 'FRECUENCIA CARDIACA (lpm)', 'number'],
         ['frecuencia_respiratoria', 'FRECUENCIA RESPIRATORIA (rpm)', 'number'],
         ['tiempo_llenado_capilar', 'TIEMPO LLENADO CAPILAR (seg)', 'number'],
+        ['peso', 'PESO (kg)', 'number'],
     ];
     protected static $validationRules = [
         'id_historia_clinica' => 'required|integer|exists:historia_clinica,id_historia_clinica',
@@ -24,7 +25,24 @@ class HistoriaClinicaAnamnesis extends BaseModel
         'frecuencia_cardiaca' => 'nullable|integer',
         'frecuencia_respiratoria' => 'nullable|integer',
         'tiempo_llenado_capilar' => 'nullable|integer',
+        'peso' => 'nullable|integer',
     ];
+    public static function getQuery() {
+        $t1 = (new self)->getTable();
+        $query = DB::table($t1)->select([
+                "$t1.id_$t1",
+                "$t1.id_historia_clinica",
+                "$t1.fecha",
+                "$t1.hora",
+                "$t1.temperatura",
+                "$t1.frecuencia_cardiaca",
+                "$t1.frecuencia_respiratoria",
+                "$t1.tiempo_llenado_capilar",
+                "$t1.peso",
+                "$t1.created_at",
+            ]);
+        return ['query' => $query, 'alias' => $t1];
+    }
     protected static $tableColumns = [
         ['ID', 'id_historia_clinica_anamnesis'],
         ['HISTORIA CLINICA', 'id_historia_clinica'],
@@ -34,27 +52,8 @@ class HistoriaClinicaAnamnesis extends BaseModel
         ['FRECUENCIA CARDIACA (lpm)', 'frecuencia_cardiaca'],
         ['FRECUENCIA RESPIRATORIA (rpm)', 'frecuencia_respiratoria'],
         ['TIEMPO LLENADO CAPILAR (seg)', 'tiempo_llenado_capilar'],
+        ['PESO (kg)', 'peso'],
         ['FECHA REGISTRO', 'created_at'],
     ];
-    public static function getQuery()
-    {
-        $al1 = (new self)->getTable();
-        $query = DB::table($al1)
-            ->select([
-                "{$al1}.id_historia_clinica_anamnesis",
-                "{$al1}.id_historia_clinica",
-                "{$al1}.fecha",
-                "{$al1}.hora",
-                "{$al1}.temperatura",
-                "{$al1}.frecuencia_cardiaca",
-                "{$al1}.frecuencia_respiratoria",
-                "{$al1}.tiempo_llenado_capilar",
-                "{$al1}.created_at",
-            ]);
-        return ['query' => $query, 'alias' => $al1];
-    }
-    public function parent()
-    {
-        return $this->belongsTo(HistoriaClinica::class, $this->parentForeignKey, 'id');
-    }
+    public function parent() { return $this->belongsTo(HistoriaClinica::class, $this->parentForeignKey, 'id'); }
 }

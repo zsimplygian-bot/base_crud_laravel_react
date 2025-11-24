@@ -1,80 +1,52 @@
-import { useRef, useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { SearchIcon, XIcon } from "lucide-react";
-import DropdownMenuBase, { DItem } from "@/components/dropdown-menu";
+import DropdownMenuBase from "@/components/dropdown-menu";
+import { useSearchFilter } from "@/hooks/datatable/toolbar/use-search-filter";
 interface Column {
   header: string;
   accessor: string;
 }
-interface SearchFilterProps {
+export function SearchFilter(props: {
   columns: Column[];
   localSelectedColumn: string | null;
   setLocalSelectedColumn: (v: string | null) => void;
   localSearchTerm: string;
   setLocalSearchTerm: (v: string) => void;
   onSearch: () => void;
-}
-export function SearchFilter({
-  columns,
-  localSelectedColumn,
-  setLocalSelectedColumn,
-  localSearchTerm,
-  setLocalSearchTerm,
-  onSearch
-}: SearchFilterProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [inputVisible, setInputVisible] = useState(false);
-  useEffect(() => {
-    if (inputVisible) setTimeout(() => inputRef.current?.focus(), 50);
-  }, [inputVisible]);
-  const closeSearch = () => {
-    setInputVisible(false);
-    setLocalSelectedColumn(null);
-    setLocalSearchTerm("");
-  };
-  const menuItems: DItem[] = columns.map(col => ({
-    label: col.header.toUpperCase(),
-    action: () => {
-      setLocalSelectedColumn(col.accessor);
-      setInputVisible(true);
-    }
-  }));
+}) {
+  const { inputRef, inputVisible, closeSearch, placeholder, menuItems, handleKeyDown,
+    } = useSearchFilter(props);
   return (
     <div className="flex items-center gap-2 w-full">
-    <DropdownMenuBase
+      <DropdownMenuBase
         trigger={
-        <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm">
             <SearchIcon className="w-4 h-4 opacity-60 hover:opacity-100 transition" />
-        </Button>
+          </Button>
         }
         label="Buscar por"
         items={menuItems}
         align="start"
-    />
-    {inputVisible && (
+      />
+      {inputVisible && (
         <div className="relative w-40 md:w-36">
-        <Input
+          <Input
             ref={inputRef}
-            placeholder={`Buscar ${
-            columns.find(c => c.accessor === localSelectedColumn)?.header.toLowerCase() ?? ""
-            }`}
-            value={localSearchTerm}
-            onChange={e => setLocalSearchTerm(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && onSearch()}
+            placeholder={placeholder}
+            value={props.localSearchTerm}
+            onChange={e => props.setLocalSearchTerm(e.target.value)}
+            onKeyDown={handleKeyDown}
             className="text-sm w-full"
-        />
-        {localSearchTerm && (
-            <button
-            type="button"
-            onClick={closeSearch}
-            className="absolute right-2 top-1/2 -translate-y-1/2"
+          />
+          {props.localSearchTerm && (
+            <button type="button" onClick={closeSearch} className="absolute right-2 top-1/2 -translate-y-1/2"
             >
-            <XIcon className="w-3 h-3 opacity-60 hover:opacity-100 transition" />
+              <XIcon className="w-3 h-3 opacity-60 hover:opacity-100 transition" />
             </button>
-        )}
+          )}
         </div>
-    )}
+      )}
     </div>
   );
 }

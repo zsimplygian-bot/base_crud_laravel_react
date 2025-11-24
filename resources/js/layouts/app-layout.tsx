@@ -1,7 +1,7 @@
 import AppLayoutTemplate from "@/layouts/app/app-sidebar-layout";
 import { type BreadcrumbItem } from "@/types";
 import { type ReactNode, useEffect, useState, useRef } from "react";
-import { usePage } from "@inertiajs/react";
+import { Head, usePage } from "@inertiajs/react";
 import { Toaster, toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 interface AppLayoutProps {
@@ -34,32 +34,31 @@ export default function AppLayout({ children, breadcrumbs, ...props }: AppLayout
       });
       shownRef.current.error = true;
     }
-    if (pageProps.errors && Object.keys(pageProps.errors).length > 0) {
-      const errorMessages = Object.values(pageProps.errors)
-        .map((v) => (Array.isArray(v) ? v.join(", ") : v))
-        .join(" | ");
-      setDialog({
-        title: "Advertencia",
-        content: errorMessages,
-      });
-    }
+    //if (pageProps.errors && Object.keys(pageProps.errors).length > 0) {
+      //const errorMessages = Object.values(pageProps.errors)
+        //.map((v) => (Array.isArray(v) ? v.join(", ") : v))
+        //.join(" | ");
+      //setDialog({
+        //title: "Advertencia",
+        //content: errorMessages,
+      //});
+    //}
   }, [pageProps.success, pageProps.error, pageProps.errors]);
   return (
-    <AppLayoutTemplate breadcrumbs={breadcrumbs} {...props}>
+    <AppLayoutTemplate breadcrumbs={breadcrumbs}>
+      <Head />  {/* <<--- AQUÍ ESTA LA SOLUCIÓN */}
       {children}
+
       <Dialog open={!!dialog} onOpenChange={() => setDialog(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{dialog?.title}</DialogTitle>
           </DialogHeader>
-          <p className="text-sm ">{dialog?.content}</p>
+          <p>{dialog?.content}</p>
         </DialogContent>
       </Dialog>
-      <Toaster
-        position="top-center"
-        closeButton
-        theme="dark"
-      />
+
+      <Toaster position="top-center" closeButton theme="dark" />
     </AppLayoutTemplate>
   );
 }

@@ -2,11 +2,7 @@
 namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Helpers\{
-    ListadoHelper,
-    ListadoQueryBuilder,
-    ModelRegistry
-};
+use App\Helpers\{ListadoHelper, ListadoQueryBuilder, ModelRegistry};
 use Illuminate\Support\Facades\Validator;
 class ListadoController extends Controller
 {
@@ -20,38 +16,44 @@ class ListadoController extends Controller
             'column'    => 'string|nullable',
             'search'    => 'string|nullable',
             'from'      => 'date|nullable',
-            'to'        => 'date|nullable|after_or_equal:from',
-            'tipo'      => 'string|nullable',
+            'to'        => 'date|nullable|after_or_equal:from'
         ], [
             'view.required' => 'El parámetro "view" es obligatorio.'
         ]);
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
         }
-        $viewParam = $request->input('view');
-        $tipo = $request->input('tipo');
+        $params = array_merge([
+            'limit'     => 10,
+            'page'      => 1,
+            'sortOrder' => null,
+            'column'    => null,
+            'search'    => null,
+            'from'      => null,
+            'to'        => null
+        ], $request->only(['limit','page','view','sortOrder','column','search','from','to']));
         try {
-            $instance = ModelRegistry::resolve($viewParam, $tipo);
+            $instance = ModelRegistry::resolve($params['view']);
         } catch (\InvalidArgumentException $e) {
-            return response()->json(['error' => $e->getMessage()], 400);
+            return response()->json(['errors' => ['view' => $e->getMessage()]], 400);
         }
-        $realView = in_array($viewParam, ['honora', 'pagomen', 'consultasan']) ? 'detalle_liquidacion' : $viewParam;
-        $built = $instance::getQuery($request->input('search'), $tipo ?? $viewParam);
-        $query = $built['query'];
-        $alias = $built['alias'];
-        $query = ListadoQueryBuilder::apply($query, $alias, $request, $instance, $realView);
-        $data = $query->paginate(
-            $request->input('limit', 10),
-            ['*'],
-            'page',
-            $request->input('page', 1)
-        );
+        $columns = $instance::getColumns();
+        $realView = match ($params['view']) {
+            'honora','pagomen','consultasan' => 'detalle_liquidacion',
+            default => $params['view']
+        };
+        $built = $instance::getQuery($params['search'], $params['view']);
+        $query = ListadoQueryBuilder::apply($built['query'], $built['alias'], $request, $instance, $realView);
+        $data = $query->paginate($params['limit'], ['*'], 'page', $params['page']);
+        $params['total']        = $data->total();
+        $params['current_page'] = $data->currentPage();
+        $params['per_page']     = $data->perPage();
+        $params['last_page']    = $data->lastPage();
+        $params['resolved']     = ['realView' => $realView, 'alias' => $built['alias']];
         return response()->json([
-            'data'         => $data->items(),
-            'total'        => $data->total(),
-            'current_page' => $data->currentPage(),
-            'per_page'     => $data->perPage(),
-            'last_page'    => $data->lastPage(),
+            'columns' => $columns,
+            'data'    => $data->items(),
+            'params'  => $params
         ]);
     }
 }

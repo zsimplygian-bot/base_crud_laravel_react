@@ -1,5 +1,5 @@
 import React from "react";
-import { getNestedValue, renderMap, ImageCell } from "@/components/datatable/base/render_cell";
+import { getNestedValue, renderMap, ImageCell } from "@/components/datatable/base/body/render_cell";
 export const useRenderCellContent = () => {
   const renderCellContent = (
     accessor: string,

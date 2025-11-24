@@ -3,18 +3,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { CalendarIcon } from "lucide-react";
 import { es } from "date-fns/locale";
-import { format } from "date-fns";
+import { useDateRangeFilter } from "@/hooks/datatable/toolbar/use-daterange-filter";
 interface DateRangeFilterProps {
   dateRange?: { from?: Date; to?: Date };
   setDateRange: (v?: { from?: Date; to?: Date }) => void;
   onApply?: () => void;
 }
 export function DateRangeFilter({ dateRange, setDateRange, onApply }: DateRangeFilterProps) {
-  const formatted = dateRange?.from
-    ? dateRange.to
-      ? `${format(dateRange.from, "LLL dd, yyyy")} - ${format(dateRange.to, "LLL dd, yyyy")}`
-      : format(dateRange.from, "LLL dd, yyyy")
-    : "Fecha";
+  const { formatted } = useDateRangeFilter(dateRange);
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -25,17 +21,17 @@ export function DateRangeFilter({ dateRange, setDateRange, onApply }: DateRangeF
       </PopoverTrigger>
       <PopoverContent align="start" className="p-0 w-auto">
         <div className="w-[250px]">
-            <Calendar
+          <Calendar
             mode="range"
             selected={dateRange}
             onSelect={(r) => {
-                setDateRange(r);
-                onApply?.();
+              setDateRange(r);
+              onApply?.();
             }}
             locale={es}
-            />
+          />
         </div>
-        </PopoverContent>
+      </PopoverContent>
     </Popover>
   );
 }

@@ -1,0 +1,37 @@
+/* ===== FULLCALENDAR DARK MODE ===== */
+html.dark .fc {
+  --fc-border-color: #2b2b2b;
+  --fc-page-bg-color: #111;
+  --fc-neutral-bg-color: #1a1a1a;
+  --fc-list-event-hover-bg-color: #222;
+
+  --fc-button-text-color: #e5e5e5;
+  --fc-button-bg-color: #333;
+  --fc-button-border-color: #444;
+  --fc-button-hover-bg-color: #444;
+  --fc-button-active-bg-color: #555;
+
+  --fc-today-bg-color: rgba(59, 130, 246, 0.25);
+
+  --fc-event-bg-color: #2563eb;
+  --fc-event-border-color: #1d4ed8;
+  --fc-event-text-color: white;
+}
+
+html.dark .fc-daygrid-day,
+html.dark .fc-timegrid-slot {
+  background-color: #0f0f0f !important;
+  color: #e5e5e5;
+}
+
+html.dark .fc-daygrid-day-number {
+  color: #e5e5e5;
+}
+
+html.dark .fc-toolbar-title {
+  color: #e5e5e5;
+}
+
+html.dark .fc-col-header-cell-cushion {
+  color: #e5e5e5;
+}

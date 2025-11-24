@@ -2,6 +2,7 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 abstract class BaseModel extends Model
 {
     use HasFactory;
@@ -16,153 +17,101 @@ abstract class BaseModel extends Model
             $this->fillable = array_keys(static::$validationRules);
         }
     }
-    public static function getValidationRules(): array
-    {
-        return property_exists(static::class, 'validationRules') ? static::$validationRules : [];
-    }
     public static function getApiConfig(): array
     {
         return static::$apiConfig ?? [];
     }
-    public static function getFormFields($listaController = null, $data = null, string $action = null): array
+    public static function getValidationRules(): array
     {
-        return static::buildFields('form', $listaController, $data, $action);
+        return static::$validationRules ?? [];
     }
-    public static function getToolbarFields($listaController = null): array
+    public static function getFormFields($data = null, ?string $action = null): array
     {
-        return static::buildFields('toolbar', $listaController);
+        return static::buildFields('formFieldDefinitions', $data, $action);
+    }
+    public static function getToolbarFields(): array
+    {
+        return static::buildFields('toolbarFieldDefinitions');
     }
     public static function getFooterFields(): array
     {
-        return static::buildFields('footer');
+        return static::buildFields('footerFieldDefinitions');
     }
-    public static function getModalFields($listaController = null, $data = null, string $action = null): array
+    public static function getModalFields($data = null, ?string $action = null): array
     {
-        return static::buildFields('modal', $listaController, $data, $action);
+        return static::buildFields('modalFormFieldDefinitions', $data, $action);
     }
-    protected static function buildFields(string $type, $listaController = null, $data = null, string $action = null): array
+    protected static function buildFields(string $property, $data = null, ?string $action = null): array
     {
-        $definitions = static::getFieldDefinitions($type, $action, $data);
-        return static::buildFieldsFromDefinitions($definitions, $listaController, $data);
+        $definitions = static::resolveFieldDefinitions($property, $action);
+        return static::applyFieldMeta($definitions, $data);
     }
-    protected static function getFieldDefinitions(string $type, string $action = null, $data = null): array
+    protected static function resolveFieldDefinitions(string $property, ?string $action = null): array
     {
-        $propertyMap = [
-            'form'    => 'formFieldDefinitions',
-            'toolbar' => 'toolbarFieldDefinitions',
-            'footer'  => 'footerFieldDefinitions',
-            'modal'   => 'modalFormFieldDefinitions',
-        ];
-        if (!isset($propertyMap[$type])) return [];
-        $property = $propertyMap[$type];
         if (property_exists(static::class, $property) && !empty(static::${$property})) {
-            return static::${$property};
+            return static::normalizeDefinitions(static::${$property}, $action);
         }
         $simpleProperty = 'simple' . ucfirst($property);
         if (property_exists(static::class, $simpleProperty) && !empty(static::${$simpleProperty})) {
-            return static::transformSimpleFieldDefinitions(static::${$simpleProperty});
+            return static::transformSimple(static::${$simpleProperty}, $action);
         }
         return [];
     }
-    protected static function transformSimpleFieldDefinitions(array $simple): array
+    protected static function normalizeDefinitions(array $defs, ?string $action = null): array
+    {
+        return $defs;
+    }
+    // Transform simple definitions, aplicando hook por acción
+    protected static function transformSimple(array $simple, ?string $action = null): array
     {
         $result = [];
         foreach ($simple as $item) {
-            if (!is_array($item) || count($item) < 3) continue;
+            if (count($item) < 3) continue;
             [$field, $label, $type] = array_slice($item, 0, 3);
-            $width = (isset($item[3]) && is_int($item[3])) ? $item[3] : 2;
-            $startOpt = (isset($item[3]) && is_int($item[3])) ? 4 : 3;
-            $definition = ['label' => $label, 'type' => $type, 'width' => $width];
-            for ($i = $startOpt; $i < count($item); $i++) {
-                $opt = $item[$i];
+            $definition = ['label' => $label, 'type' => $type, 'width' => $item[3] ?? 2];
+            foreach (array_slice($item, 3) as $opt) {
                 if (is_string($opt)) {
-                    match (true) {
-                        in_array($opt, ['readonly', 'disabled', 'required', 'autofocus', 'hidden']) => $definition[$opt] = true,
-                        preg_match('/^>(\d+)$/', $opt, $m) => $definition['min'] = (int)$m[1],
-                        preg_match('/^<(\d+)$/', $opt, $m) => $definition['max'] = (int)$m[1],
-                        preg_match('/^maxlength:(\d+)$/', $opt, $m) => $definition['maxlength'] = (int)$m[1],
-                        preg_match('/^pattern:(.+)$/', $opt, $m) => $definition['pattern'] = $m[1],
-                        preg_match('/^placeholder:(.+)$/', $opt, $m) => $definition['placeholder'] = trim($m[1]),
-                        default => null
-                    };
-                } elseif (is_array($opt)) {
-                    foreach ($opt as $k => $v) {
-                        if (!is_null($v)) $definition[$k] = $v;
+                    if (in_array($opt, ['readonly','disabled','required','autofocus','hidden'])) {
+                        $definition[$opt] = true; 
+                        continue;
+                    }
+                    if (preg_match('/^maxlength:(\d+)$/', $opt, $m)) {
+                        $definition['maxlength'] = (int)$m[1]; 
+                        continue;
+                    }
+                    if (preg_match('/^placeholder:(.+)$/', $opt, $m)) {
+                        $definition['placeholder'] = trim($m[1]); 
+                        continue;
                     }
                 }
+                if (is_array($opt)) {
+                    foreach ($opt as $k => $v) $definition[$k] = $v;
+                }
             }
+            // Hook para que modelos hijos puedan modificar según action
+            $definition = static::adjustFieldForAction($definition, $field, $action);
             $result[$field] = $definition;
         }
         return $result;
     }
-    protected static function buildFieldsFromDefinitions(array $definitions, $listaController = null, $data = null): array
+    // Hook que modelos hijos pueden sobrescribir
+    protected static function adjustFieldForAction(array $fieldDef, string $fieldName, ?string $action): array
     {
-        $fields = [];
-        foreach ($definitions as $field => $meta) {
-            $form = $meta;
+        return $fieldDef; // Por defecto no hace nada
+    }
+    protected static function applyFieldMeta(array $definitions, $data = null): array
+    {
+        foreach ($definitions as $field => &$meta) {
             if ($data !== null) {
                 $value = is_array($data) ? ($data[$field] ?? null) : ($data->$field ?? null);
-                if (!is_null($value)) $form['value'] = $value;
+                if (!is_null($value)) $meta['value'] = $value;
             }
-            if ($listaController && in_array($form['type'] ?? '', ['select', 'multiselect'])) {
-                $form['options'] = static::getFieldOptions($field, $listaController);
-            }
-            $fields[$field] = $form;
         }
-        return $fields;
+        return $definitions;
     }
-    protected static function getFieldOptions(string $field, $listaController): ?array
-{
-    // Si no hay lista controller, no hacer nada
-    if (!$listaController || !is_object($listaController) || !method_exists($listaController, 'getListaPorCampo')) {
-        return null;
-    }
-
-    $response = $listaController->getListaPorCampo($field);
-
-    if (is_object($response) && method_exists($response, 'getData')) {
-        return $response->getData(true) ?? null;
-    }
-
-    return is_array($response) ? $response : null;
-}
-public static function getTableColumns()
-{
-    return self::$tableColumns;
-}
-
     public static function getColumns(): array
     {
-        if (property_exists(static::class, 'tableColumns') && !empty(static::$tableColumns)) {
-            return static::transformSimpleTableColumns(static::$tableColumns);
-        }
-        if (property_exists(static::class, 'simpleTableColumns') && !empty(static::$simpleTableColumns)) {
-            return static::transformSimpleTableColumns(static::$simpleTableColumns);
-        }
-        return [];
-    }
-    protected static function transformSimpleTableColumns(array $simple): array
-    {
-        $result = [];
-        foreach ($simple as $item) {
-            if (is_array($item) && count($item) === 2) {
-                $result[] = ['title' => $item[0], 'column' => $item[1]];
-            }
-        }
-        return $result;
-    }
-    protected static function autoDetectFields(): array
-    {
-        $instance = new static();
-        $fields = [];
-        foreach ($instance->getFillable() as $field) {
-            if ($instance->parentForeignKey && $field === $instance->parentForeignKey) continue;
-            if ($field === 'creater_id') continue;
-            $label = strtoupper(str_replace('_', ' ', $field));
-            $type = str_contains($field, 'fecha') ? 'date' : 'text';
-            $fields[$field] = ['label' => $label, 'type' => $type, 'width' => 2];
-        }
-        return $fields;
+        return array_map(fn($c) => ['header' => $c[0], 'accessor' => $c[1]], static::$tableColumns ?? []);
     }
     public function parent()
     {

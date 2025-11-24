@@ -1,39 +1,25 @@
 import { Button } from "@/components/ui/button";
-import { SearchIcon, EraserIcon } from "lucide-react";
-import { useTableFilters } from "@/hooks/use-table-filters";
+import { SearchIcon } from "lucide-react";
 export function TableFiltersButtons({
-  localSearchTerm,
-  setLocalSearchTerm,
-  localSelectedColumn,
-  setLocalSelectedColumn,
   localFilterValues,
-  setLocalFilterValues,
-  setAppliedSearchTerm,
-  setSelectedColumn,
   setFilterValues,
   setPageIndex,
-  dateRange,
-  setDateRange,
-  queryparams,
 }) {
-  const { handleFilterClick, handleClearFilters, hasActiveFilters } = useTableFilters({
-    localSearchTerm,
-    setLocalSearchTerm,
-    localSelectedColumn,
-    setLocalSelectedColumn,
-    localFilterValues,
-    setLocalFilterValues,
-    setAppliedSearchTerm,
-    setSelectedColumn,
-    setFilterValues,
-    setPageIndex,
-    dateRange,
-    setDateRange,
-    queryparams,
-  });
+  const hasActiveFilters = Object.values(localFilterValues || {}).some(
+    (v) => v !== null && v !== "" && v !== undefined
+  );
+  const applyFilters = () => {
+    setFilterValues(localFilterValues);
+    setPageIndex(0);
+  };
   return (
     <div className="flex gap-2">
-      <Button size="sm" variant="outline" onClick={handleFilterClick} disabled={!hasActiveFilters}>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={applyFilters}
+        disabled={!hasActiveFilters}
+      >
         <SearchIcon className="w-4 h-4" /> Filtrar
       </Button>
     </div>

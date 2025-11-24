@@ -29,8 +29,6 @@ class Dashboard
             ],
         ];
     }
-
-
     // Devuelve los menús con totales y rutas personalizadas
     public static function getMenus(): array
     {
@@ -46,33 +44,5 @@ class Dashboard
                 'url_detail' => url($key),
             ];
         })->values()->toArray();
-    }
-
-    // 🔹 Datos extra para gráficos
-    public static function getStats(): array
-    {
-        // Top 5 razas más comunes
-        $razas = DB::table('mascota')
-            ->join('raza', 'mascota.id_raza', '=', 'raza.id_raza')
-            ->select('raza', DB::raw('COUNT(*) as total'))
-            ->groupBy('raza')
-            ->orderByDesc('total')
-            ->limit(5)
-            ->get();
-
-        // Citas por mes (últimos 6 meses)
-        $citasPorMes = DB::table('cita')
-            ->selectRaw("DATE_FORMAT(fecha, '%Y-%m') as mes, COUNT(*) as total")
-            ->groupBy('mes')
-            ->orderBy('mes', 'desc')
-            ->limit(6)
-            ->get()
-            ->reverse() // para que se muestre de más antiguo a reciente
-            ->values();
-
-        return [
-            'razas' => $razas,
-            'citasPorMes' => $citasPorMes,
-        ];
     }
 }

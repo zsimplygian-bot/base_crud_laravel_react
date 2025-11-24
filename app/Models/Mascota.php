@@ -13,9 +13,11 @@ class Mascota extends BaseModel
         ['id_raza', 'ESPECIE - RAZA', 'select', 'required'],
         ['id_sexo', 'SEXO', 'select', 1, 'required'],
         ['id_unidad_tiempo', 'UNIDAD EDAD', 'select', 1, 'required'],
-        ['edad', 'EDAD', 'number', 1, 'required'],
+        ['edad', 'EDAD MESES', 'number', 1, 'required'],
+        ['edad_extendida', 'EDAD', 'text', 1.5, 'disabled'],
         ['color', 'COLOR', 'text', 'required'],
         ['peso', 'PESO (KG)', 'number', 1, 'required'],
+        ['id_estado_mascota', 'ESTADO', 'select', 'required'],
         ['observaciones', 'OBSERVACIONES', 'textarea'],
         ['imagen', 'IMAGEN', 'file'],
     ];
@@ -28,80 +30,62 @@ class Mascota extends BaseModel
         'edad' => 'nullable|int',
         'color' => 'nullable|string|max:100',
         'peso' => 'nullable|numeric',
+        'id_estado_mascota' => 'required|int',
         'observaciones' => 'nullable|string',
     ];
     protected static $simpleToolbarFieldDefinitions = [
         ['id_cliente', 'DUEÑO', 'select'],
         ['id_raza', 'RAZA', 'select'],
         ['id_sexo', 'SEXO', 'select', 1],
+        ['id_estado_mascota', 'ESTADO', 'select'],
     ];
-    public static array $allowedFilters = ['id_cliente', 'id_raza', 'id_sexo'];
-    protected static array $apiConfig = [
-        //'inputKey' => 'especie',
-        'type' => 'file',
-        'endpoint' => 'clasificador-imagen',
-        'fields' => [
-            'especie' => 'especie',
-            'raza' => 'raza',
-        ],
-        'emptyValue' => '-',
-    ];
-    public static function getQuery()
-    {
-        $alias = (new self)->getTable(); // mascota
-        $alias2 = 'cliente';
-        $alias3 = 'raza';
-        $alias4 = 'especie';
-        $alias5 = 'sexo';
-        $alias6 = 'unidad_tiempo';
-        $query = DB::table($alias)
-            ->leftJoin($alias2, "{$alias}.id_{$alias2}", '=', "{$alias2}.id_{$alias2}")
-            ->leftJoin($alias3, "{$alias}.id_{$alias3}", '=', "{$alias3}.id_{$alias3}")
-            ->leftJoin($alias4, "{$alias3}.id_{$alias4}", '=', "{$alias4}.id_{$alias4}")
-            ->leftJoin($alias5, "{$alias}.id_{$alias5}", '=', "{$alias5}.id_{$alias5}")
-            ->leftJoin($alias6, "{$alias}.id_{$alias6}", '=', "{$alias6}.id_{$alias6}")
-            ->select([
-                "{$alias}.id_{$alias} as id",
-                "{$alias}.mascota",
-                "{$alias2}.cliente",
-                DB::raw("CONCAT({$alias4}.especie, ' - ', {$alias3}.raza) as raza"),
-                "{$alias3}.raza as raza_original",
-                "{$alias5}.sexo",
-                DB::raw("CONCAT({$alias}.edad, ' ', {$alias6}.unidad_tiempo) as edad"),
-                "{$alias}.color",
-                "{$alias}.peso",
-                "{$alias}.imagen",
-                "{$alias}.created_at",
-            ]);
-        return ['query' => $query, 'alias' => $alias];
+    public static array $allowedFilters = ['id_cliente', 'id_raza', 'id_sexo', 'id_estado_mascota']; // NUEVO
+    public static function getQuery() {
+        $t1 = (new self)->getTable();
+        $t2 = 'cliente';
+        $t3 = 'raza';
+        $t4 = 'especie';
+        $t5 = 'sexo';
+        $t6 = 'estado_mascota';
+        $query = DB::table($t1)
+        ->leftJoin($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
+        ->leftJoin($t3, "$t1.id_$t3", '=', "$t3.id_$t3")
+        ->leftJoin($t4, "$t3.id_$t4", '=', "$t4.id_$t4")
+        ->leftJoin($t5, "$t1.id_$t5", '=', "$t5.id_$t5")
+        ->leftJoin($t6, "$t1.id_$t6", '=', "$t6.id_$t6")
+        ->select([
+            "$t1.id_$t1 as id",
+            "$t1.mascota",
+            "$t2.cliente",
+            DB::raw("CONCAT($t4.especie, ' - ', $t3.raza) as raza"),
+            "$t3.raza as raza_original",
+            "$t5.sexo",
+            "$t1.edad",
+            DB::raw("( $t1.edad + TIMESTAMPDIFF(MONTH, $t1.created_at, NOW()) ) as edad_actual"),
+            "$t1.color",
+            "$t1.peso",
+            "$t6.estado_mascota",
+            "$t1.imagen",
+            "$t1.created_at",
+        ]);
+        return ['query' => $query, 'alias' => $t1];
     }
     protected static $tableColumns = [
         ['ID', 'id'],
         ['NOMBRE', 'mascota'],
         ['DUEÑO', 'cliente'],
-        ['ESPECIE - RAZA', 'raza'], // <- campo combinado
+        ['ESPECIE - RAZA', 'raza'], 
         ['SEXO', 'sexo'],
+        ['ESTADO', 'estado_mascota'],
         ['EDAD', 'edad'],
+        ['EDAD ACTUAL', 'edad_actual'],
         ['COLOR', 'color'],
         ['PESO', 'peso'],
         ['IMAGEN', 'imagen'],
         ['FECHA REGISTRO', 'created_at'],
     ];
-    public function cliente()
-    {
-        // Asegúrate que el segundo parámetro coincide con la columna de FK en mascota
-        return $this->belongsTo(Cliente::class, 'id_cliente', 'id_cliente');
-    }
-    public function raza()
-    {
-        return $this->belongsTo(Raza::class, 'id_raza');
-    }
-    public function sexo()
-    {
-        return $this->belongsTo(Sexo::class, 'id_sexo');
-    }
-    public function unidad_tiempo()
-    {
-        return $this->belongsTo(UnidadTiempo::class, 'id_unidad_tiempo');
-    }
+    public function cliente() { return $this->belongsTo(Cliente::class, 'id_cliente'); }
+    public function raza() { return $this->belongsTo(Raza::class, 'id_raza'); }
+    public function sexo() { return $this->belongsTo(Sexo::class, 'id_sexo'); }
+    public function estado() { return $this->belongsTo(EstadoMascota::class, 'id_estado_mascota'); }
 }

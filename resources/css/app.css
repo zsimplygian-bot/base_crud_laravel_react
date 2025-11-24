@@ -63,11 +63,11 @@
 
 :root {
     --background:
-        oklch(1 0 0);
+        oklch(100% 0.00011 271.152);
     --foreground:
         oklch(0.145 0 0);
     --card:
-        oklch(1 0 0);
+        oklch(100% 0.00011 271.152);
     --card-foreground:
         oklch(0.145 0 0);
     --popover:
@@ -112,7 +112,7 @@
     --radius:
         1rem;
     --sidebar:
-        oklch(0.985 0 0);
+        oklch(92.994% 0.03354 272.79);
     --sidebar-foreground:
         oklch(0.145 0 0);
     --sidebar-primary:
@@ -120,7 +120,7 @@
     --sidebar-primary-foreground:
         oklch(0.985 0 0);
     --sidebar-accent:
-        oklch(0.97 0 0);
+        oklch(91.224% 0.04225 272.31);
     --sidebar-accent-foreground:
         oklch(0.205 0 0);
     --sidebar-border:
@@ -128,7 +128,6 @@
     --sidebar-ring:
         oklch(0.708 0 0);
 }
-
 .dark {
     --background:
         oklch(0.145 0 0);
@@ -178,7 +177,7 @@
     --chart-5:
         oklch(0.645 0.246 16.439);
     --sidebar:
-        oklch(0.205 0 0);
+        oklch(17.218% 0.02318 275.781);
     --sidebar-foreground:
         oklch(0.985 0 0);
     --sidebar-primary:
@@ -186,7 +185,7 @@
     --sidebar-primary-foreground:
         oklch(0.985 0 0);
     --sidebar-accent:
-        oklch(0.269 0 0);
+        oklch(20.73% 0.03388 277.886);
     --sidebar-accent-foreground:
         oklch(0.985 0 0);
     --sidebar-border:
@@ -194,17 +193,14 @@
     --sidebar-ring:
         oklch(0.556 0 0);
 }
-
 @layer base {
     * {
         @apply border-border;
     }
-
     body {
         @apply bg-background text-foreground;
     }
 }
-
 @theme inline {
     --radius-sm:
         calc(var(--radius) - 4px);
@@ -285,4 +281,82 @@
   body {
     @apply bg-background text-foreground;
     }
+}
+/* === FULLCALENDAR BUTTON ROUND / SMALL === */
+
+.fc .fc-button {
+  border-radius: 8px !important;     /* más redondeado */
+  padding: 4px 8px !important;       /* más pequeño */
+  font-size: 0.75rem !important;     /* texto más chico */
+  line-height: 1rem !important;
+}
+
+/* Espaciado entre botones */
+.fc .fc-button-group .fc-button {
+  margin-right: 4px;
+}
+
+.fc .fc-button-group .fc-button:last-child {
+  margin-right: 0;
+}
+
+/* Botón HOY más pequeño */
+.fc .fc-today-button {
+  padding: 3px 10px !important;
+  font-size: 0.75rem !important;
+}
+
+/* Dark mode: reutiliza tu estilo pero conserva tamaño */
+.dark .fc .fc-button {
+  border-radius: 8px !important;
+}
+
+/* === FULLCALENDAR DARK MODE FIX === */
+.dark .fc {
+  --fc-border-color: rgba(255, 255, 255, 0.15);
+  --fc-page-bg-color: #0f0f0f;
+  --fc-neutral-bg-color: #1a1a1a;
+  --fc-list-event-hover-bg-color: rgba(255, 255, 255, 0.1);
+
+  --fc-text-color: #e5e5e5;
+  --fc-button-text-color: #e5e5e5;
+  --fc-button-bg-color: #2a2a2a;
+  --fc-button-border-color: #444;
+  --fc-button-hover-bg-color: #3a3a3a;
+  --fc-button-hover-border-color: #555;
+  --fc-button-active-bg-color: #4a4a4a;
+  --fc-button-active-border-color: #666;
+}
+
+.dark .fc .fc-daygrid-day-number {
+  color: #e5e5e5;
+}
+
+.dark .fc .fc-col-header-cell {
+  background: #1a1a1a;
+  color: #e5e5e5;
+}
+
+.dark .fc .fc-daygrid-day {
+  background: #141414;
+}
+
+.dark .fc .fc-day-today {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.dark .fc .fc-event {
+  background: #2563eb; /* azul Tailwind */
+  border: none;
+  color: white;
+}
+
+.dark .fc .fc-timegrid-slot {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+/* Permitir que los dropdowns se rendericen fuera del evento */
+.fc-event,
+.fc-daygrid-event,
+.fc-daygrid-event-harness {
+  overflow: visible !important;
 }

@@ -32,33 +32,24 @@ class HistoriaClinicaProcedimiento extends BaseModel
         ['FECHA REGISTRO', 'created_at'],
     ];
     protected $appends = ['nombre_procedimiento'];
-    public static function getQuery()
-    {
-        $al1 = (new self)->getTable();
-        $query = DB::table($al1)
-            ->leftJoin('procedimiento', 'procedimiento.id_procedimiento', '=', "{$al1}.id_procedimiento")
+    public static function getQuery() {
+        $t1 = (new self)->getTable(); // historia_clinica_procedimiento
+        $t2 = 'procedimiento';
+        $query = DB::table("$t1 as $t1")
+            ->leftJoin("$t2 as $t2", "$t1.id_$t2", '=', "$t2.id_$t2")
             ->select([
-                "{$al1}.id_historia_clinica_procedimiento", 
-                "{$al1}.id_historia_clinica", 
-                "procedimiento.procedimiento as nombre_procedimiento",
-                "{$al1}.id_procedimiento",
-                "{$al1}.detalle",
-                "{$al1}.precio",
-                "{$al1}.fecha",
-                "{$al1}.created_at",
+                "$t1.id_$t1",
+                "$t1.id_historia_clinica",
+                "$t2.procedimiento as nombre_procedimiento",
+                "$t1.id_procedimiento",
+                "$t1.detalle",
+                "$t1.precio",
+                "$t1.fecha",
+                "$t1.created_at",
             ]);
-        return ['query' => $query, 'alias' => $al1];
+        return ['query' => $query, 'alias' => $t1];
     }
-    public function procedimiento()
-    {
-        return $this->belongsTo(Procedimiento::class, 'id_procedimiento');
-    }
-    public function getNombreProcedimientoAttribute()
-    {
-        return $this->procedimiento->procedimiento ?? null;
-    }
-    public function parent()
-    {
-        return $this->belongsTo(HistoriaClinica::class, $this->parentForeignKey, 'id');
-    }
+    public function procedimiento() { return $this->belongsTo(Procedimiento::class, 'id_procedimiento'); }
+    public function getNombreProcedimientoAttribute() { return $this->procedimiento->procedimiento ?? null; }
+    public function parent() { return $this->belongsTo(HistoriaClinica::class, $this->parentForeignKey, 'id'); }
 }

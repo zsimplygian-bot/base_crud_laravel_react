@@ -6,14 +6,8 @@ use App\Models\HistoriaClinicaProcedimiento;
 use App\Models\HistoriaClinicaMedicamento;
 use App\Models\HistoriaClinicaAnamnesis;
 use App\Models\HistoriaClinica;
-use App\Http\Controllers\ListaController;
 class HistoriaClinicaFieldsController extends Controller
 {
-    protected ListaController $listaController;
-    public function __construct(ListaController $listaController)
-    {
-        $this->listaController = $listaController;
-    }
     public function fields(Request $request, $tipo)
     {
         $map = [
@@ -26,7 +20,7 @@ class HistoriaClinicaFieldsController extends Controller
             return response()->json([], 404);
         }
         $model = $map[$tipo];
-        $fields = $model::getModalFields($this->listaController, null, 'create');
+        $fields = $model::getModalFields(null, 'create');
         return response()->json($fields);
     }
     public function records($id)
@@ -34,10 +28,10 @@ class HistoriaClinicaFieldsController extends Controller
         $record = HistoriaClinica::find($id);
         if (!$record) {
             return response()->json([
-                'seguimientos' => [],
+                'seguimientos'   => [],
                 'procedimientos' => [],
-                'medicamentos' => [],
-                'anamnesis' => [],
+                'medicamentos'   => [],
+                'anamnesis'      => [],
             ]);
         }
         $map = [
@@ -49,7 +43,7 @@ class HistoriaClinicaFieldsController extends Controller
         $result = [];
         foreach ($map as $key => $modelClass) {
             $instance = new $modelClass;
-            // query usando getQuery()
+            // query usando getQuery si existe
             if (method_exists($modelClass, 'getQuery')) {
                 $queryData = $modelClass::getQuery();
                 $alias = $queryData['alias'];
@@ -62,21 +56,19 @@ class HistoriaClinicaFieldsController extends Controller
                 $query = $record->$relationMethod()->orderBy('created_at', 'asc')->get();
             }
             // columnas
-            $tableColumns = $modelClass::getColumns(); // ← devuelve ['title', 'column']
+            $tableColumns = $modelClass::getColumns();
             // transformar registros para frontend
             $records = $query->map(function ($item) use ($tableColumns) {
                 return collect($tableColumns)->map(function ($col) use ($item) {
-                    $column = $col['column']; // este es el key real
-                    $label  = $col['title'];  // este es el label para mostrar
+                    $column = $col['accessor'];
+                    $label  = $col['header'];
                     $value  = $item->{$column} ?? null;
                     return [
-                        'key'   => $column,   // ← AGREGADO
+                        'key'   => $column,
                         'label' => $label,
                         'value' => $value,
                     ];
-
                 })->toArray();
-
             });
             $result[$key] = $records;
         }

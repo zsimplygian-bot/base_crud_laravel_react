@@ -1,72 +1,56 @@
-import {
-  LayoutGrid,
-  PawPrint,
-  Calendar,
-  Stethoscope,
-  ClipboardList,
-  Users,
-  User,
-  Syringe,
-  BookOpen,
-} from "lucide-react";
-// Definición genérica de items de navegación
-type RawItem = {
-  title: string;
-  icon: any;
-  href?: string;
-  children?: RawItem[];
-};
-// Función: convierte RawItem en estructura compatible con NavMain/NavFooter
-function buildNavStructure(rawItems: RawItem[]) {
-  return rawItems.map(({ title, icon, href, children }) => ({
-    title,
-    icon,
-    href: href ?? (children?.length === 1 ? children[0].href : undefined),
-    children: children?.length
-      ? children.map((c) => ({
-          title: c.title,
-          href: c.href,
-          icon: c.icon ?? icon,
-        }))
-      : undefined,
-  }));
-}
-// Sidebar "crudo" en formato más limpio
-const rawSidebar: RawItem[] = [
-  {
-    icon: LayoutGrid,
-    title: "Dashboard", href: "/dashboard",
-  },
-  {
-    icon: Stethoscope,
-    title: "Historias clínicas", href: "/historia_clinica",
-  },
-  {
-    icon: Calendar,
-    title: "Citas", href: "/cita",
-  },
-  {
-    icon: PawPrint,
-    title: "Mascotas", href: "/mascota",
-  },
-  {
-    icon: Users,
-    title: "Dueños", href: "/cliente",
-  },
-  {
-    title: "Items",
-    icon: BookOpen,
-    children: [
-               { title: "Medicamentos", href: "/medicamento", icon: Syringe,},
-               { title: "Procedimientos", href: "/procedimiento", icon: ClipboardList,},
-               { title: "Especie", href: "/especie", icon: PawPrint,},
-               { title: "Raza", href: "/raza", icon: PawPrint,},
-               { title: "Motivo cita", href: "/motivo_cita", icon: Calendar,},
-               { title: "Motivo historia", href: "/motivo_historia_clinica", icon: Calendar,},
-    ],
-  },
+import { LayoutGrid, PawPrint, Calendar, Stethoscope, ClipboardList, Users, Syringe, BookOpen,
+  } from "lucide-react";
+// Tipo base mínimo y rápido de escribir
+type NavDef = [
+  title: string,
+  icon: any,
+  href?: string,
+  children?: NavDef[]
 ];
-// Footer (por ahora vacío, se puede extender con docs/repositorio)
-const rawFooter: RawItem[] = [];
-export const sidebarItems = buildNavStructure(rawSidebar);
-export const footerNavItems = buildNavStructure(rawFooter);
+// Transformador dinámico del formato compacto → estructura final
+function buildNav(defs: NavDef[]) {
+  return defs.map((item) => {
+    const [title, icon, href, children] = item;
+    return {
+      title,
+      icon,
+      href: href ?? (children?.length === 1 ? children[0][2] : undefined),
+      children: children
+        ? children.map(([ct, ci, ch]) => ({
+            title: ct,
+            icon: ci ?? icon,
+            href: ch,
+          }))
+        : undefined,
+    };
+  });
+}
+// Definición *ultra simple*
+const rawSidebar: NavDef[] = [
+  ["Dashboard", LayoutGrid, "/dashboard"],
+  ["Historias clínicas", Stethoscope, "/historia_clinica"],
+  [ "Citas",
+    Calendar,
+    undefined,
+    [
+      ["Listado", Calendar, "/cita"],
+      ["Calendario", Calendar, "/cita/calendario"],
+    ],
+  ],
+  ["Mascotas", PawPrint, "/mascota"],
+  ["Dueños", Users, "/cliente"],
+  [  "Items",
+    BookOpen,
+    undefined,
+    [
+      ["Medicamentos", Syringe, "/medicamento"],
+      ["Procedimientos", ClipboardList, "/procedimiento"],
+      ["Especie", PawPrint, "/especie"],
+      ["Raza", PawPrint, "/raza"],
+      ["Motivo cita", Calendar, "/motivo_cita"],
+      ["Motivo historia", Calendar, "/motivo_historia_clinica"],
+    ],
+  ],
+];
+export const sidebarItems = buildNav(rawSidebar);
+export const footerNavItems = buildNav([]);

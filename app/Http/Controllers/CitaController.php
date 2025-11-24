@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 use App\Models\Cita;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 class CitaController extends BaseController
@@ -30,4 +31,38 @@ class CitaController extends BaseController
         $citas = Cita::proximas();
         return response()->json($citas);
     }
+    public function eventos(Request $request)
+{
+    $start = $request->query('start');
+    $end   = $request->query('end');
+
+    if (!$start || !$end) {
+        return response()->json([]); // evitar consulta sin rango
+    }
+
+    $citas = Cita::select(
+        'cita.id_cita as id',
+        'mascota.mascota',
+        'cliente.cliente',
+        'motivo_cita.motivo_cita',
+        DB::raw("CONCAT(cita.fecha, 'T', cita.hora) as start")
+    )
+    ->join('mascota', 'cita.id_mascota', '=', 'mascota.id_mascota')
+    ->join('cliente', 'mascota.id_cliente', '=', 'cliente.id_cliente')
+    ->join('motivo_cita', 'cita.id_motivo_cita', '=', 'motivo_cita.id_motivo_cita')
+    ->whereBetween('cita.fecha', [$start, $end])
+    ->get();
+
+    return response()->json(
+        $citas->map(function ($item) {
+            return [
+                'id'    => $item->id,
+                'title' => $item->mascota . ' – ' . $item->motivo_cita,
+                'start' => $item->start,
+            ];
+        })
+    );
+}
+
+    
 }

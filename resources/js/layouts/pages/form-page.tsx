@@ -12,8 +12,8 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useFormCalculate } from "@/hooks/use-form-calculate";
 import useToggleForm from "@/hooks/use-form-toggle";
-import { useFormAction } from "@/hooks/use-form-action";
-import { FormFieldsRenderer } from "@/components/form-fields";
+import { useFormAction } from "@/hooks/form/use-form-action";
+import { FormFieldsRenderer } from "@/components/form/form-fields";
 import { ApiConfigEntry, useFetchWithButton } from "@/hooks/use-fetch-with-button";
 
 interface FormProps {

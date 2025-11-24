@@ -13,19 +13,16 @@ class MotivoHistoriaClinica extends BaseModel
     protected static $validationRules = [
         'motivo_historia_clinica' => 'required|string|max:100',
     ];
-    public static function getQuery()
-    {
-        $alias = (new self)->getTable();
-        $query = DB::table($alias)
-            ->select([
-                "{$alias}.id_{$alias} as id",
-                "{$alias}.{$alias}",
+    public static function getQuery() {
+        $t1 = (new self)->getTable();
+        $query = DB::table($t1)->select([
+                "$t1.id_$t1 as id",
+                "$t1.$t1",
             ]);
-        return ['query' => $query, 'alias' => $alias];
+        return ['query' => $query, 'alias' => $t1];
     }
     protected static $tableColumns = [
         ['ID', 'id'],
         ['MOTIVO HISTORIA CLÍNICA', 'motivo_historia_clinica'],
     ];
-
 }

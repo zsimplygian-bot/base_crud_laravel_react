@@ -4,23 +4,15 @@ use Inertia\Inertia;
 use Laravel\Fortify\Features;
 use App\Http\Controllers as C;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\BackupController;
-// Página principal
-Route::get('/', function () {
+Route::get('/', function () { // Página principal
     return Inertia::render('welcome', [
         'canRegister' => Features::enabled(Features::registration()),
     ]);
 })->name('home');
-// Dashboard
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () { // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
-// Backup
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/export-db', [BackupController::class, 'export'])->name('export.db');
-});
-// Recursos principales con formularios
-$resourcesWithForms = [
+$resourcesWithForms = [ // Recursos principales con formularios
     'cliente'           => C\ClienteController::class,
     'mascota'           => C\MascotaController::class,
     'cita'              => C\CitaController::class,
@@ -36,8 +28,10 @@ $resourcesWithForms = [
     'medicamento'       => C\MedicamentoController::class,
     'procedimiento'     => C\ProcedimientoController::class,
 ];
-// Recursos con rutas adicionales (nested)
-foreach ($resourcesWithForms as $uri => $controller) {
+Route::get('/cita/calendario', function () { // Calendario de citas
+    return inertia('cita/calendario');
+});
+foreach ($resourcesWithForms as $uri => $controller) { // Recursos con rutas adicionales (nested)
     Route::resource($uri, $controller)->parameters([$uri => $uri]);
     Route::get("$uri/form/{action}/{id?}", [$controller, 'handleAction'])->name("$uri.form");
     Route::post("$uri/form", [$controller, 'store'])->name("$uri.form.store");

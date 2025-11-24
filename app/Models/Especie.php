@@ -15,13 +15,12 @@ class Especie extends BaseModel
     ];
     public static function getQuery()
     {
-        $alias = (new self)->getTable();
-        $query = DB::table($alias)
-            ->select([
-                "{$alias}.id_{$alias} as id",
-                "{$alias}.{$alias}",
-            ]);
-        return ['query' => $query, 'alias' => $alias];
+        $t1 = (new self)->getTable();
+        $query = DB::table($t1)->select([
+            "$t1.id_$t1 as id",
+            "$t1.$t1",
+        ]);
+        return ['query' => $query, 'alias' => $t1];
     }
     protected static $tableColumns = [
         ['ID', 'id'],

@@ -27,22 +27,17 @@ class HistoriaClinicaSeguimiento extends BaseModel
         ['FECHA', 'fecha'],
         ['FECHA REGISTRO', 'created_at'],
     ];
-    public static function getQuery()
-    {
-        $al1 = (new self)->getTable();
-        $query = DB::table($al1)
-            ->select([
-                "{$al1}.id_historia_clinica_seguimiento",
-                "{$al1}.id_historia_clinica",
-                "{$al1}.detalle",
-                "{$al1}.observaciones",
-                "{$al1}.fecha",
-                "{$al1}.created_at",
+    public static function getQuery() {
+        $t1 = (new self)->getTable();
+        $query = DB::table($t1)->select([
+                "$t1.id_$t1",
+                "$t1.id_historia_clinica",
+                "$t1.detalle",
+                "$t1.observaciones",
+                "$t1.fecha",
+                "$t1.created_at",
             ]);
-        return ['query' => $query, 'alias' => $al1];
+        return ['query' => $query, 'alias' => $t1];
     }
-    public function parent()
-    {
-        return $this->belongsTo(HistoriaClinica::class, $this->parentForeignKey, 'id');
-    }
+    public function parent() { return $this->belongsTo(HistoriaClinica::class, $this->parentForeignKey, 'id'); }
 }
