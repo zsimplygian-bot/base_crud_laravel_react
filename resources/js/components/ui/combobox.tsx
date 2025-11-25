@@ -43,6 +43,7 @@ export const Combobox = ({
             )}
           </div>
         </PopoverTrigger>
+
         <PopoverContent className="p-0 w-full">
           <Command>
             <div className="flex items-center justify-between gap-2 px-2">
@@ -61,10 +62,11 @@ export const Combobox = ({
                 {options.map((opt) => (
                   <CommandItem
                     key={opt.id}
-                    value={opt.id.toString()}
+                    value={opt.label.toLowerCase()} // BÚSQUEDA FUNCIONAL
                     onSelect={() => onSelect(opt.id)}
                   >
                     {opt.label}
+
                     {value === opt.id.toString() && (
                       <CommandShortcut>
                         <CheckIcon className="w-4 h-4" />
