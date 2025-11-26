@@ -21,11 +21,11 @@ class HistoriaClinicaAnamnesis extends BaseModel
         'id_historia_clinica' => 'required|integer|exists:historia_clinica,id_historia_clinica',
         'fecha' => 'required|date',
         'hora' => 'nullable|string|max:10',
-        'temperatura' => 'nullable|integer',
-        'frecuencia_cardiaca' => 'nullable|integer',
-        'frecuencia_respiratoria' => 'nullable|integer',
-        'tiempo_llenado_capilar' => 'nullable|integer',
-        'peso' => 'nullable|integer',
+        'temperatura' => 'nullable|numeric',
+        'frecuencia_cardiaca' => 'nullable|numeric',
+        'frecuencia_respiratoria' => 'nullable|numeric',
+        'tiempo_llenado_capilar' => 'nullable|numeric',
+        'peso' => 'nullable|numeric',
     ];
     public static function getQuery() {
         $t1 = (new self)->getTable();

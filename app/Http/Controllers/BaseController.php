@@ -47,23 +47,32 @@ abstract class BaseController extends Controller
     public function store(Request $request) { return $this->persist($request); }
     public function update(Request $request, $id) { return $this->persist($request, $id); }
     protected function persist(Request $request, $id = null)
-    {
-        $data = $this->validateData($request);
-        if (method_exists($this, 'validateExtra')) {
-            $this->validateExtra($request, $id);
-        }
-        $this->normalizeData($data);
-        $model = $id ? $this->model::findOrFail($id) : new $this->model();
-        $model->fill($data);
-        $model->{$id ? 'updater_id' : 'creater_id'} = auth()?->id();
-        $model->save();
-        $this->processFileUploads($request, $model);
-        if ($this->view === 'historia_clinica' && !$id) {
-            return redirect("/{$this->view}/form/update/{$model->getKey()}")
-                ->with('success', 'Registro creado exitosamente.');
-        }
-        return $this->redirectAfterAction($id ? 'update' : 'create');
+{
+    
+    $data = $this->validateData($request);
+
+    if (method_exists($this, 'validateExtra')) {
+        $this->validateExtra($request, $id);
     }
+
+    $this->normalizeData($data);
+
+    $model = $id ? $this->model::findOrFail($id) : new $this->model();
+    $model->fill($data);
+
+    $model->{$id ? 'updater_id' : 'creater_id'} = auth()?->id();
+    $model->save();
+
+    $this->processFileUploads($request, $model);
+
+    if ($this->view === 'historia_clinica' && !$id) {
+        return redirect("/{$this->view}/form/update/{$model->getKey()}")
+            ->with('success', 'Registro creado exitosamente.');
+    }
+
+    return $this->redirectAfterAction($id ? 'update' : 'create');
+}
+
     // DELETE
     public function destroy($id)
     {
