@@ -1,6 +1,6 @@
 // components/datatable/footer/page-size-selector.tsx
 import { Button } from "@/components/ui/button";
-import DropdownMenuBase from "@/components/dropdown-menu";
+import DropdownMenuBase from "@/components/dropdown-menu-base";
 import { usePageSizeSelector } from "@/hooks/datatable/footer/use-page-size-selector";
 export const PageSizeSelector = ({
   pageSize,

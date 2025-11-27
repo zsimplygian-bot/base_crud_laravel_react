@@ -1,5 +1,5 @@
 // hooks/datatable/footer/use-page-size.ts
-import type { DItem } from "@/components/dropdown-menu";
+import type { DItem } from "@/components/dropdown-menu-base";
 export function usePageSizeSelector(
   pageSize: number,
   setPageSize: (v: number) => void,

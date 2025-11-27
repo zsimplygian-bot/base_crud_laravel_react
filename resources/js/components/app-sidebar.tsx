@@ -1,4 +1,4 @@
-// AppSidebar.tsx
+// components/app-sidebar.tsx
 import { useState } from "react";
 import { Link } from "@inertiajs/react";
 import {
@@ -11,15 +11,12 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { NavMain } from "@/components/nav-main";
-import SidebarCitas from "@/pages/cita/sidebar_cita";
 import { NavFooter } from "@/components/nav-footer";
 import { NavUser } from "@/components/nav-user";
 import AppLogo from "./app-logo";
 import { sidebarItems, footerNavItems } from "@/config/navigation";
-
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
-
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
@@ -33,15 +30,9 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-
       <SidebarContent className="flex flex-col min-h-0">
         <NavMain items={sidebarItems} isCollapsed={collapsed} />
-
-     
-          <SidebarCitas />
-
       </SidebarContent>
-
       <SidebarFooter>
         <NavFooter items={footerNavItems} className="mt-auto" />
         <NavUser />

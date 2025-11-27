@@ -63,37 +63,58 @@ abstract class BaseModel extends Model
     }
     // Transform simple definitions, aplicando hook por acción
     protected static function transformSimple(array $simple, ?string $action = null): array
-    {
-        $result = [];
-        foreach ($simple as $item) {
-            if (count($item) < 3) continue;
-            [$field, $label, $type] = array_slice($item, 0, 3);
-            $definition = ['label' => $label, 'type' => $type, 'width' => $item[3] ?? 2];
-            foreach (array_slice($item, 3) as $opt) {
-                if (is_string($opt)) {
-                    if (in_array($opt, ['readonly','disabled','required','autofocus','hidden'])) {
-                        $definition[$opt] = true; 
-                        continue;
-                    }
-                    if (preg_match('/^maxlength:(\d+)$/', $opt, $m)) {
-                        $definition['maxlength'] = (int)$m[1]; 
-                        continue;
-                    }
-                    if (preg_match('/^placeholder:(.+)$/', $opt, $m)) {
-                        $definition['placeholder'] = trim($m[1]); 
-                        continue;
-                    }
+{
+    $result = [];
+
+    foreach ($simple as $item) {
+        if (count($item) < 3) continue;
+
+        [$field, $label, $type] = array_slice($item, 0, 3);
+
+        // width siempre tendrá valor (si no viene, será 2)
+        $definition = [
+            'label' => $label,
+            'type'  => $type,
+            'width' => isset($item[3]) && is_numeric($item[3]) ? (int)$item[3] : 2,
+        ];
+
+        // Procesar el resto de opciones
+        foreach (array_slice($item, 3) as $opt) {
+
+            if (is_string($opt)) {
+
+                if (in_array($opt, ['readonly', 'disabled', 'required', 'autofocus', 'hidden'])) {
+                    $definition[$opt] = true;
+                    continue;
                 }
-                if (is_array($opt)) {
-                    foreach ($opt as $k => $v) $definition[$k] = $v;
+
+                if (preg_match('/^maxlength:(\d+)$/', $opt, $m)) {
+                    $definition['maxlength'] = (int) $m[1];
+                    continue;
+                }
+
+                if (preg_match('/^placeholder:(.+)$/', $opt, $m)) {
+                    $definition['placeholder'] = trim($m[1]);
+                    continue;
                 }
             }
-            // Hook para que modelos hijos puedan modificar según action
-            $definition = static::adjustFieldForAction($definition, $field, $action);
-            $result[$field] = $definition;
+
+            if (is_array($opt)) {
+                foreach ($opt as $k => $v) {
+                    $definition[$k] = $v;
+                }
+            }
         }
-        return $result;
+
+        // Hook para acción del formulario
+        $definition = static::adjustFieldForAction($definition, $field, $action);
+
+        $result[$field] = $definition;
     }
+
+    return $result;
+}
+
     // Hook que modelos hijos pueden sobrescribir
     protected static function adjustFieldForAction(array $fieldDef, string $fieldName, ?string $action): array
     {

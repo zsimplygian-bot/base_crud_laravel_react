@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
-import DropdownMenuBase from "@/components/dropdown-menu";
+import DropdownMenuBase from "@/components/dropdown-menu-base";
 import { EyeIcon } from "lucide-react";
 import { useToggleColumns } from "@/hooks/datatable/toolbar/use-toggle-columns";
 export const ToggleColumns = memo(function ToggleColumns({

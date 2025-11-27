@@ -11,7 +11,7 @@ class Cliente extends BaseModel
         ['cliente', 'CLIENTE', 'text', 'required'],
         ['dni', 'DNI', 'tel', 'maxlength:8'],
         ['telefono', 'TELÉFONO', 'tel', 'maxlength:9', 'required'],
-        ['direccion', 'DIRECCIÓN', 'textarea']
+        ['direccion', 'DIRECCIÓN', 'textarea', 'placeholder:Ejemplo: Virgen del Carmen MZ #',]
     ];
     protected static $validationRules = [
         'cliente' => 'required|string|max:255',

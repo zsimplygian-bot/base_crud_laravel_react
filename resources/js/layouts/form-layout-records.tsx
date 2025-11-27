@@ -2,18 +2,13 @@ import { Head } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
 import { useRef } from "react";
 import { useForm } from "@inertiajs/react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useFormCalculate } from "@/hooks/use-form-calculate";
 import useToggleForm from "@/hooks/use-form-toggle";
 import { useFormAction } from "@/hooks/form/use-form-action";
 import { FormFieldsRenderer } from "@/components/form/form-fields";
+import { getTitle } from "@/hooks/custom-titles";
 import { ApiConfigEntry, useFetchWithButton } from "@/hooks/use-fetch-with-button";
 import SeguimientoSection from "@/layouts/seguimiento";
 interface FormPageProps {
@@ -81,15 +76,16 @@ export const FormPage: React.FC<FormPageProps> = ({
   );
   const { hiddenFields, ToggleUI } = useToggleForm(toggleOptions, setData, data, view, action);
   const FetchButton = useFetchWithButton({ data, setData, apiConfig, view });
+  const displayTitle = getTitle(view);
   return (
-    <AppLayout breadcrumbs={[{ title, href: view }]}>
-      <Head title={title} />
+    <AppLayout breadcrumbs={[{ title: displayTitle, href: view }]}>
+      <Head title={displayTitle} />
       <div className="flex flex-1 flex-col gap-4 p-4 rounded-xl">
         <Card className={`${!isMobile ? width_form : "w-full"} border-2 ${cardBorderClass}`}>
           <CardHeader>
             <div className="flex flex-wrap items-start gap-x-4">
               <div>
-                <CardTitle>{formTitle}</CardTitle>
+                <CardTitle>{formTitle} {displayTitle.toUpperCase()}</CardTitle>
                 <CardDescription>{description}</CardDescription>
               </div>
               {ToggleUI && <div className="mt-1"><ToggleUI /></div>}

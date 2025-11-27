@@ -4,6 +4,7 @@ export const DATA_TABLE_TITLES = {
   medicamento: "Medicamentos",
   usuario: "Usuarios",
   cita: "Citas",
+  cliente: "Dueños",
   // agrega lo que necesites
 };
 export const getTitle = (view) => {

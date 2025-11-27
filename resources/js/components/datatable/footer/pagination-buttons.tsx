@@ -2,7 +2,6 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { usePaginationButtons } from "@/hooks/datatable/footer/use-pagination-buttons";
-
 export const PaginationButtons = ({
   totalRows,
   pageIndex,
@@ -16,12 +15,10 @@ export const PaginationButtons = ({
     setPageIndex,
     pageSize
   );
-
   // FIX: NO setState during render
   useEffect(() => {
     onTotalPages(totalPages);
   }, [totalPages]);
-
   return (
     <div className="flex items-center gap-1">
       {nav.map((n, i) => (

@@ -19,9 +19,14 @@ class HistoriaClinica extends BaseModel
     // Sobrescribimos el hook para acción create
     protected static function adjustFieldForAction(array $fieldDef, string $fieldName, ?string $action): array
     {
-        if ($fieldName === 'id_estado_historia_clinica' && $action === 'create') {
-            $fieldDef['type'] = 'hidden';
-            $fieldDef['value'] = 1;
+        if ($action === 'create') {
+            if ($fieldName === 'fecha') {
+                $fieldDef['value'] = now()->toDateString();
+            }
+            if ($fieldName === 'id_estado_historia_clinica') {
+                $fieldDef['type'] = 'hidden';
+                $fieldDef['value'] = 1;
+            }
         }
         return $fieldDef;
     }

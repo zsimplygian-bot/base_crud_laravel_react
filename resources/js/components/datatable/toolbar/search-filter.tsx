@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SearchIcon, XIcon } from "lucide-react";
-import DropdownMenuBase from "@/components/dropdown-menu";
+import DropdownMenuBase from "@/components/dropdown-menu-base";
 import { useSearchFilter } from "@/hooks/datatable/toolbar/use-search-filter";
 interface Column {
   header: string;

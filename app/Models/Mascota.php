@@ -21,6 +21,16 @@ class Mascota extends BaseModel
         ['observaciones', 'OBSERVACIONES', 'textarea'],
         ['imagen', 'IMAGEN', 'file'],
     ];
+    protected static function adjustFieldForAction(array $fieldDef, string $fieldName, ?string $action): array
+    {
+        if ($action === 'create') {
+            if ($fieldName === 'id_estado_mascota') {
+                $fieldDef['type'] = 'hidden';
+                $fieldDef['value'] = 1;
+            }
+        }
+        return $fieldDef;
+    }
     protected static $validationRules = [
         'mascota' => 'required|string|max:255',
         'id_cliente' => 'required|int',

@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import { CopyIcon, EyeIcon, EditIcon, TrashIcon, FileTextIcon } from "lucide-react";
-import DropdownMenuBase from "@/components/dropdown-menu";
+import DropdownMenuBase from "@/components/dropdown-menu-base";
 export const ActionButtons = memo(function ActionButtons({
   row_id,
   view,

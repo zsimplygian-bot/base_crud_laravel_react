@@ -79,20 +79,23 @@ class Cita extends BaseModel
         $t2 = 'mascota';
         $t3 = 'cliente';
         $t4 = 'motivo_cita';
-        return DB::table("$t1")
-            ->join("$t2", "$t1.id_$t2", '=', "$t2.id_$t2")
-            ->join("$t3", "$t2.id_$t3", '=', "$t3.id_$t3")
-            ->join("$t4", "$t1.id_$t4", '=', "$t4.id_$t4")
+        return DB::table($t1)
+            ->join($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
+            ->join($t3, "$t2.id_$t3", '=', "$t3.id_$t3")
+            ->join($t4, "$t1.id_$t4", '=', "$t4.id_$t4")
             ->select([
                 "$t1.id_$t1 as id",
                 "$t2.mascota",
                 "$t3.cliente",
                 "$t4.motivo_cita",
-                DB::raw("CONCAT($t1.fecha, ' ', $t1.hora) as fecha_hora")
+                "$t1.fecha",
+                "$t1.hora",
             ])
             ->where("$t1.id_estado_cita", 1)
-            ->whereRaw("CONCAT($t1.fecha, ' ', $t1.hora) >= NOW()")
-            ->orderByRaw("CONCAT($t1.fecha, ' ', $t1.hora) ASC")
+            ->whereRaw("$t1.fecha >= CURDATE()")
+            ->orderByRaw("$t1.fecha ASC")
+            ->orderByRaw("$t1.hora ASC")
             ->get();
     }
+
 }

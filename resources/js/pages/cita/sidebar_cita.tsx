@@ -1,157 +1,116 @@
-import { useEffect, useRef, useState } from "react";
-import {
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import { Clock } from "lucide-react";
+import { useEffect, useRef, useMemo, memo } from "react";
+import DropdownMenuBase from "@/components/dropdown-menu-base";
+import { Button } from "@/components/ui/button";
+import { Clock, Edit2, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import axios from "axios";
-import {
-  Tooltip,
-  TooltipProvider,
-  TooltipTrigger,
-  TooltipContent,
-} from "@/components/ui/tooltip";
-import { Link } from "@inertiajs/react";
-
-interface Cita {
-  id: number;
-  mascota: string;
-  cliente: string;
-  motivo_cita: string;
-  fecha_hora: string;
+import { useApi } from "@/hooks/use-api";
+import { TooltipBase } from "@/components/tooltip-base";
+// REGLAS POR DIA
+const DAY_RULES = [
+  { max: 0, type: "error", label: "hoy" },
+  { max: 1, type: "warning", label: "mañana" },
+  { max: 3, type: "info", label: "en pocos días" },
+];
+function getDayAlert(diffDays, c) {
+  const rule = DAY_RULES.find(r => diffDays <= r.max);
+  if (!rule) return null;
+  return {
+    type: rule.type,
+    msg: `Cita con ${c.mascota} (${c.cliente}) es ${rule.label}`,
+  };
 }
-
-export default function SidebarCitas({ collapsed = false }: { collapsed?: boolean }) {
-  const [citas, setCitas] = useState<Cita[]>([]);
-  const notified = useRef<Set<number>>(new Set());
-
-  const baseUrl = import.meta.env.VITE_APP_URL || ""; // ← URL desde .env
-
-  const fetchCitas = async () => {
-    try {
-      const { data } = await axios.get<Cita[]>(`${baseUrl}/api/citas/proximas`);
-      setCitas(data);
-
-      data.forEach((c) => {
-        if (notified.current.has(c.id)) return;
-
-        const diff = (new Date(c.fecha_hora).getTime() - Date.now()) / 60000;
-        let msg: string | null = null;
-
-        if (diff <= 60 && diff > 30)
-          msg = `Cita con ${c.mascota} (${c.cliente}) en menos de 1 hora`;
-        else if (diff <= 30 && diff > 10)
-          msg = `Cita con ${c.mascota} (${c.cliente}) en menos de 30 minutos`;
-        else if (diff <= 10 && diff > 0)
-          msg = `Cita con ${c.mascota} (${c.cliente}) en menos de 10 minutos`;
-
-        if (msg) {
-          const type = diff <= 10 ? "error" : diff <= 30 ? "warning" : "info";
-          toast[type](msg);
-          notified.current.add(c.id);
-        }
-      });
-    } catch {
-      console.warn("Error al obtener citas próximas");
-    }
-  };
-
-  useEffect(() => {
-    fetchCitas();
-    const interval = setInterval(fetchCitas, 300000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const renderCitaItem = (c: Cita) => {
-    const citaUrl = `${baseUrl}/cita/form/update/${c.id}`; // ← URL dinámico
-
-    const content = (
-      <div className="flex flex-col gap-1 text-sm min-w-0 overflow-hidden">
-        <div className="flex items-center gap-2 min-w-0">
-          <Clock className="w-4 h-4 text-blue-500 flex-shrink-0" />
-          {!collapsed && (
-            <>
-              <span className="font-medium truncate">{c.mascota}</span>
-              <span className="text-xs text-muted-foreground truncate">
-                ({c.cliente})
-              </span>
-            </>
-          )}
-        </div>
-
-        {!collapsed && (
-          <>
-            <span className="text-xs text-muted-foreground truncate">
-              {c.motivo_cita}
-            </span>
-            <span className="text-xs text-muted-foreground truncate">
-              {new Date(c.fecha_hora).toLocaleString("es-PE", {
-                hour: "2-digit",
-                minute: "2-digit",
-                day: "2-digit",
-                month: "short",
-              })}
-            </span>
-          </>
-        )}
-      </div>
-    );
-
-    return collapsed ? (
-      <TooltipProvider key={c.id} delayDuration={0}>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link href={citaUrl}>
-              <SidebarMenuItem className="min-w-0">
-                <SidebarMenuButton
-                  asChild
-                  className="!h-auto !items-start py-2 px-2 transition-colors rounded-md w-full min-w-0 justify-center hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-                >
-                  {content}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent side="right" align="center" className="text-foreground">
-            <p className="text-sm font-medium">{c.mascota}</p>
-            <p className="text-xs">{c.cliente}</p>
-            <p className="text-xs">{c.motivo_cita}</p>
-            <p className="text-xs">{new Date(c.fecha_hora).toLocaleString("es-PE")}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    ) : (
-      <Link key={c.id} href={citaUrl}>
-        <SidebarMenuItem className="min-w-0">
-          <SidebarMenuButton
-            asChild
-            className="!h-auto !items-start py-2 px-2 transition-colors rounded-md w-full min-w-0 justify-start hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-          >
-            {content}
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </Link>
-    );
-  };
-
+const CitaItem = memo(function CitaItem({ cita, baseUrl }) {
   return (
-    <SidebarGroup className="px-2 py-1 min-w-0 flex flex-col flex-1 min-h-0">
-      <SidebarGroupLabel className="truncate">Citas próximas</SidebarGroupLabel>
-      {citas.length === 0 ? (
-        <p className="text-xs text-muted-foreground truncate px-1 mt-1">
-          Sin citas próximas
-        </p>
-      ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto mt-1">
-          <SidebarMenu className="flex flex-col gap-1 min-w-0">
-            {citas.map(renderCitaItem)}
-          </SidebarMenu>
+    <div className="flex items-center justify-between px-2 py-2 rounded-md select-none pointer-events-none">
+      <div className="flex-1 flex flex-col">
+        <div className="flex items-center gap-2 mb-1">
+          <Clock className="w-4 h-4 text-blue-500" />
+          <span className="font-medium text-sm truncate">{cita.mascota}</span>
+          <span className="text-xs text-muted-foreground">— {cita.cliente}</span>
         </div>
-      )}
-    </SidebarGroup>
+        <div className="text-xs">{cita.motivo_cita} — {cita.displayDate}</div>
+      </div>
+      <div className="flex items-center gap-1 ml-2 pointer-events-auto">
+        <TooltipBase
+          as="link"
+          href={`${baseUrl}/cita/form/update/${cita.id}`}
+          content="Editar"
+          icon={Edit2}
+          className="h-7 w-7"
+          side="left"
+        />
+        <TooltipBase
+          as="link"
+          href={`${baseUrl}/historia_clinica/form/create`}
+          content="Atender"
+          icon={CheckCircle}
+          className="h-7 w-7 text-green-600"
+          side="left"
+        />
+      </div>
+    </div>
+  );
+});
+export default function CitasDropdown() {
+  const baseUrl = import.meta.env.VITE_APP_URL || "";
+  const { data: citasApi } = useApi(`${baseUrl}/api/citas/proximas`, {
+    autoFetch: true,
+    interval: 300000,
+    method: "GET",
+    initialData: [],
+  });
+  const notified = useRef(new Set());
+  const citas = useMemo(() => {
+    const today = new Date();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    return citasApi.map(c => {
+      const fecha = new Date(`${c.fecha}T00:00:00`);
+      const diffDays = Math.floor((fecha - startOfToday) / 86400000);
+      return {
+        ...c,
+        diffDays,
+        alert: getDayAlert(diffDays, c),
+        displayDate: `${c.fecha} ${c.hora.slice(0, 5)}`,
+      };
+    });
+  }, [citasApi]);
+  useEffect(() => {
+    citas.forEach(c => {
+      if (c.alert && !notified.current.has(c.id)) {
+        toast[c.alert.type](c.alert.msg);
+        notified.current.add(c.id);
+      }
+    });
+  }, [citas]);
+  const items = useMemo(() => {
+    if (!citas.length) {
+      return [
+        {
+          custom: (
+            <div className="text-xs text-muted-foreground px-2 py-1">Sin citas próximas</div>
+          ),
+        },
+      ];
+    }
+    return citas.map(c => ({ custom: <CitaItem key={c.id} cita={c} baseUrl={baseUrl} /> }));
+  }, [citas, baseUrl]);
+  return (
+    <DropdownMenuBase
+      trigger={
+        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md relative">
+          <Clock className="w-4 h-4" />
+          {!!citas.length && (
+            <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
+              {citas.length}
+            </span>
+          )}
+        </Button>
+      }
+      label="Citas próximas"
+      align="end"
+      closeOnSelect={false}
+      itemHover={false}
+      items={items}
+    />
   );
 }

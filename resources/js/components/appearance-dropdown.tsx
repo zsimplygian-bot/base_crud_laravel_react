@@ -1,67 +1,38 @@
-import { Button } from '@/components/ui/button';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { useAppearance } from '@/hooks/use-appearance';
-import { Monitor, Moon, Sun } from 'lucide-react';
-import { HTMLAttributes } from 'react';
-
+import { HTMLAttributes } from "react";
+import { Button } from "@/components/ui/button";
+import DropdownMenuBase, { DItem } from "@/components/dropdown-menu-base";
+import { useAppearance } from "@/hooks/use-appearance";
+import { Monitor, Moon, Sun } from "lucide-react";
 export default function AppearanceToggleDropdown({
-    className = '',
-    ...props
+  className = "",
+  ...props
 }: HTMLAttributes<HTMLDivElement>) {
-    const { appearance, updateAppearance } = useAppearance();
-
-    const getCurrentIcon = () => {
-        switch (appearance) {
-            case 'dark':
-                return <Moon className="h-5 w-5" />;
-            case 'light':
-                return <Sun className="h-5 w-5" />;
-            default:
-                return <Monitor className="h-5 w-5" />;
-        }
-    };
-
-    return (
-        <div className={className} {...props}>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 rounded-md"
-                    >
-                        {getCurrentIcon()}
-                        <span className="sr-only">Toggle theme</span>
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => updateAppearance('light')}>
-                        <span className="flex items-center gap-2">
-                            <Sun className="h-5 w-5" />
-                            Claro
-                        </span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => updateAppearance('dark')}>
-                        <span className="flex items-center gap-2">
-                            <Moon className="h-5 w-5" />
-                            Oscuro
-                        </span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                        onClick={() => updateAppearance('system')}
-                    >
-                        <span className="flex items-center gap-2">
-                            <Monitor className="h-5 w-5" />
-                            Sistema
-                        </span>
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
+  const { appearance, updateAppearance } = useAppearance();
+  const iconCurrent =
+    appearance === "dark" ? (
+      <Moon className="h-5 w-5" />
+    ) : appearance === "light" ? (
+      <Sun className="h-5 w-5" />
+    ) : (
+      <Monitor className="h-5 w-5" />
     );
+  const items: DItem[] = [
+    { label: "Claro", icon: Sun, action: () => updateAppearance("light"), },
+    { label: "Oscuro", icon: Moon, action: () => updateAppearance("dark"), },
+    { label: "Sistema", icon: Monitor, action: () => updateAppearance("system"), },
+  ];
+  return (
+    <div className={className} {...props}>
+      <DropdownMenuBase
+        trigger={
+          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md">
+            {iconCurrent}
+            <span className="sr-only">Toggle theme</span>
+          </Button>
+        }
+        items={items}
+        align="end"
+      />
+    </div>
+  );
 }
