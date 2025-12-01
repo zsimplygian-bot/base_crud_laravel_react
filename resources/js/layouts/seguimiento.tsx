@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
-import { useForm } from "@inertiajs/react";
+import { useForm, router } from "@inertiajs/react";
 import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { FormFieldsRenderer } from "@/components/form/form-fields";
-import { PencilIcon, TrashIcon, Save, Loader2 } from "lucide-react";
+import { PencilIcon, TrashIcon, Save, Loader2, FileText, ImageIcon } from "lucide-react";
 interface Field { label: string; key: string; value: any }
 interface Props { view: string; formId: number; action?: string }
 const CONFIG = {
@@ -31,7 +31,6 @@ const idKey = (t: string) => `id_historia_clinica_${singular(t)}`;
 const route = (t: string, id?: number) => id ? `/historia_clinica_${singular(t)}/${id}` : `/historia_clinica_${singular(t)}/form`;
 const extractId = (f: Field[], t: string) => f.find(x => x.key.startsWith("id_") || x.label.toLowerCase().includes(singular(t)))?.value ?? null;
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-// Interpretar YYYY-MM-DD como fecha LOCAL (Perú)
 const parseDateAsLocal = (dateStr: string): Date | null => {
   if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return null;
   const [year, month, day] = dateStr.split("-").map(Number);
@@ -52,10 +51,15 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
   const [fields, setFields] = useState<Record<string, any[]>>({});
   const [data, setData] = useState<Record<string, any>>({});
   const [records, setRecords] = useState<Record<string, Field[][]>>({});
+  const [loadingRecords, setLoadingRecords] = useState(true);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const { post, put, delete: del, processing, errors, setData: setInertia } = useForm({});
   const load = useCallback(() => {
-    fetch(`/api/historia/${parentId}/records`).then(r => r.json()).then(setRecords).catch(() => {});
+    setLoadingRecords(true);
+    fetch(`/api/historia/${parentId}/records`)
+      .then(r => r.json())
+      .then(setRecords)
+      .finally(() => setLoadingRecords(false));
   }, [parentId]);
   useEffect(load, [load]);
   useEffect(() => {
@@ -81,15 +85,31 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
     e.preventDefault();
     if (!modal.tipo) return;
     const id = data[idKey(modal.tipo)];
-    const onSuccess = () => { setModal(m => ({ ...m, open: false })); load(); };
-    const opts = { onSuccess };
-    modal.act === "create" ? post(route(modal.tipo), { data, ...opts })
-      : modal.act === "update" ? put(route(modal.tipo, id), { data, ...opts })
-      : del(route(modal.tipo, id), opts);
+    const hasFile = Object.values(data).some(v => v instanceof File);
+    const url = modal.act === "create" ? route(modal.tipo) : route(modal.tipo, id);
+    const onSuccess = () => {
+      setModal(m => ({ ...m, open: false }));
+      load();
+    };
+    if (hasFile) {
+      const fd = new FormData();
+      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
+      if (token) fd.append("_token", token);
+      if (modal.act !== "create") fd.append("_method", "PUT");
+      Object.entries(data).forEach(([k, v]) => {
+        if (v != null) fd.append(k, v instanceof File ? v : String(v));
+      });
+      router.post(url, fd, { forceFormData: true, preserveScroll: true, onSuccess });
+      return;
+    }
+    modal.act === "create"
+      ? post(url, { data, onSuccess })
+      : modal.act === "update"
+        ? put(url, { data, onSuccess })
+        : del(url, { onSuccess });
   }, [modal, data, post, put, del, load]);
   const open = (tipo: string, reg: Field[] | null, act: Action) => setModal({ open: true, tipo, reg, act });
   const close = () => setModal({ open: false, tipo: null, reg: null, act: "update" });
-  // AGRUPAR POR FECHA
   const groupedByDate = useMemo(() => {
     const map: Record<string, { tipo: string; f: Field[]; k: string }[]> = {};
     Object.entries(records).forEach(([t, items]) => {
@@ -109,9 +129,52 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
   }, [records]);
   const cfg = modal.tipo ? ACTION[modal.act] : null;
   const label = modal.tipo ? CONFIG[modal.tipo as keyof typeof CONFIG] : "";
+  const getTitleAndColor = (item: { k: string; f: Field[] }) => {
+    const technicalKeys = ["id", "created_at", "updated_at", "fecha"];
+    const visibleFields = item.f.filter(f => !technicalKeys.some(tk => f.key.startsWith(tk) || f.key === tk));
+    let title = "Sin título";
+    let color = "text-purple-600 dark:text-purple-400";
+    let usedKey = "";
+    if (item.k === "procedimientos") {
+      const field = visibleFields.find(f =>
+        f.key.toLowerCase().includes("nombre") ||
+        f.key.toLowerCase().includes("procedimiento") ||
+        f.label.toLowerCase().includes("procedimiento") ||
+        f.label.toLowerCase().includes("nombre")
+      );
+      title = field ? String(field.value).toUpperCase().trim() : "PROCEDIMIENTO";
+      usedKey = field?.key || "";
+      color = "text-blue-600 dark:text-blue-400";
+    } else if (item.k === "medicamentos") {
+      const field = visibleFields.find(f =>
+        f.key.toLowerCase().includes("medicamento") ||
+        f.key.toLowerCase().includes("nombre") ||
+        f.label.toLowerCase().includes("medicamento") ||
+        f.label.toLowerCase().includes("nombre")
+      );
+      title = field ? String(field.value).trim() : "MEDICAMENTO";
+      usedKey = field?.key || "";
+      color = "text-green-600 dark:text-green-400";
+    } else if (item.k === "anamnesis") {
+      title = "ANAMNESIS";
+      color = "text-red-600 dark:text-red-400";
+    } else if (item.k === "seguimientos") {
+      title = "SEGUIMIENTO";
+      color = "text-gray-600 dark:text-gray-400";
+    }
+    return { title, color, usedKey };
+  };
+  const getFolderForType = (typeKey: string) => {
+    const map: Record<string, string> = {
+      procedimientos: "historia_clinica_procedimiento",
+      medicamentos: "historia_clinica_medicamento",
+      anamnesis: "historia_clinica_anamnesis",
+      seguimientos: "historia_clinica_seguimiento",
+    };
+    return map[typeKey] || "historia_clinica";
+  };
   return (
     <div className="flex flex-col gap-4">
-      {/* Botones para crear nuevos registros */}
       {canEdit && (
         <ButtonGroup className="gap-1 flex flex-wrap">
           {Object.keys(CONFIG).map(t => (
@@ -127,38 +190,90 @@ export default function SeguimientoSection({ view, formId, action = "update" }: 
           ))}
         </ButtonGroup>
       )}
-      {/* Lista agrupada por fecha */}
       {Object.entries(groupedByDate).map(([fecha, items]) => (
         <div key={fecha} className="">
           <h3 className="font-semibold text-gray-600 dark:text-gray-400 mb-2">
             {fecha === "Sin fecha" ? fecha : formatDatePeru(fecha)}
           </h3>
-          {items.map((r, idx) => (
-            <div
-              key={`${r.k}-${idx}`}
-              className="border rounded-lg p-3 flex justify-between bg-muted/40 mb-2"
-            >
-              <div>
-                <p className="font-semibold text-purple-600 dark:text-purple-400">{r.tipo}</p>
-                {r.f
-                  .filter(x => !["id_", "fecha", "created_at", "updated_at"].some(p => x.key.startsWith(p) || x.key === p))
-                  .map((f, i) => <p key={i} className="text-sm">{f.label}: {f.value ?? "-"}</p>)}
-              </div>
-              {canEdit && (
-                <div className="flex flex-col gap-1 ml-2">
-                  <Button size="icon" variant="outline" onClick={() => open(r.k, r.f, "update")}>
-                    <PencilIcon className="w-4 h-4" />
-                  </Button>
-                  <Button size="icon" variant="destructive" onClick={() => open(r.k, r.f, "delete")}>
-                    <TrashIcon className="w-4 h-4" />
-                  </Button>
+          {items.map((r, idx) => {
+            const { title, color, usedKey } = getTitleAndColor(r);
+            const archivoField = r.f.find(f => f.key === "archivo");
+const archivoNombre = archivoField?.value;
+const tieneArchivo = archivoNombre && typeof archivoNombre === "string" && archivoNombre.trim() !== "";
+const carpeta = getFolderForType(r.k);
+let archivoUrl: string | null = null;
+let esImagen = false;
+let esPdf = false;
+
+if (tieneArchivo) {
+  const nombre = archivoNombre.trim();
+  const extension = nombre.toLowerCase().split('.').pop() || "";
+  const extensionesImagen = ["jpg", "jpeg", "png", "gif", "webp"];
+  if (extensionesImagen.includes(extension)) {
+    archivoUrl = `/images/${carpeta}/${nombre}`;
+    esImagen = true;
+  } else if (extension === "pdf") {
+    archivoUrl = `/pdf/${carpeta}/${nombre}`;
+    esPdf = true;
+  }
+
+  // DEBUG: mostrar información del archivo y ruta
+  console.log(`[DEBUG] Tipo: ${r.k}, Título: ${title}, Archivo detectado: ${archivoNombre}, URL generada: ${archivoUrl}, Es imagen: ${esImagen}, Es PDF: ${esPdf}`);
+} else {
+  console.log(`[DEBUG] Tipo: ${r.k}, Título: ${title}, No se detectó archivo`);
+}
+
+            return (
+              <div
+                key={`${r.k}-${idx}`}
+                className="border rounded-lg p-3 bg-muted/40 mb-3 shadow-sm"
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <p className={`font-bold text-xl ${color}`}>
+                      {title}
+                    </p>
+                    {r.f
+                      .filter(x =>
+                        !["id", "created_at", "updated_at", "fecha", "archivo"].some(p => x.key.startsWith(p) || x.key === p) &&
+                        x.key !== usedKey &&
+                        x.value != null &&
+                        String(x.value).trim() !== ""
+                      )
+                      .map((f, i) => (
+                        <p key={i} className="text-sm text-gray-700 dark:text-gray-300">
+                          <span className="font-medium">{f.label}:</span> {f.value}
+                        </p>
+                      ))}
+                  </div>
+                  {canEdit && (
+                    <div className="flex flex-col gap-2 ml-4">
+                      <Button size="icon" variant="outline" onClick={() => open(r.k, r.f, "update")}>
+                        <PencilIcon className="w-4 h-4" />
+                      </Button>
+                      {tieneArchivo && archivoUrl && (
+                        <Button size="icon" variant="outline" className="border-blue-500 text-blue-600 hover:bg-blue-50" asChild>
+                          <a href={archivoUrl} target="_blank" rel="noopener noreferrer">
+                            {esPdf ? <FileText className="w-4 h-4" /> : <ImageIcon className="w-4 h-4" />}
+                          </a>
+                        </Button>
+                      )}
+                      <Button size="icon" variant="destructive" onClick={() => open(r.k, r.f, "delete")}>
+                        <TrashIcon className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       ))}
-      {/* Modal */}
+      {loadingRecords && (
+        <div className="w-full flex justify-center py-4">
+          <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
+        </div>
+      )}
       <Dialog open={modal.open} onOpenChange={close}>
         <DialogContent className={`max-w-lg p-6 ${cfg?.border || ""}`}>
           {cfg && (

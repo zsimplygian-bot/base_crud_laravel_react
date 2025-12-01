@@ -1,16 +1,16 @@
-// src/hooks/useApi.ts
+// js/hooks/use-api.ts
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import axios, { AxiosRequestConfig } from "axios";
 interface UseApiOptions extends AxiosRequestConfig {
   autoFetch?: boolean;
   interval?: number;
   initialData?: any;
-  transform?: (data: any) => any;   // <--- Transformador opcional
+  transform?: (data: any) => any;  
 }
 export function useApi<T = any>(url: string, options: UseApiOptions = {}) {
   const {
     autoFetch = true,
-    interval,
+    interval = null,              
     initialData = null,
     transform,
     ...axiosOptions
@@ -19,7 +19,6 @@ export function useApi<T = any>(url: string, options: UseApiOptions = {}) {
   const [loading, setLoading] = useState(autoFetch);
   const [error, setError] = useState<string | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
-  // Memo estable para evitar recrear options a cada render
   const stableAxiosOptions = useMemo(() => axiosOptions, []);
   const fetchApi = useCallback(async () => {
     controllerRef.current?.abort();
@@ -42,16 +41,16 @@ export function useApi<T = any>(url: string, options: UseApiOptions = {}) {
       setLoading(false);
     }
   }, [url, stableAxiosOptions, transform]);
-  // Auto-fetch
   useEffect(() => {
     if (autoFetch) fetchApi();
     return () => controllerRef.current?.abort();
   }, [fetchApi, autoFetch]);
-  // Interval estable
+  // Interval SIEMPRE existe (por defecto 10s), pero puedes desactivarlo pasando interval = null
   useEffect(() => {
-    if (!interval) return;
+    if (!interval) return;              
     const id = setInterval(fetchApi, interval);
     return () => clearInterval(id);
   }, [interval, fetchApi]);
+
   return { data, loading, error, refetch: fetchApi };
 }

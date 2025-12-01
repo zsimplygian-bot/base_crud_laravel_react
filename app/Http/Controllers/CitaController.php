@@ -31,33 +31,94 @@ class CitaController extends BaseController
         $citas = Cita::proximas();
         return response()->json($citas);
     }
+    public function atender($id)
+    {
+        $cita = Cita::findOrFail($id);
+        $cita->update([
+            'id_estado_cita' => 2,
+        ]);
+        return redirect()->to('/historia_clinica/form/create');
+    }
     public function eventos(Request $request)
     {
         $start = $request->query('start');
         $end   = $request->query('end');
+
         if (!$start || !$end) {
-            return response()->json([]); // evitar consulta sin rango
+            return response()->json([]);
         }
-        $citas = Cita::select(
-            'cita.id_cita as id',
-            'mascota.mascota',
-            'cliente.cliente',
-            'motivo_cita.motivo_cita',
-            DB::raw("CONCAT(cita.fecha, 'T', cita.hora) as start")
-        )
-        ->join('mascota', 'cita.id_mascota', '=', 'mascota.id_mascota')
-        ->join('cliente', 'mascota.id_cliente', '=', 'cliente.id_cliente')
-        ->join('motivo_cita', 'cita.id_motivo_cita', '=', 'motivo_cita.id_motivo_cita')
-        ->whereBetween('cita.fecha', [$start, $end])
-        ->get();
+
+        $citas = Cita::eventosEntreFechas($start, $end);
+
         return response()->json(
-            $citas->map(function ($item) {
-                return [
-                    'id'    => $item->id,
-                    'title' => $item->mascota . ' – ' . $item->motivo_cita,
-                    'start' => $item->start,
-                ];
-            })
+            $citas->map(fn($item) => [
+                'id'      => $item->id,
+                'start'   => $item->start,
+                'mascota' => $item->mascota,
+                'cliente' => $item->cliente,
+                'motivo'  => $item->motivo_cita,
+                'fecha'  => $item->fecha,
+                'hora'  => $item->hora,
+                'id_estado_cita' => $item->id_estado_cita,
+            ])
         );
     }
+
+
+    public function info($id)
+    {
+        $t1 = (new Cita)->getTable();
+        $t2 = 'mascota';
+        $t3 = 'cliente';
+        $t4 = 'motivo_cita';
+        $t5 = 'estado_cita';
+
+        $cita = DB::table($t1)
+            ->leftJoin($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
+            ->leftJoin($t3, "$t2.id_$t3", '=', "$t3.id_$t3")
+            ->leftJoin($t4, "$t1.id_$t4", '=', "$t4.id_$t4")
+            ->leftJoin($t5, "$t1.id_$t5", '=', "$t5.id_$t5")
+            ->where("$t1.id_$t1", $id)
+            ->select([
+                "$t1.id_$t1 as id",
+                "$t2.mascota",
+                "$t3.cliente",
+                "$t3.telefono",
+                "$t1.fecha",
+                "$t1.hora",
+                "$t1.fecha_hora_atencion",
+                "$t1.fecha_hora_notificacion",
+                "$t4.motivo_cita",
+                "$t5.estado_cita as estado",
+                "$t1.observaciones"
+            ])
+            ->first();
+
+        if (!$cita) {
+            return response()->json(null, 404);
+        }
+
+        return response()->json($cita);
+    }
+public function notificar($id)
+{
+
+    // Buscamos la cita
+    $cita = Cita::findOrFail($id);
+
+    // FORZAMOS el guardado directo del campo (ignora $fillable)
+    $cita->fecha_hora_notificacion = now();
+
+    // Guardamos SOLO este campo (bypassea mass assignment)
+    $cita->save();
+
+
+    return response()->json([
+        'success' => true,
+        'message' => 'Notificación registrada',
+        'fecha_notificacion' => $cita->fecha_hora_notificacion->format('d/m/Y H:i:s'),
+    ]);
+}
+
+
 }

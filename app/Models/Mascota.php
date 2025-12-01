@@ -12,14 +12,13 @@ class Mascota extends BaseModel
         ['id_cliente', 'DUEÑO', 'select', 'required'],
         ['id_raza', 'ESPECIE - RAZA', 'select', 'required'],
         ['id_sexo', 'SEXO', 'select', 1, 'required'],
-        ['id_unidad_tiempo', 'UNIDAD EDAD', 'select', 1, 'required'],
         ['edad', 'EDAD MESES', 'number', 1, 'required'],
         ['edad_extendida', 'EDAD', 'text', 1.5, 'disabled'],
         ['color', 'COLOR', 'text', 'required'],
         ['peso', 'PESO (KG)', 'number', 1, 'required'],
         ['id_estado_mascota', 'ESTADO', 'select', 'required'],
         ['observaciones', 'OBSERVACIONES', 'textarea'],
-        ['imagen', 'IMAGEN', 'file'],
+        ['archivo', 'ARCHIVO', 'file'],
     ];
     protected static function adjustFieldForAction(array $fieldDef, string $fieldName, ?string $action): array
     {
@@ -36,7 +35,6 @@ class Mascota extends BaseModel
         'id_cliente' => 'required|int',
         'id_raza' => 'required|int',
         'id_sexo' => 'required|int|max:2',
-        'id_unidad_tiempo' => 'required|int|max:2',
         'edad' => 'nullable|int',
         'color' => 'nullable|string|max:100',
         'peso' => 'nullable|numeric',
@@ -75,7 +73,7 @@ class Mascota extends BaseModel
             "$t1.color",
             "$t1.peso",
             "$t6.estado_mascota",
-            "$t1.imagen",
+            "$t1.archivo",
             "$t1.created_at",
         ]);
         return ['query' => $query, 'alias' => $t1];
@@ -91,7 +89,7 @@ class Mascota extends BaseModel
         ['EDAD ACTUAL', 'edad_actual'],
         ['COLOR', 'color'],
         ['PESO', 'peso'],
-        ['IMAGEN', 'imagen'],
+        ['IMAGEN', 'archivo'],
         ['FECHA REGISTRO', 'created_at'],
     ];
     public function cliente() { return $this->belongsTo(Cliente::class, 'id_cliente'); }

@@ -13,7 +13,7 @@ class MotivoCita extends BaseModel
     ];
     protected static $validationRules = [
         'motivo_cita' => 'required|string|max:100',
-        'lapso_tiempo' => 'required|string|max:100',
+        'lapso_tiempo' => 'nullable|string|max:100',
     ];
     public static function getQuery() {
         $t1 = (new self)->getTable();

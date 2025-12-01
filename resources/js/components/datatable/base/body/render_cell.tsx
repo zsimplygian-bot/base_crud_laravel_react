@@ -138,7 +138,7 @@ const R: Record<string, RenderFn> = {
   estado: (v) => <BadgeStatus v={v} map={CONFIG.estados} />,
   estado_delega: (v) => <BadgeStatus v={v} map={CONFIG.estados} />,
   estado_mascota: (v) => <BadgeStatus v={v} map={CONFIG.estado_mascota} />,
-  imagen: (v, _, view) => <ImageDialog v={v} view={view} />,
+  archivo: (v, _, view) => <ImageDialog v={v} view={view} />,
   raza: (v) => {
     if (!v) return "—";
     const t = v.toLowerCase().trim();
@@ -194,7 +194,7 @@ export const useRenderCellContent = () =>
     const v = $(row, key);
     if (v == null || v === "") return "—";
     if (R[key]) return R[key](v, row, view);
-    if (key.toLowerCase().includes("imagen") && view) return <ImageDialog v={v} view={view} />;
+    if (key.toLowerCase().includes("archivo") && view) return <ImageDialog v={v} view={view} />;
     return v;
   }, []);
 

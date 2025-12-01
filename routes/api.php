@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\ListaController;
 use App\Http\Controllers\CitaController;
 use App\Http\Controllers\HistoriaClinicaFieldsController;
 use App\Http\Controllers\Api\DashboardChartsController;
+Route::get('/cita/{id}/info', [CitaController::class, 'info']);
+Route::post('/cita/{id}/notificar', [CitaController::class, 'notificar']);
 Route::get('/dashboard/charts', [DashboardChartsController::class, 'charts']);
 Route::get('/citas/proximas', [CitaController::class, 'proximas']);
 Route::get('/historia/{tipo}/fields', [HistoriaClinicaFieldsController::class, 'fields']);

@@ -34,7 +34,7 @@ const rawSidebar: NavDef[] = [
     undefined,
     [
       ["Listado", Calendar, "/cita"],
-      ["Calendario", Calendar, "/cita/calendario"],
+      ["Calendario", Calendar, "/calendario"],
     ],
   ],
   ["Mascotas", PawPrint, "/mascota"],

@@ -13,6 +13,7 @@ class HistoriaClinicaProcedimiento extends BaseModel
         ['detalle', 'DETALLE', 'textarea'],
         ['precio', 'PRECIO S/', 'number', 'required'],
         ['fecha', 'FECHA', 'date', 'required'],
+        ['archivo', 'ARCHIVO', 'file'],
     ];
     protected static $validationRules = [
         'id_historia_clinica' => 'required|integer|exists:historia_clinica,id_historia_clinica',
@@ -29,6 +30,7 @@ class HistoriaClinicaProcedimiento extends BaseModel
         ['DETALLE', 'detalle'],
         ['PRECIO S/', 'precio'],
         ['FECHA', 'fecha'],
+        ['ARCHIVO', 'archivo'],
         ['FECHA REGISTRO', 'created_at'],
     ];
     protected $appends = ['nombre_procedimiento'];
@@ -45,6 +47,7 @@ class HistoriaClinicaProcedimiento extends BaseModel
                 "$t1.detalle",
                 "$t1.precio",
                 "$t1.fecha",
+                "$t1.archivo",
                 "$t1.created_at",
             ]);
         return ['query' => $query, 'alias' => $t1];

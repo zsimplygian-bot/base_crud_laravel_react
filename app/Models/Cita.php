@@ -27,7 +27,7 @@ class Cita extends BaseModel
     }
     protected static $validationRules = [
         'id_mascota'       => 'required|integer',
-        'fecha'            => 'required|date|after_or_equal:today',
+        'fecha'            => 'required|date',
         'hora'             => 'required',
         'id_motivo_cita'   => 'required|integer',
         'observaciones'    => 'nullable|string',
@@ -97,5 +97,27 @@ class Cita extends BaseModel
             ->orderByRaw("$t1.hora ASC")
             ->get();
     }
-
+    public static function eventosEntreFechas(string $start, string $end)
+    {
+        $t1 = (new self)->getTable();
+        $t2 = 'mascota';
+        $t3 = 'cliente';
+        $t4 = 'motivo_cita';
+        return DB::table($t1)
+            ->join($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
+            ->join($t3, "$t2.id_$t3", '=', "$t3.id_$t3")
+            ->join($t4, "$t1.id_$t4", '=', "$t4.id_$t4")
+            ->select([
+                "$t1.id_$t1 as id",
+                "$t2.mascota",
+                "$t3.cliente",
+                "$t4.motivo_cita",
+                "$t1.id_estado_cita",
+                "$t1.fecha",
+                "$t1.hora",
+                DB::raw("CONCAT($t1.fecha, 'T', $t1.hora) as start")
+            ])
+            ->whereBetween("$t1.fecha", [$start, $end])
+            ->get();
+    }
 }

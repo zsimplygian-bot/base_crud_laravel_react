@@ -12,6 +12,7 @@ class HistoriaClinicaSeguimiento extends BaseModel
         ['detalle', 'DETALLE', 'textarea', 'required'],
         ['observaciones', 'OBSERVACIONES', 'textarea'],
         ['fecha', 'FECHA', 'date', 'required'],
+        ['ARCHIVO', 'archivo'],
     ];
     protected static $validationRules = [
         'id_historia_clinica' => 'required|integer|exists:historia_clinica,id_historia_clinica',
@@ -25,6 +26,7 @@ class HistoriaClinicaSeguimiento extends BaseModel
         ['DETALLE', 'detalle'],
         ['OBSERVACIONES', 'observaciones'],
         ['FECHA', 'fecha'],
+        ['ARCHIVO', 'archivo'],
         ['FECHA REGISTRO', 'created_at'],
     ];
     public static function getQuery() {
@@ -35,6 +37,7 @@ class HistoriaClinicaSeguimiento extends BaseModel
                 "$t1.detalle",
                 "$t1.observaciones",
                 "$t1.fecha",
+                "$t1.archivo",
                 "$t1.created_at",
             ]);
         return ['query' => $query, 'alias' => $t1];

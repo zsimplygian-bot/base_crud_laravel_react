@@ -16,6 +16,7 @@ class HistoriaClinicaAnamnesis extends BaseModel
         ['frecuencia_respiratoria', 'FRECUENCIA RESPIRATORIA (rpm)', 'number'],
         ['tiempo_llenado_capilar', 'TIEMPO LLENADO CAPILAR (seg)', 'number'],
         ['peso', 'PESO (kg)', 'number'],
+        ['archivo', 'ARCHIVO', 'file'],
     ];
     protected static $validationRules = [
         'id_historia_clinica' => 'required|integer|exists:historia_clinica,id_historia_clinica',
@@ -39,6 +40,7 @@ class HistoriaClinicaAnamnesis extends BaseModel
                 "$t1.frecuencia_respiratoria",
                 "$t1.tiempo_llenado_capilar",
                 "$t1.peso",
+                "$t1.archivo",
                 "$t1.created_at",
             ]);
         return ['query' => $query, 'alias' => $t1];
@@ -53,6 +55,7 @@ class HistoriaClinicaAnamnesis extends BaseModel
         ['FRECUENCIA RESPIRATORIA (rpm)', 'frecuencia_respiratoria'],
         ['TIEMPO LLENADO CAPILAR (seg)', 'tiempo_llenado_capilar'],
         ['PESO (kg)', 'peso'],
+        ['ARCHIVO', 'archivo'],
         ['FECHA REGISTRO', 'created_at'],
     ];
     public function parent() { return $this->belongsTo(HistoriaClinica::class, $this->parentForeignKey, 'id'); }

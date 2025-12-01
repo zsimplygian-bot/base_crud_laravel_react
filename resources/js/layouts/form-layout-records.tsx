@@ -1,6 +1,6 @@
 import { Head } from "@inertiajs/react";
 import AppLayout from "@/layouts/app-layout";
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { useForm } from "@inertiajs/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -8,9 +8,11 @@ import { useFormCalculate } from "@/hooks/use-form-calculate";
 import useToggleForm from "@/hooks/use-form-toggle";
 import { useFormAction } from "@/hooks/form/use-form-action";
 import { FormFieldsRenderer } from "@/components/form/form-fields";
+import { FormFooterButtons } from "@/components/form/footer-buttons";
 import { getTitle } from "@/hooks/custom-titles";
 import { ApiConfigEntry, useFetchWithButton } from "@/hooks/use-fetch-with-button";
 import SeguimientoSection from "@/layouts/seguimiento";
+
 interface FormPageProps {
   form_data: any;
   formFields: any;
@@ -33,6 +35,7 @@ interface FormPageProps {
   anamnesis?: any[];
   debug?: boolean;
 }
+
 export const FormPage: React.FC<FormPageProps> = ({
   form_data,
   formFields,
@@ -47,22 +50,48 @@ export const FormPage: React.FC<FormPageProps> = ({
   apiConfig,
   debug = false,
 }) => {
-  const { data, setData, post, put, delete: inertiaDelete, processing, errors, recentlySuccessful, reset } =
-    useForm(form_data);
+
+  // backto incluido
+  const initialData = useMemo(
+    () => ({
+      ...form_data,
+      backto: localStorage.getItem("lastPage") ?? null,
+    }),
+    [form_data]
+  );
+
+  const {
+    data,
+    setData,
+    post,
+    put,
+    delete: inertiaDelete,
+    processing,
+    errors,
+    recentlySuccessful,
+    reset,
+  } = useForm(initialData);
+
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const isMobile = useIsMobile();
+
   useFormCalculate({ view, data, setData });
+
   const {
     title: formTitle,
     description,
     cardBorderClass,
     readonly: configReadonly,
     handleSubmit,
-    FooterButtons,
+    config,
+    type,
+    queryString,
+    recentlySuccessful: formSaved,
+    processing: formProcessing,
   } = useFormAction(
     action,
     custom_title,
-    form_data,
+    initialData,
     view,
     post,
     put,
@@ -74,23 +103,42 @@ export const FormPage: React.FC<FormPageProps> = ({
     setData,
     reset
   );
-  const { hiddenFields, ToggleUI } = useToggleForm(toggleOptions, setData, data, view, action);
+
+  const { hiddenFields, ToggleUI } = useToggleForm(
+    toggleOptions,
+    setData,
+    data,
+    view,
+    action
+  );
+
   const FetchButton = useFetchWithButton({ data, setData, apiConfig, view });
+
   const displayTitle = getTitle(view);
+
   return (
     <AppLayout breadcrumbs={[{ title: displayTitle, href: view }]}>
       <Head title={displayTitle} />
+
       <div className="flex flex-1 flex-col gap-4 p-4 rounded-xl">
         <Card className={`${!isMobile ? width_form : "w-full"} border-2 ${cardBorderClass}`}>
           <CardHeader>
             <div className="flex flex-wrap items-start gap-x-4">
               <div>
-                <CardTitle>{formTitle} {displayTitle.toUpperCase()}</CardTitle>
+                <CardTitle>
+                  {formTitle} {displayTitle.toUpperCase()}
+                </CardTitle>
                 <CardDescription>{description}</CardDescription>
               </div>
-              {ToggleUI && <div className="mt-1"><ToggleUI /></div>}
+
+              {ToggleUI && (
+                <div className="mt-1">
+                  <ToggleUI />
+                </div>
+              )}
             </div>
           </CardHeader>
+
           <CardContent>
             {debug && (
               <>
@@ -98,9 +146,9 @@ export const FormPage: React.FC<FormPageProps> = ({
                 {console.log("📤 data actual:", data)}
               </>
             )}
+
             <form
               onSubmit={handleSubmit}
-              action={route(`${view}.form`, { id: form_data?.id, action })}
               method="POST"
               className="space-y-2"
               encType="multipart/form-data"
@@ -120,11 +168,21 @@ export const FormPage: React.FC<FormPageProps> = ({
                   FetchButton={FetchButton}
                 />
               </div>
-              {FooterButtons}
+
+              {/* FooterButtons correcto según tu ejemplo */}
+              <FormFooterButtons
+                view={view}
+                queryString={queryString}
+                config={config}
+                type={type}
+                handleSubmit={handleSubmit}
+                recentlySuccessful={formSaved}
+                processing={formProcessing}
+              />
             </form>
           </CardContent>
         </Card>
-        {/* Sección de seguimiento preservada */}
+
         {action !== "create" && (
           <SeguimientoSection
             view={view}
@@ -137,4 +195,5 @@ export const FormPage: React.FC<FormPageProps> = ({
     </AppLayout>
   );
 };
+
 export default FormPage;

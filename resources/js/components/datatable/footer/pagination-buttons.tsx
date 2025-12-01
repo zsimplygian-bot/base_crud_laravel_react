@@ -1,37 +1,57 @@
 // components/datatable/footer/pagination-buttons.tsx
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { usePaginationButtons } from "@/hooks/datatable/footer/use-pagination-buttons";
+import { useEffect } from "react"
+import { SmartButton } from "@/components/ui/smart-button"
+import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react"
+import { usePaginationButtons } from "@/hooks/datatable/footer/use-pagination-buttons"
+import { cn } from "@/lib/utils"
+const iconMap = {
+  first: ChevronsLeft,
+  previous: ChevronLeft,
+  next: ChevronRight,
+  last: ChevronsRight,
+}
+const tooltipMap = {
+  first: "Primera página",
+  previous: "Página anterior",
+  next: "Página siguiente",
+  last: "Última página",
+}
 export const PaginationButtons = ({
   totalRows,
   pageIndex,
   setPageIndex,
   pageSize,
   onTotalPages,
+}: {
+  totalRows: number
+  pageIndex: number
+  setPageIndex: (page: number) => void
+  pageSize: number
+  onTotalPages: (total: number) => void
 }) => {
-  const { totalPages, nav } = usePaginationButtons(
-    totalRows,
-    pageIndex,
-    setPageIndex,
-    pageSize
-  );
-  // FIX: NO setState during render
+  const { totalPages, buttons } = usePaginationButtons(
+    totalRows, pageIndex, setPageIndex, pageSize
+    )
   useEffect(() => {
-    onTotalPages(totalPages);
-  }, [totalPages]);
+    onTotalPages(totalPages)
+  }, [totalPages, onTotalPages])
   return (
     <div className="flex items-center gap-1">
-      {nav.map((n, i) => (
-        <Button
-          key={i}
-          variant="outline"
-          className="h-8 w-8 p-0 border border-input"
-          onClick={n.fn}
-          disabled={n.disabled}
-        >
-          {n.icon}
-        </Button>
-      ))}
+      {buttons.map((btn, i) => {
+        const Icon = iconMap[btn.type]
+        return (
+          <SmartButton
+            key={i}
+            icon={Icon}
+            tooltip={tooltipMap[btn.type]}
+            onClick={btn.goToPage}
+            className={cn(
+              "h-9 w-9", // Tu tamaño favorito: 36px circular
+              btn.disabled && "opacity-50 cursor-not-allowed"
+            )}
+          />
+        )
+      })}
     </div>
-  );
-};
+  )
+}
