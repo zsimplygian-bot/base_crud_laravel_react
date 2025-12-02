@@ -69,13 +69,7 @@ export function DataTableToolbar({
             hiddenFields={[]}
             isMobile={isMobile}
           />
-          <TableFiltersButtons
-            {...{
-              localFilterValues,
-              setFilterValues,
-              setPageIndex,
-            }}
-          />
+          <TableFiltersButtons {...{ localFilterValues, setFilterValues, setPageIndex, }} />
         </div>
       )}
     </div>

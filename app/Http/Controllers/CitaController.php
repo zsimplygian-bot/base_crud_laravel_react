@@ -59,6 +59,7 @@ class CitaController extends BaseController
                 'motivo'  => $item->motivo_cita,
                 'fecha'  => $item->fecha,
                 'hora'  => $item->hora,
+                'fecha_hora_notificacion'  => $item->fecha_hora_notificacion,
                 'id_estado_cita' => $item->id_estado_cita,
             ])
         );

@@ -1,29 +1,33 @@
 // components/datatable/footer/page-size-selector.tsx
-import { Button } from "@/components/ui/button";
-import DropdownMenuBase from "@/components/dropdown-menu-base";
-import { usePageSizeSelector } from "@/hooks/datatable/footer/use-page-size-selector";
-export const PageSizeSelector = ({
+import { memo, useMemo } from "react";
+import { SmartDropdown } from "@/components/smart-dropdown";
+interface Props {
+  pageSize: number;
+  setPageSize: (size: number) => void;
+  setPageIndex: (page: number) => void;
+}
+export const PageSizeSelector = memo(function PageSizeSelector({
   pageSize,
   setPageSize,
-  setPageIndex,
-}: {
-  pageSize: number;
-  setPageSize: (v: number) => void;
-  setPageIndex: (v: number) => void;
-}) => {
-  const { items } = usePageSizeSelector(pageSize, setPageSize, setPageIndex);
+  setPageIndex
+}: Props) {
+  const items = useMemo(() => {
+    const SIZES = [10, 20, 50, 100, 250, 500];
+    return SIZES.map((n) => ({
+      label: String(n),
+      action: () => {
+        setPageSize(n);
+        setPageIndex(0);
+      }
+    }));
+  }, [setPageSize, setPageIndex]);
   return (
     <div className="flex items-center gap-2">
-      <span>Filas:</span>
-      <DropdownMenuBase
-        trigger={
-          <Button variant="outline" size="sm">
-            {pageSize}
-          </Button>
-        }
+      <span className="text-sm opacity-70">Filas:</span>
+      <SmartDropdown
         items={items}
-        align="start"
+        triggerLabel={String(pageSize)}
       />
     </div>
   );
-};
+});

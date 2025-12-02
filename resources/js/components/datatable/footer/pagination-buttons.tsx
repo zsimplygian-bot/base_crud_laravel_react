@@ -1,6 +1,6 @@
 // components/datatable/footer/pagination-buttons.tsx
 import { useEffect } from "react"
-import { SmartButton } from "@/components/ui/smart-button"
+import { SmartButton } from "@/components/smart-button"
 import { ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight } from "lucide-react"
 import { usePaginationButtons } from "@/hooks/datatable/footer/use-pagination-buttons"
 import { cn } from "@/lib/utils"

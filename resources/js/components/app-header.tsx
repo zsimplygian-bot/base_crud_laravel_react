@@ -9,7 +9,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
     } from '@/components/ui/tooltip';
 import { UserMenuContent } from '@/components/user-menu-content';
-import DropdownMenuBase from '@/components/dropdown-menu-base';
+import DropdownMenuBase from '@/components/smart-dropdown';
 import { useInitials } from '@/hooks/use-initials';
 import { cn, isSameUrl, resolveUrl } from '@/lib/utils';
 import { dashboard } from '@/routes';

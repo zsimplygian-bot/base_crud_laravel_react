@@ -1,6 +1,5 @@
-import { HTMLAttributes } from "react";
-import { Button } from "@/components/ui/button";
-import DropdownMenuBase, { DItem } from "@/components/dropdown-menu-base";
+import { HTMLAttributes, useMemo } from "react";
+import { SmartDropdown, SDItem } from "@/components/smart-dropdown";
 import { useAppearance } from "@/hooks/use-appearance";
 import { Monitor, Moon, Sun } from "lucide-react";
 export default function AppearanceToggleDropdown({
@@ -8,31 +7,24 @@ export default function AppearanceToggleDropdown({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   const { appearance, updateAppearance } = useAppearance();
-  const iconCurrent =
-    appearance === "dark" ? (
-      <Moon className="h-5 w-5" />
-    ) : appearance === "light" ? (
-      <Sun className="h-5 w-5" />
-    ) : (
-      <Monitor className="h-5 w-5" />
-    );
-  const items: DItem[] = [
-    { label: "Claro", icon: Sun, action: () => updateAppearance("light"), },
-    { label: "Oscuro", icon: Moon, action: () => updateAppearance("dark"), },
-    { label: "Sistema", icon: Monitor, action: () => updateAppearance("system"), },
-  ];
+  const CurrentIcon = useMemo(() => {
+    return appearance === "dark"
+      ? Moon
+      : appearance === "light"
+      ? Sun
+      : Monitor;
+  }, [appearance]);
+  const items: SDItem[] = useMemo(
+    () => [
+      { label: "Claro", icon: Sun, action: () => updateAppearance("light") },
+      { label: "Oscuro", icon: Moon, action: () => updateAppearance("dark") },
+      { label: "Sistema", icon: Monitor, action: () => updateAppearance("system") },
+    ],
+    [updateAppearance]
+  );
   return (
     <div className={className} {...props}>
-      <DropdownMenuBase
-        trigger={
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-md">
-            {iconCurrent}
-            <span className="sr-only">Toggle theme</span>
-          </Button>
-        }
-        items={items}
-        align="end"
-      />
+      <SmartDropdown label="Cambiar tema" triggerIcon={CurrentIcon} triggerVariant="ghost" items={items} />
     </div>
   );
 }

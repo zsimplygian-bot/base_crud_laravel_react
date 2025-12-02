@@ -1,24 +1,21 @@
-import { memo } from "react";
-import { Button } from "@/components/ui/button";
-import { CopyIcon, EyeIcon, EditIcon, TrashIcon, FileTextIcon } from "lucide-react";
-import DropdownMenuBase from "@/components/dropdown-menu-base";
+import { memo } from "react"
+import { CopyIcon, EyeIcon, EditIcon, TrashIcon, FileTextIcon, MoreVertical } from "lucide-react"
+import { SmartDropdown } from "@/components/smart-dropdown"
 export const ActionButtons = memo(function ActionButtons({
   row_id,
   view,
 }: {
-  row_id: string;
-  view: string;
+  row_id: string
+  view: string
 }) {
-  const base = `/${view}/form`;
-  const allowPrint = view === "historia_clinica";
+  const base = `/${view}/form`
+  const allowPrint = view === "historia_clinica"
   return (
-    <DropdownMenuBase
+    <SmartDropdown
       label="Acciones"
-      trigger={
-        <Button variant="ghost" size="sm" aria-label="Acciones">
-          …
-        </Button>
-      }
+      triggerIcon={MoreVertical}
+      triggerVariant="ghost"
+      triggerClassName="text-muted-foreground"
       items={[
         { label: "Copiar ID", icon: CopyIcon, action: () => navigator.clipboard.writeText(row_id) },
         { label: "Detalle", href: `${base}/info/${row_id}`, icon: EyeIcon, color: "text-blue-600" },
@@ -29,5 +26,5 @@ export const ActionButtons = memo(function ActionButtons({
           : []),
       ]}
     />
-  );
-});
+  )
+})

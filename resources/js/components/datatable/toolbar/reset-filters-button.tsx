@@ -5,13 +5,12 @@ export function ResetFiltersButton(props) {
   const { canReset, reset } = useResetFilters(props);
   return (
     <Button
-      size="sm"
       variant="outline"
       onClick={reset}
-      className="gap-1 text-sm"
+      className="w-9 px-0 rounded-full"
       disabled={!canReset}
     >
-      <RotateCcwIcon className="w-4 h-4 opacity-80" />
+      <RotateCcwIcon className="w-4 h-4 opacity-80"/>
     </Button>
   );
 }

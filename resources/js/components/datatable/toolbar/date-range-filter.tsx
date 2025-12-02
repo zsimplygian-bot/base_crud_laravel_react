@@ -14,13 +14,19 @@ export function DateRangeFilter({ dateRange, setDateRange, onApply }: DateRangeF
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <CalendarIcon className="w-3 h-3" />
-          <span>{formatted}</span>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent align="start" className="p-0 w-auto">
-        <div className="w-[250px]">
+  <Button
+    variant="outline"
+    className={`
+      rounded-full
+      ${formatted ? "" : "w-9 px-0"}
+    `}
+  >
+    <CalendarIcon className="w-4 h-4 mx-auto" />
+    {formatted && <span>{formatted}</span>}
+  </Button>
+</PopoverTrigger>
+
+      <PopoverContent className="p-0 w-auto">
           <Calendar
             mode="range"
             selected={dateRange}
@@ -30,7 +36,6 @@ export function DateRangeFilter({ dateRange, setDateRange, onApply }: DateRangeF
             }}
             locale={es}
           />
-        </div>
       </PopoverContent>
     </Popover>
   );

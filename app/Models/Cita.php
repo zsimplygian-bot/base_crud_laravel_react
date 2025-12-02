@@ -113,6 +113,7 @@ class Cita extends BaseModel
                 "$t3.cliente",
                 "$t4.motivo_cita",
                 "$t1.id_estado_cita",
+                "$t1.fecha_hora_notificacion",
                 "$t1.fecha",
                 "$t1.hora",
                 DB::raw("CONCAT($t1.fecha, 'T', $t1.hora) as start")
