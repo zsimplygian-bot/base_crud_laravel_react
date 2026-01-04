@@ -1,103 +1,121 @@
-// components/ui/smart-button.tsx
-import { forwardRef } from "react"
-import { cn } from "@/lib/utils"
-import { Link } from "@inertiajs/react"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
-import type { LucideIcon } from "lucide-react"
+import { forwardRef, useState } from "react";
+import { cn } from "@/lib/utils";
+import { Link } from "@inertiajs/react";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Loader2 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
-const KEY = "lp"
+const KEY = "lp";
 
 type Props = {
-  to?: string
-  back?: boolean
-  save?: boolean
-  icon?: LucideIcon
-  label?: React.ReactNode
-  tooltip?: string
-  children?: React.ReactNode
-  className?: string
-  variant?: "default" | "outline" | "ghost" | "secondary" | "destructive"
-  onClick?: () => void
-}
+  to?: string;
+  back?: boolean;
+  save?: boolean;
+  icon?: LucideIcon;
+  iconPosition?: "left" | "right"; // default: left
+  label?: React.ReactNode;
+  loadingLabel?: React.ReactNode;
+  tooltip?: string;
+  children?: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties; // ← NUEVO (custom styles)
+  variant?: "default" | "outline" | "ghost" | "secondary" | "destructive";
+  disabled?: boolean;
+  onClick?: () => void | Promise<void>;
+};
 
-export const SmartButton = forwardRef<HTMLButtonElement, Props>(
-  (
-    {
-      to,
-      back,
-      save,
-      icon: Icon,
-      label,
-      tooltip,
-      children,
-      className,
-      onClick,
-      variant = "outline",
-    },
-    ref
-  ) => {
+export const SmartButton = forwardRef<HTMLButtonElement, Props>((
+  {
+    to,
+    back,
+    save,
+    icon: Icon,
+    iconPosition = "left",
+    label,
+    loadingLabel,
+    tooltip,
+    children,
+    className,
+    style, // ← aquí
+    onClick,
+    variant = "default",
+    disabled = false,
+  },
+  ref
+) => {
+  const [loading, setLoading] = useState(false);
 
-    const href = back
-      ? (typeof window !== "undefined" ? localStorage.getItem(KEY) || "/" : "/")
-      : to
+  const href = back
+    ? typeof window !== "undefined"
+      ? localStorage.getItem(KEY) || "/"
+      : "/"
+    : to;
 
-    const handleClick = () => {
-      if (save) {
-        localStorage.setItem(KEY, location.pathname + location.search)
+  const handleClick = async () => {
+    if (disabled || loading || !onClick) return;
+    if (save) localStorage.setItem(KEY, location.pathname + location.search);
+    try {
+      const result = onClick();
+      if (result instanceof Promise) {
+        setLoading(true);
+        await result;
       }
-      onClick?.()
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Detecta si habrá texto visible (label o children)
-    const hasLabel =
-      (label && String(label).trim()) ||
-      (children && String(children).trim())
+  const hasLabel = !!(label || loadingLabel || (children && String(children).trim()));
 
-    // Si tiene label y el dev NO pasó variant explícitamente, se usa "default"
-    const computedVariant =
-      hasLabel && variant === "outline" ? "default" : variant
+  const iconNode = loading
+    ? <Loader2 className="size-4 animate-spin" />
+    : Icon && <Icon className="size-4" />;
 
-    const inner = (
-      <>
-        {Icon && <Icon className="size-4" />}
-        {label && <span>{label}</span>}
-        {!label && hasLabel && <span>{children}</span>}
-      </>
-    )
+  const textNode =
+    (label || children || loadingLabel) && (
+      <span>
+        {loading ? loadingLabel ?? label ?? children : label ?? children}
+      </span>
+    );
 
-    const button = (
-      <Button
-        ref={ref}
-        variant={computedVariant}
-        size=""
-        className={cn(
-          hasLabel ? "px-3" : "w-9 px-0",
-          "rounded-full flex items-center gap-2",
-          className
-        )}
-        asChild={!!href}
-        onClick={handleClick}
-      >
-        {href ? (
-          <Link href={href}>{inner}</Link>
-        ) : (
-          inner
-        )}
-      </Button>
-    )
+  const inner = (
+    <>
+      {iconPosition === "left" && iconNode}
+      {textNode}
+      {iconPosition === "right" && iconNode}
+    </>
+  );
 
-    if (!tooltip) return button
+  const button = (
+    <Button
+      ref={ref}
+      variant={variant}
+      size=""
+      asChild={!!href}
+      disabled={disabled || loading}
+      onClick={handleClick}
+      style={style} // ← aplicado aquí
+      className={cn(
+        hasLabel ? "px-3" : "w-9 px-0",
+        "rounded-full flex items-center gap-2",
+        className
+      )}
+    >
+      {href ? <Link href={href}>{inner}</Link> : inner}
+    </Button>
+  );
 
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{button}</TooltipTrigger>
-        <TooltipContent side="top">
-          <p>{tooltip}</p>
-        </TooltipContent>
-      </Tooltip>
-    )
-  }
-)
+  if (!tooltip) return button;
 
-SmartButton.displayName = "SmartButton"
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent side="top">
+        <p>{tooltip}</p>
+      </TooltipContent>
+    </Tooltip>
+  );
+});
+
+SmartButton.displayName = "SmartButton";

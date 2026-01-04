@@ -1,112 +1,63 @@
-import { Head, router } from "@inertiajs/react";
-import AppLayout from "@/layouts/app-layout";
-import SettingsLayout from "@/layouts/settings/layout";
-import HeadingSmall from "@/components/heading-small";
-import { type BreadcrumbItem } from "@/types";
-import { Button } from "@/components/ui/button";
-import * as LucideIcons from "lucide-react";
-import { Loader2, Upload } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useState } from "react";
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    title: "Opciones de base de datos",
-    href: "/settings/database",
-  },
-];
-
+import { Head, router } from "@inertiajs/react"
+import AppLayout from "@/layouts/app-layout"
+import SettingsLayout from "@/layouts/settings/layout"
+import HeadingSmall from "@/components/heading-small"
+import { SmartButton } from "@/components/smart-button"
+import { Database, Upload } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useState } from "react"
 export default function DatabaseSettings() {
-  const DatabaseIcon = LucideIcons.Database;
-
-  const [loadingExport, setLoadingExport] = useState(false);
-  const [loadingImport, setLoadingImport] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  const [file, setFile] = useState<File | null>(null);
-
-  const handleExport = () => {
-    setLoadingExport(true);
-
-    window.location.href = route("export.db");
-
-    setTimeout(() => {
-      setLoadingExport(false);
-      setDialogOpen(true);
-    }, 2000);
-  };
-
-  const handleImport = () => {
-    if (!file) return;
-
-    setLoadingImport(true);
-
-    const formData = new FormData();
-    formData.append("backup", file);
-
-    router.post(route("import.db"), formData, {
-      onFinish: () => {
-        setLoadingImport(false);
-        setDialogOpen(true);
-      },
-    });
-  };
-
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [file, setFile] = useState<File | null>(null)
+  /** EXPORTAR */
+  const handleExport = async () => {
+    // pequeño delay para que se vea el loader
+    await new Promise((r) => setTimeout(r, 300))
+    window.open(route("export.db"), "_self")
+  }
+  /** IMPORTAR */
+  const handleImport = async () => {
+    if (!file) return
+    const formData = new FormData()
+    formData.append("backup", file)
+    await router.post(route("import.db"), formData)
+    setDialogOpen(true)
+  }
   return (
-    <AppLayout breadcrumbs={breadcrumbs}>
+    <AppLayout>
       <Head title="Base de Datos" />
-
       <SettingsLayout>
         <div className="space-y-6">
-          <HeadingSmall title="Base de datos" description="Exportar o importar" />
-
+          <HeadingSmall
+            title="Base de datos"
+            description="Exportar o importar información"
+          />
           {/* EXPORTAR */}
-          <div className="flex justify-start">
-            <Button
-              variant="default"
-              size="sm"
-              className="flex items-center gap-2"
-              onClick={handleExport}
-              disabled={loadingExport}
-            >
-              {loadingExport ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <DatabaseIcon className="w-4 h-4" />
-              )}
-
-              {loadingExport ? "Exportando..." : "Exportar Base de Datos"}
-            </Button>
-          </div>
-
+          <SmartButton
+            icon={Database}
+            label="Exportar Base de Datos"
+            loadingLabel="Exportando..."
+            onClick={handleExport}
+          />
           {/* IMPORTAR */}
-          <div className="flex items-center gap-3 mt-6">
+          <div className="flex items-center gap-3 mt-2">
             <input
               type="file"
               accept=".sql,.txt"
-              className="border rounded p-2 text-sm"
+              className="rounded border p-2 text-sm"
               onChange={(e) => setFile(e.target.files?.[0] || null)}
             />
-
-            <Button
+            <SmartButton
+              icon={Upload}
+              label="Importar Base de Datos"
+              loadingLabel="Importando..."
               variant="secondary"
-              size="sm"
-              className="flex items-center gap-2"
+              disabled={!file}
               onClick={handleImport}
-              disabled={loadingImport || !file}
-            >
-              {loadingImport ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Upload className="w-4 h-4" />
-              )}
-              {loadingImport ? "Importando..." : "Importar Base de Datos"}
-            </Button>
+            />
           </div>
         </div>
       </SettingsLayout>
-
-      {/* DIALOG */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -116,5 +67,5 @@ export default function DatabaseSettings() {
         </DialogContent>
       </Dialog>
     </AppLayout>
-  );
+  )
 }

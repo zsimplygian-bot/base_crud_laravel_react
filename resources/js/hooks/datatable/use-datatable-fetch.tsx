@@ -1,118 +1,63 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
-interface DateRange {
-  from?: Date | string | null;
-  to?: Date | string | null;
-}
-export interface FetchOptions {
+import { useMemo, useCallback } from "react";
+import { useApi } from "@/hooks/use-api";
+
+interface UseDataTableFetchProps {
   view: string;
   pageIndex: number;
   pageSize: number;
   sortBy: string | null;
   sortOrder: "asc" | "desc";
-  dateRange?: DateRange;
-  selectedColumn: string | null;
-  searchTerm: string | null;
-  filterValues?: Record<string, any>;
+  dateRange: Record<string, any>;
+  filters?: Record<string, string>;
   isRestored: boolean;
-  resetTrigger?: number;
 }
+
 export const useDataTableFetch = ({
-  view,
-  pageIndex,
-  pageSize,
-  sortBy,
-  sortOrder,
-  dateRange,
-  selectedColumn,
-  searchTerm = "",
-  filterValues = {},
-  isRestored,
-  resetTrigger = 0,
-}: FetchOptions) => {
-  const [data, setData] = useState<any[]>([]);
-  const [columns, setColumns] = useState<any[]>([]);
-  const [totalRows, setTotalRows] = useState(0);
-  const [loading, setLoading] = useState(false);
-  // Normalizar fechas únicamente para el backend
-  const normalizedDateRange = useMemo(() => {
-    const normalize = (v?: Date | string | null) => {
-      if (!v) return undefined;
-      const d = v instanceof Date ? v : new Date(v);
-      return isNaN(d.getTime()) ? undefined : d.toISOString().split("T")[0];
+  view, pageIndex, pageSize, sortBy, sortOrder,
+  dateRange, filters = {}, isRestored,
+}: UseDataTableFetchProps) => {
+
+  const params = useMemo(() => {
+    if (!isRestored) return null;
+
+    const p: Record<string, any> = {
+      view,
+      page: pageIndex + 1,
+      limit: pageSize,
+      sortBy: sortBy ?? "id",
+      sortOrder: sortOrder ?? "desc",
     };
-    return {
-      from: normalize(dateRange?.from),
-      to: normalize(dateRange?.to),
-    };
-  }, [dateRange?.from, dateRange?.to]);
-  // Clave estable de filtros para evitar loops infinitos
-  const filterValuesKey = useMemo(() => {
-    return JSON.stringify(
-      Object.entries(filterValues)
-        .filter(([, v]) => v !== undefined && v !== null && v !== "")
-        .sort(([a], [b]) => a.localeCompare(b))
-    );
-  }, [filterValues]);
-  const fetchData = useCallback(async () => {
-    if (!isRestored) return;
-    setLoading(true);
-    const params = new URLSearchParams();
-    params.set("view", view);
-    params.set("page", String(pageIndex + 1));
-    params.set("limit", String(pageSize));
-    params.set("sortBy", sortBy || "id");
-    params.set("sortOrder", sortOrder);
-    if (selectedColumn && searchTerm.trim()) {
-      params.set("column", selectedColumn);
-      params.set("search", searchTerm.trim());
-    }
-    if (normalizedDateRange.from) params.set("from", normalizedDateRange.from);
-    if (normalizedDateRange.to) params.set("to", normalizedDateRange.to);
-    // Filtros
-    Object.entries(filterValues).forEach(([key, value]) => {
-      if (value === undefined || value === null || value === "") return;
-      params.set(key, String(value));
+
+    if (dateRange?.from) p.from = dateRange.from;
+    if (dateRange?.to) p.to = dateRange.to;
+
+    // Aquí aplicamos los filtros persistentes
+    Object.entries(filters).forEach(([k, v]) => {
+      if (v !== "" && v != null) {
+        p[`filters[${k}]`] = v;
+      }
     });
-    const url = `/api/index?${params.toString()}`;
-    console.log("[FETCH]", url);
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Fetch failed");
-      const result = await res.json();
-      // NO normalizamos columnas
-      setData(result.data ?? []);
-      setColumns(result.columns ?? []);
-      setTotalRows(result.params?.total ?? result.total ?? 0);
-    } catch (err) {
-      console.error("[useDataTableFetch] Error:", err);
-      setData([]);
-      setColumns([]);
-      setTotalRows(0);
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    isRestored,
-    view,
-    pageIndex,
-    pageSize,
-    sortBy,
-    sortOrder,
-    selectedColumn,
-    searchTerm,
-    normalizedDateRange.from,
-    normalizedDateRange.to,
-    filterValuesKey,
-    resetTrigger,
-  ]);
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    return p;
+  }, [isRestored, view, pageIndex, pageSize, sortBy, sortOrder, dateRange?.from, dateRange?.to, filters]);
+  const { data, loading, error, refetch } = useApi("/api/index", {
+    autoFetch: false,
+    params,
+    transform: res => ({
+      data: res.data ?? [],
+      columns: res.columns ?? [],
+      total: res.params?.total ?? 0,
+    }),
+  });
+  const fetchData = useCallback(() => {
+    if (!params) return;
+    refetch(params);
+  }, [params, refetch]);
   return {
-    data,
-    columns,
-    totalRows,
+    data: data?.data ?? [],
+    columns: data?.columns ?? [],
+    totalRows: data?.total ?? 0,
     loading,
-    refetch: fetchData,
+    error,
+    fetchData,
   };
 };

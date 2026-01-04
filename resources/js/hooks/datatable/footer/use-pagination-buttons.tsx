@@ -1,37 +1,36 @@
-// hooks/datatable/footer/use-pagination-buttons.ts
-export type PaginationButton = {
-  type: "first" | "previous" | "next" | "last"
-  disabled: boolean
-  goToPage: () => void
-}
 export function usePaginationButtons(
   totalRows: number,
   pageIndex: number,
   setPageIndex: (page: number) => void,
   pageSize: number
 ) {
-  const totalPages = Math.max(1, Math.ceil(totalRows / pageSize))
-  const buttons: PaginationButton[] = [
+  const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+  const lastPage = totalPages - 1;
+  const safeSetPage = (page: number) => {
+    if (page < 0 || page > lastPage) return;
+    setPageIndex(page);
+  };
+  const buttons = [
     {
       type: "first",
       disabled: pageIndex === 0,
-      goToPage: () => setPageIndex(0),
+      goToPage: () => safeSetPage(0),
     },
     {
       type: "previous",
       disabled: pageIndex === 0,
-      goToPage: () => setPageIndex(p => Math.max(0, p - 1)),
+      goToPage: () => safeSetPage(pageIndex - 1),
     },
     {
       type: "next",
-      disabled: pageIndex >= totalPages - 1,
-      goToPage: () => setPageIndex(p => Math.min(totalPages - 1, p + 1)),
+      disabled: pageIndex >= lastPage,
+      goToPage: () => safeSetPage(pageIndex + 1),
     },
     {
       type: "last",
-      disabled: pageIndex >= totalPages - 1,
-      goToPage: () => setPageIndex(totalPages - 1),
+      disabled: pageIndex >= lastPage,
+      goToPage: () => safeSetPage(lastPage),
     },
-  ]
-  return { totalPages, buttons }
+  ];
+  return { totalPages, buttons };
 }

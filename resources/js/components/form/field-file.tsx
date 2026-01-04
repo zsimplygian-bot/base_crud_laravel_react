@@ -6,7 +6,7 @@ export const FieldFile = ({ id, value, setData, disabled, view }: any) => {
 
   useEffect(() => {
     const fieldName = id.replace("field-", "");
-    if (fieldName.toLowerCase().includes("imagen") && typeof value === "string" && value) {
+    if (fieldName.toLowerCase().includes("archivo") && typeof value === "string" && value) {
       const url = value.startsWith("http")
         ? value
         : `${window.location.origin}/images/${view}/${value}`;

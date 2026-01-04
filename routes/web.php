@@ -19,6 +19,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 $resourcesWithForms = [ // Recursos principales con formularios
     'cliente'           => C\ClienteController::class,
+    'user'           => C\UserController::class,
     'mascota'           => C\MascotaController::class,
     'cita'              => C\CitaController::class,
     'historia_clinica'  => C\HistoriaClinicaController::class,

@@ -1,56 +1,83 @@
-// js/hooks/use-api.ts
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import axios, { AxiosRequestConfig } from "axios";
+
 interface UseApiOptions extends AxiosRequestConfig {
   autoFetch?: boolean;
   interval?: number;
   initialData?: any;
-  transform?: (data: any) => any;  
+  transform?: (data: any) => any;
 }
-export function useApi<T = any>(url: string, options: UseApiOptions = {}) {
+
+export function useApi<T = any>(url?: string, options: UseApiOptions = {}) {
   const {
     autoFetch = true,
-    interval = null,              
+    interval = null,
     initialData = null,
     transform,
+    params: externalParams,
     ...axiosOptions
   } = options;
-  const [data, setData] = useState<T>(initialData);
-  const [loading, setLoading] = useState(autoFetch);
-  const [error, setError] = useState<string | null>(null);
-  const controllerRef = useRef<AbortController | null>(null);
-  const stableAxiosOptions = useMemo(() => axiosOptions, []);
-  const fetchApi = useCallback(async () => {
-    controllerRef.current?.abort();
-    controllerRef.current = new AbortController();
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await axios({
-        url,
-        signal: controllerRef.current.signal,
-        ...stableAxiosOptions,
-      });
-      const result = transform ? transform(res.data) : res.data;
-      setData(result);
-      return result;
-    } catch (err: any) {
-      if (err.name === "CanceledError") return;
-      setError(err.message || "Error");
-    } finally {
-      setLoading(false);
-    }
-  }, [url, stableAxiosOptions, transform]);
-  useEffect(() => {
-    if (autoFetch) fetchApi();
-    return () => controllerRef.current?.abort();
-  }, [fetchApi, autoFetch]);
-  // Interval SIEMPRE existe (por defecto 10s), pero puedes desactivarlo pasando interval = null
-  useEffect(() => {
-    if (!interval) return;              
-    const id = setInterval(fetchApi, interval);
-    return () => clearInterval(id);
-  }, [interval, fetchApi]);
 
-  return { data, loading, error, refetch: fetchApi };
+  const [data, setData] = useState<T | null>(initialData);
+  const [loading, setLoading] = useState(autoFetch && !!url);
+  const [error, setError] = useState<any>(null);
+
+  const controllerRef = useRef<AbortController | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  // fetchApi NO depende de params → identidad estable siempre
+  const fetchApi = useCallback(
+    async (overrideParams?: Record<string, any>) => {
+      if (!url) return;
+
+      controllerRef.current?.abort();
+      controllerRef.current = new AbortController();
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await axios({
+          url,
+          signal: controllerRef.current.signal,
+          params: overrideParams ?? externalParams,
+          ...axiosOptions,
+        });
+
+        const transformed = transform ? transform(response.data) : response.data;
+        setData(transformed);
+        return transformed;
+      } catch (err: any) {
+        if (err.name === "CanceledError") return;
+        setError(err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    // Dependencias completamente estables
+    [url, transform, axiosOptions, externalParams] // externalParams sí debe estar aquí
+  );
+
+  // Solo ejecuta autoFetch inicial o por intervalo
+  useEffect(() => {
+    if (!autoFetch || !url) return;
+
+    fetchApi();
+
+    if (interval) {
+      intervalRef.current = setInterval(() => fetchApi(), interval);
+    }
+
+    return () => {
+      controllerRef.current?.abort();
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [autoFetch, url, interval, fetchApi]);
+
+  return {
+    data,
+    loading,
+    error,
+    refetch: fetchApi, // Identidad estable
+  };
 }

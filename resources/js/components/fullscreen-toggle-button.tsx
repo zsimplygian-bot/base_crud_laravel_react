@@ -1,37 +1,25 @@
-import { useEffect, useState, useCallback } from "react";
-import { ExpandIcon, MinimizeIcon } from "lucide-react";
+import { useEffect, useState, useCallback } from "react"
+import { ExpandIcon, MinimizeIcon } from "lucide-react"
+import { SmartButton } from "@/components/smart-button"
 export function FullscreenToggleButton() {
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  // Detecta estado inicial y cambios
+  const [isFullscreen, setIsFullscreen] = useState(false) // Estado que indica si estamos en pantalla completa
   useEffect(() => {
-    const syncState = () => {
-      setIsFullscreen(Boolean(document.fullscreenElement));
-    };
-    syncState(); // estado inicial
-    document.addEventListener("fullscreenchange", syncState);
-    return () => {
-      document.removeEventListener("fullscreenchange", syncState);
-    };
-  }, []);
-  // Función estable para evitar re-renders
-  const toggleFullscreen = useCallback(async () => {
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-    } else {
-      await document.documentElement.requestFullscreen();
+    const syncState = () => { 
+      setIsFullscreen(Boolean(document.fullscreenElement)) // Actualiza el estado según si hay un elemento en fullscreen
     }
-  }, []);
+    syncState() // Inicializa el estado al montar el componente
+    document.addEventListener("fullscreenchange", syncState) // Escucha cambios de fullscreen globales
+    return () => document.removeEventListener("fullscreenchange", syncState) // Limpia el listener al desmontar
+  }, []) // [] asegura que se ejecute solo al montar/desmontar
+  const toggleFullscreen = useCallback(async () => {
+    if (document.fullscreenElement) await document.exitFullscreen() // Sale de pantalla completa si hay un elemento
+    else await document.documentElement.requestFullscreen() // Entra en pantalla completa si no hay ninguno
+  }, []) // [] asegura que la función no se recree entre renders
   return (
-    <button
-      onClick={toggleFullscreen}
-      className="p-2 rounded hover:bg-accent transition-colors"
-      title={isFullscreen ? "Salir de Pantalla Completa" : "Pantalla Completa"}
-    >
-      {isFullscreen ? (
-        <MinimizeIcon className="h-5 w-5" />
-      ) : (
-        <ExpandIcon className="h-5 w-5" />
-      )}
-    </button>
-  );
+    <SmartButton
+      icon={isFullscreen ? MinimizeIcon : ExpandIcon} // Ícono que cambia según el estado de fullscreen
+      tooltip={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"} // Tooltip dinámico según estado
+      variant="ghost" onClick={toggleFullscreen} 
+    />
+  )
 }

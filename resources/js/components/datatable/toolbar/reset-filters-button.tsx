@@ -1,16 +1,25 @@
-import { Button } from "@/components/ui/button";
 import { RotateCcwIcon } from "lucide-react";
-import { useResetFilters } from "@/hooks/datatable/toolbar/use-reset-filters";
-export function ResetFiltersButton(props) {
-  const { canReset, reset } = useResetFilters(props);
+import { SmartButton } from "@/components/smart-button";
+interface ResetFiltersButtonProps {
+  filterValues?: Record<string, any>;
+  columnVisibility?: Record<string, boolean>;
+  dateRange?: { from?: string; to?: string };
+  sortBy?: string | null;
+  handleResetAll: () => void;
+}
+export function ResetFiltersButton({
+  filterValues = {},
+  columnVisibility = {},
+  dateRange,
+  sortBy,
+  handleResetAll
+}: ResetFiltersButtonProps) {
+  const canReset =
+    !!(dateRange?.from || dateRange?.to) ||                // Rango de fechas
+    Object.values(filterValues).some(v => v) ||             // Filtros extra
+    Object.keys(columnVisibility).length > 0 ||             // Visibilidad alterada
+    !!sortBy;                                              // Ordenamiento activo
   return (
-    <Button
-      variant="outline"
-      onClick={reset}
-      className="w-9 px-0 rounded-full"
-      disabled={!canReset}
-    >
-      <RotateCcwIcon className="w-4 h-4 opacity-80"/>
-    </Button>
+    <SmartButton {...{ onClick: handleResetAll, icon: RotateCcwIcon, disabled: !canReset, tooltip: "Restablecer filtros" }} />
   );
 }

@@ -1,4 +1,14 @@
 import { DataTableLayout } from "@/layouts/datatable-layout";
-export default function DatatablePage(props: any) {
-  return <DataTableLayout {...props} />;
+const view = "cliente";
+const title = "Cliente";
+const formFields = {
+  fields: [
+    { id: "cliente", label: "Cliente", required: true },
+    { id: "email", label: "Email" },
+    { id: "telefono", label: "Teléfono" },
+  ],
+};
+const searchFields = formFields.fields.map(f => ({ ...f }));
+export default function DatatablePage() {
+  return <DataTableLayout {...{ view, title, formFields, searchFields }} />;
 }

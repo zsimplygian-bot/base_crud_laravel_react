@@ -2,83 +2,63 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
-class Cita extends BaseModel
-{
+
+class Cita extends BaseModel {
     use HasFactory;
+
     protected $table = 'cita';
-    public static string $title = 'Citas';
-    protected static $simpleFormFieldDefinitions = [
-        ['id_mascota', 'MASCOTA - DUEÑO', 'select', 'required'],
-        ['fecha', 'FECHA', 'date', 1, 'required'],
-        ['hora', 'HORA', 'time', 1, 'required'],
-        ['id_motivo_cita', 'MOTIVO CITA', 'select', 'required'],
-        ['observaciones', 'OBSERVACIONES', 'textarea'],
-        ['id_estado_cita', 'ESTADO CITA', 'select'],
-    ];
-    // Sobrescribimos el hook para acción create
-    protected static function adjustFieldForAction(array $fieldDef, string $fieldName, ?string $action): array
-    {
-        if ($fieldName === 'id_estado_cita' && $action === 'create') {
-            $fieldDef['type'] = 'hidden';
-            $fieldDef['value'] = 1;
-        }
-        return $fieldDef;
-    }
+
     protected static $validationRules = [
-        'id_mascota'       => 'required|integer',
-        'fecha'            => 'required|date',
-        'hora'             => 'required',
-        'id_motivo_cita'   => 'required|integer',
-        'observaciones'    => 'nullable|string',
-        'id_estado_cita'   => 'required|integer',
+        'id_mascota'     => 'required|integer',
+        'fecha'          => 'required|date',
+        'hora'           => 'required',
+        'id_motivo_cita' => 'required|integer',
+        'observaciones'  => 'nullable|string',
+        'id_estado_cita' => 'required|integer',
     ];
-    protected static $simpleToolbarFieldDefinitions = [
-        ['id_mascota', 'MASCOTA - DUEÑO', 'select'],
-        ['id_motivo_cita', 'MOTIVO CITA', 'select'],
-        ['id_estado_cita', 'ESTADO CITA', 'select'],
+
+    protected static $tableColumns = [
+        ['ID', 'id'],
+        ['MASCOTA - DUEÑO', 'mascota'],
+        ['FECHA', 'fecha'],
+        ['HORA', 'hora'],
+        ['MOTIVO', 'motivo_cita'],
+        ['ESTADO', 'estado_cita'],
+        ['FECHA REGISTRO', 'created_at'],
     ];
-    public static array $allowedFilters = ['id_mascota', 'id_motivo_cita', 'id_estado_cita'];
-    public static function getQuery()
-    {
-        $t1 = (new self)->getTable();
+
+    public static function getQuery(): array {
+        $t1 = (new self)->getTable(); // cita
         $t2 = 'mascota';
         $t3 = 'estado_cita';
         $t4 = 'motivo_cita';
         $t5 = 'cliente';
-        $query = DB::table($t1)
-            ->leftJoin($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
-            ->leftJoin($t3, "$t1.id_$t3", '=', "$t3.id_$t3")
-            ->leftJoin($t4, "$t1.id_$t4", '=', "$t4.id_$t4")
-            ->leftJoin($t5, "$t2.id_$t5", '=', "$t5.id_$t5")
-            ->select([
-                "$t1.id_$t1 as id",
-                "$t2.mascota",
-                "$t5.cliente",
-                "$t1.fecha",
-                "$t1.hora",
-                "$t4.motivo_cita",
-                "$t3.estado_cita as estado",
-                "$t1.created_at",
-            ]);
-        return ['query' => $query, 'alias' => $t1];
+
+        return [
+            'alias' => $t1,
+            'query' => DB::table($t1)
+                ->leftJoin($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
+                ->leftJoin($t3, "$t1.id_$t3", '=', "$t3.id_$t3")
+                ->leftJoin($t4, "$t1.id_$t4", '=', "$t4.id_$t4")
+                ->leftJoin($t5, "$t2.id_$t5", '=', "$t5.id_$t5")
+                ->select([
+                    "$t1.id_$t1 as id",
+                    DB::raw("CONCAT($t2.mascota,' - ',$t5.cliente) as mascota"),
+                    "$t1.fecha",
+                    "$t1.hora",
+                    "$t4.motivo_cita",
+                    "$t3.estado_cita",
+                    "$t1.created_at",
+                ])
+        ];
     }
-    protected static $tableColumns = [
-        ['ID', 'id'],
-        ['MASCOTA', 'mascota'],
-        ['DUEÑO', 'cliente'],
-        ['FECHA', 'fecha'],
-        ['HORA', 'hora'],
-        ['MOTIVO', 'motivo_cita'],
-        ['ESTADO', 'estado'],
-        ['FECHA REGISTRO', 'created_at'],
-    ];
-    public static function proximas()
-    {
-        $t1 = (new self)->getTable();
+
+    public static function proximas() {
+        $t1 = (new self)->getTable(); // cita
         $t2 = 'mascota';
         $t3 = 'cliente';
         $t4 = 'motivo_cita';
+
         return DB::table($t1)
             ->join($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
             ->join($t3, "$t2.id_$t3", '=', "$t3.id_$t3")
@@ -91,18 +71,19 @@ class Cita extends BaseModel
                 "$t1.fecha",
                 "$t1.hora",
             ])
-            ->where("$t1.id_estado_cita", 1)
+            ->where("$t1.id_estado_cita", 1) // Pendientes
             ->whereRaw("$t1.fecha >= CURDATE()")
-            ->orderByRaw("$t1.fecha ASC")
-            ->orderByRaw("$t1.hora ASC")
+            ->orderBy("$t1.fecha")
+            ->orderBy("$t1.hora")
             ->get();
     }
-    public static function eventosEntreFechas(string $start, string $end)
-    {
-        $t1 = (new self)->getTable();
+
+    public static function eventosEntreFechas(string $start, string $end) {
+        $t1 = (new self)->getTable(); // cita
         $t2 = 'mascota';
         $t3 = 'cliente';
         $t4 = 'motivo_cita';
+
         return DB::table($t1)
             ->join($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
             ->join($t3, "$t2.id_$t3", '=', "$t3.id_$t3")
@@ -116,7 +97,7 @@ class Cita extends BaseModel
                 "$t1.fecha_hora_notificacion",
                 "$t1.fecha",
                 "$t1.hora",
-                DB::raw("CONCAT($t1.fecha, 'T', $t1.hora) as start")
+                DB::raw("CONCAT($t1.fecha,'T',$t1.hora) as start"),
             ])
             ->whereBetween("$t1.fecha", [$start, $end])
             ->get();

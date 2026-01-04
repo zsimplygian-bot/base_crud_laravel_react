@@ -30,7 +30,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
         });
     };
     return (
-        <AuthLayout title="Inicia sesión" description="Ingresa tus datos para acceder a tu cuenta">
+        <AuthLayout title="Inicia sesión" description=''>
             <Head title="Acceder" />
             <form className="flex flex-col gap-6" onSubmit={submit}>
                 <div className="grid gap-6">
@@ -45,7 +45,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             autoComplete="email"
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
-                            placeholder="correo@ejemplo.com"
+                            placeholder="email@example.com"
                         />
                         <InputError message={errors.email} />
                     </div>
@@ -54,7 +54,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             <Label htmlFor="password">Contraseña</Label>
                             {canResetPassword && (
                                 <TextLink href={route('password.request')} className="ml-auto text-sm" tabIndex={5}>
-                                    
+                                    Olvidaste la contraseña?
                                 </TextLink>
                             )}
                         </div>
@@ -66,7 +66,7 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                             autoComplete="current-password"
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
-                            placeholder="Contraseña"
+                            placeholder="Password"
                         />
                         <InputError message={errors.password} />
                     </div>
@@ -80,10 +80,16 @@ export default function Login({ status, canResetPassword }: LoginProps) {
                         />
                         <Label htmlFor="remember">Recuérdame</Label>
                     </div>
-                    <Button type="submit" className="mt-1 w-full" tabIndex={4} disabled={processing}>
+                    <Button type="submit" className="mt-4 w-full" tabIndex={4} disabled={processing}>
                         {processing && <LoaderCircle className="h-4 w-4 animate-spin" />}
                         Ingresar
                     </Button>
+                </div>
+                <div className="text-muted-foreground text-center text-sm">
+                    No tienes una cuenta?{' '}
+                    <TextLink href={route('register')} tabIndex={5}>
+                        Registrate
+                    </TextLink>
                 </div>
             </form>
             {status && <div className="mb-4 text-center text-sm font-medium text-green-600">{status}</div>}

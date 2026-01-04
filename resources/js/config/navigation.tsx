@@ -1,4 +1,4 @@
-import { LayoutGrid, PawPrint, Calendar, Stethoscope, ClipboardList, Users, Syringe, BookOpen,
+import { LayoutGrid, PawPrint, Calendar, Stethoscope, ClipboardList, Users, Syringe, BookOpen, User,
   } from "lucide-react";
 // Tipo base mínimo y rápido de escribir
 type NavDef = [
@@ -49,6 +49,7 @@ const rawSidebar: NavDef[] = [
       ["Raza", PawPrint, "/raza"],
       ["Motivo cita", Calendar, "/motivo_cita"],
       ["Motivo historia", Calendar, "/motivo_historia_clinica"],
+      ["Usuario", User, "/user"],
     ],
   ],
 ];
