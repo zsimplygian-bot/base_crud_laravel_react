@@ -2,12 +2,9 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-
 class Cita extends BaseModel {
     use HasFactory;
-
     protected $table = 'cita';
-
     protected static $validationRules = [
         'id_mascota'     => 'required|integer',
         'fecha'          => 'required|date',
@@ -16,7 +13,6 @@ class Cita extends BaseModel {
         'observaciones'  => 'nullable|string',
         'id_estado_cita' => 'required|integer',
     ];
-
     protected static $tableColumns = [
         ['ID', 'id'],
         ['MASCOTA - DUEÑO', 'mascota'],
@@ -26,14 +22,12 @@ class Cita extends BaseModel {
         ['ESTADO', 'estado_cita'],
         ['FECHA REGISTRO', 'created_at'],
     ];
-
     public static function getQuery(): array {
         $t1 = (new self)->getTable(); // cita
         $t2 = 'mascota';
         $t3 = 'estado_cita';
         $t4 = 'motivo_cita';
         $t5 = 'cliente';
-
         return [
             'alias' => $t1,
             'query' => DB::table($t1)
@@ -52,13 +46,11 @@ class Cita extends BaseModel {
                 ])
         ];
     }
-
     public static function proximas() {
         $t1 = (new self)->getTable(); // cita
         $t2 = 'mascota';
         $t3 = 'cliente';
         $t4 = 'motivo_cita';
-
         return DB::table($t1)
             ->join($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
             ->join($t3, "$t2.id_$t3", '=', "$t3.id_$t3")
@@ -77,13 +69,11 @@ class Cita extends BaseModel {
             ->orderBy("$t1.hora")
             ->get();
     }
-
     public static function eventosEntreFechas(string $start, string $end) {
         $t1 = (new self)->getTable(); // cita
         $t2 = 'mascota';
         $t3 = 'cliente';
         $t4 = 'motivo_cita';
-
         return DB::table($t1)
             ->join($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
             ->join($t3, "$t2.id_$t3", '=', "$t3.id_$t3")

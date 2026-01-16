@@ -1,59 +1,58 @@
 <?php
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Http\JsonResponse;
+use Inertia\Inertia;
 use App\Services\FileService;
 abstract class BaseController extends Controller
 {
-    protected string $view; // vista
-    protected string $model; // modelo
-    protected FileService $files; // files
+    protected string $view;
+    protected string $model;
+    protected FileService $files;
     public function __construct()
     {
-        $this->files = app(FileService::class); // servicio archivos
+        $this->files = app(FileService::class);
         if (!empty($this->model)) {
-            $this->view = (new $this->model)->getTable(); // vista=tabla
+            $this->view = (new $this->model)->getTable();
         }
     }
     public function index()
     {
         return Inertia::render("{$this->view}/index", [
-            'success' => session('success'), // flash
+            'success' => session('success'),
         ]);
     }
-    public function store(Request $request) { return $this->persist($request); } // create
-    public function update(Request $request, $id) { return $this->persist($request, $id); } // update
+    public function store(Request $request) { return $this->persist($request); }
+    public function update(Request $request, $id) { return $this->persist($request, $id); }
     public function show($id): JsonResponse
     {
-        $record = $this->model::showById($id); // show modelo
-        abort_if(!$record, 404); // no existe
-        return response()->json($record); // json
+        $record = $this->model::findOrFail($id); // 👈 Eloquent puro
+        return response()->json($record);
     }
     public function destroy($id)
     {
-        $model = $this->model::findOrFail($id); // obtener
+        $model = $this->model::findOrFail($id);
         if (method_exists($this, 'deleteExtra')) {
-            $this->deleteExtra($model); // extra
+            $this->deleteExtra($model);
         }
         if (!empty($model->archivo)) {
-            $this->files->deleteFile($this->view, $model->archivo); // borrar archivo
+            $this->files->deleteFile($this->view, $model->archivo);
         }
-        $model->delete(); // delete
-        return redirect()->back()->with('success', 'Registro eliminado exitosamente.'); // flash
+        $model->delete();
+        return redirect()->back()->with('success', 'Registro eliminado exitosamente.');
     }
     protected function persist(Request $request, $id = null)
     {
-        $data = $this->validateData($request); // validar
+        $data = $this->validateData($request);
         if (method_exists($this, 'validateExtra')) {
-            $this->validateExtra($request, $id); // extra
+            $this->validateExtra($request, $id);
         }
-        $model = $id ? $this->model::findOrFail($id) : new $this->model; // instancia
-        $model->fill($data); // fill
-        $model->{$id ? 'updater_id' : 'creater_id'} = auth()?->id(); // auditoría
-        $model->save(); // save
+        $model = $id ? $this->model::findOrFail($id) : new $this->model;
+        $model->fill($data);
+        $model->{$id ? 'updater_id' : 'creater_id'} = auth()?->id();
+        $model->save();
         if ($request->hasFile('archivo')) {
-            $this->files->handleUpload($request, $model, $this->view, 'archivo'); // upload
+            $this->files->handleUpload($request, $model, $this->view, 'archivo');
         }
         return redirect()->back()->with(
             'success',
@@ -62,10 +61,10 @@ abstract class BaseController extends Controller
     }
     protected function validateData(Request $request): array
     {
-        $input = $request->input('data', $request->all()); // input
+        $input = $request->input('data', $request->all());
         return \Validator::make(
             $input,
-            $this->model::getValidationRules() // rules
+            $this->model::getValidationRules()
         )->validate();
     }
 }

@@ -7,14 +7,6 @@ class HistoriaClinicaProcedimiento extends BaseModel
     use HasFactory;
     protected $table = 'historia_clinica_procedimiento';
     public static string $title = 'Procedimiento';
-    protected static $simpleModalFormFieldDefinitions = [
-        ['id_historia_clinica', 'HISTORIA', 'text', 'required'],
-        ['id_procedimiento', 'PROCEDIMIENTO', 'select', 'required'],
-        ['detalle', 'DETALLE', 'textarea'],
-        ['precio', 'PRECIO S/', 'number', 'required'],
-        ['fecha', 'FECHA', 'date', 'required'],
-        ['archivo', 'ARCHIVO', 'file'],
-    ];
     protected static $validationRules = [
         'id_historia_clinica' => 'required|integer|exists:historia_clinica,id_historia_clinica',
         'id_procedimiento' => 'required|integer|exists:procedimiento,id_procedimiento',
@@ -34,7 +26,8 @@ class HistoriaClinicaProcedimiento extends BaseModel
         ['FECHA REGISTRO', 'created_at'],
     ];
     protected $appends = ['nombre_procedimiento'];
-    public static function getQuery() {
+    public static function getQuery(): array
+    {
         $t1 = (new self)->getTable(); // historia_clinica_procedimiento
         $t2 = 'procedimiento';
         $query = DB::table("$t1 as $t1")

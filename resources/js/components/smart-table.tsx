@@ -73,7 +73,7 @@ export const SmartTable = memo(<T extends { id: number | string }>({
           <TableRow>
             {columns.map(col =>
               !isVisible(col.accessor) ? null : (
-                <TableHead key={col.accessor} className="px-4 bg-background">
+                <TableHead key={col.accessor} className="px-4 ">
                   {col.sortable !== false && onSortChange ? (
                     <SmartButton
                       label={col.header}

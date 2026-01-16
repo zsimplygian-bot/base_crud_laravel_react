@@ -8,10 +8,89 @@ const formFields = {
     { id: "id_motivo_historia_clinica", label: "Motivo historia", type: "combobox" },
     { id: "detalle", label: "Detalle", type: "textarea" },
     { id: "observaciones", label: "Observaciones", type: "textarea" },
-    { id: "id_estado_historia_clinica", label: "Estado", type: "combobox" },
+    { id: "id_estado_historia_clinica", label: "Estado", type: "combobox", default: "1" },
   ],
 };
-const searchFields = formFields.fields.map(f => ({ ...f }));
+const searchFields = formFields.fields.map(f => ({
+  ...f,
+  defaultVisible: [ "id_mascota", "id_motivo_historia_clinica", "id_estado_historia_clinica",
+  ].includes(f.id),
+}));
+const footerFields = {
+  fields: [
+    { id: "total", label: "Total S/.", sum: true, accessor: row => Number(row.precio), },
+  ],
+};
+const extendedFields = {
+  header: "Información clínica adicional",
+  footer: "Verifique los datos antes de guardar",
+  seguimientoFields: {
+  title: "Seguimiento",
+  view: "historia_clinica_seguimiento",
+  fields: [
+    { id: "id_historia_clinica", label: "Historia clínica"},
+    { id: "detalle", label: "Detalle"},
+    { id: "observaciones", label: "Observaciones"},
+    { id: "fecha", label: "Fecha", type: "date" },
+  ],
+  recordFields: [
+    { id: "detalle", label: "Detalle" },
+    { id: "observaciones", label: "Observaciones" },
+  ]},
+  medicamentoFields: {
+  title: "Medicamentos",
+  view: "historia_clinica_medicamento",
+  fields: [
+    { id: "id_historia_clinica", label: "Historia clínica"},
+    { id: "id_medicamento", label: "Medicamento", type: "combobox" },
+    { id: "dosis", label: "Dosis"},
+    { id: "precio", label: "Precio S/", type: "number" },
+    { id: "fecha", label: "Fecha", type: "date" },
+  ],
+  recordFields: [
+    { id: "nombre_medicamento", label: "MEDICAMENTO" },
+    { id: "dosis", label: "Dosis" },
+    { id: "precio", label: "Precio S/" },
+  ]},
+  procedimientoFields: {
+  title: "Procedimientos",
+  view: "historia_clinica_procedimiento",
+  fields: [
+    { id: "id_historia_clinica", label: "Historia clínica"},
+    { id: "id_procedimiento", label: "Procedimiento", type: "combobox" },
+    { id: "detalle", label: "Detalle"},
+    { id: "precio", label: "Precio S/", type: "number" },
+    { id: "fecha", label: "Fecha", type: "date" },
+  ],
+  recordFields: [
+    { id: "nombre_procedimiento"},
+    { id: "detalle", label: "Detalle" },
+    { id: "precio", label: "Precio S/" },
+  ]
+  },
+  anamnesisFields: {
+  title: "Anamnesis",
+  view: "historia_clinica_anamnesis",
+  fields: [
+    { id: "id_historia_clinica", label: "Historia clínica"},
+    { id: "fecha", label: "Fecha", type: "date" },
+    { id: "hora", label: "Hora", type: "time" },
+    { id: "temperatura", label: "Temperatura (°C)", type: "number" },
+    { id: "frecuencia_cardiaca", label: "Frecuencia cardiaca (lpm)", type: "number" },
+    { id: "frecuencia_respiratoria", label: "Frecuencia respiratoria (rpm)", type: "number" },
+    { id: "tiempo_llenado_capilar", label: "Tiempo llenado capilar (seg)", type: "number" },
+    { id: "peso", label: "Peso (kg)", type: "number" },
+  ],
+  recordFields: [
+    { id: "fecha", label: "Fecha", type: "date" },
+    { id: "hora", label: "Hora", type: "time" },
+    { id: "temperatura", label: "Temperatura (°C)", type: "number" },
+    { id: "frecuencia_cardiaca", label: "Frecuencia cardiaca (lpm)", type: "number" },
+    { id: "frecuencia_respiratoria", label: "Frecuencia respiratoria (rpm)", type: "number" },
+    { id: "tiempo_llenado_capilar", label: "Tiempo llenado capilar (seg)", type: "number" },
+    { id: "peso", label: "Peso (kg)", type: "number" },
+  ]}
+};
 export default function DatatablePage() {
-  return <DataTableLayout {...{ view, title, formFields, searchFields }} />;
+  return <DataTableLayout {...{ view, title, formFields, searchFields, footerFields, extendedFields }} />;
 }

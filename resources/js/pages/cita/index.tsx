@@ -9,10 +9,14 @@ const formFields = {
     { id: "fecha", label: "Fecha", type: "date" },
     { id: "hora", label: "Hora", type: "time" },
     { id: "observaciones", label: "Observaciones" },
-    { id: "id_estado_cita", label: "Estado cita", type: "combobox" },
+    { id: "id_estado_cita", label: "Estado cita", type: "combobox", default: "1" },
   ]
 };
-const searchFields = formFields.fields.map(f => ({ ...f }));
+const searchFields = formFields.fields.map(f => ({
+  ...f,
+  defaultVisible: [ "id_mascota", "id_motivo_cita", "id_estado_cita",
+  ].includes(f.id),
+}));
 export default function DatatablePage() {
   return <DataTableLayout {...{ view, title, formFields, searchFields }} />;
 }

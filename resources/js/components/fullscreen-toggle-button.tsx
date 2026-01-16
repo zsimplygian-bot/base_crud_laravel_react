@@ -1,3 +1,4 @@
+// components/fulllscreen-toggle-button.tsx
 import { useEffect, useState, useCallback } from "react"
 import { ExpandIcon, MinimizeIcon } from "lucide-react"
 import { SmartButton } from "@/components/smart-button"
@@ -16,10 +17,8 @@ export function FullscreenToggleButton() {
     else await document.documentElement.requestFullscreen() // Entra en pantalla completa si no hay ninguno
   }, []) // [] asegura que la función no se recree entre renders
   return (
-    <SmartButton
-      icon={isFullscreen ? MinimizeIcon : ExpandIcon} // Ícono que cambia según el estado de fullscreen
-      tooltip={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"} // Tooltip dinámico según estado
-      variant="ghost" onClick={toggleFullscreen} 
-    />
+    <SmartButton {...{icon: isFullscreen ? MinimizeIcon : ExpandIcon, 
+                      tooltip: isFullscreen ? "Salir de pantalla completa" : "Pantalla completa", 
+                      variant: "ghost", onClick: toggleFullscreen}} />
   )
 }

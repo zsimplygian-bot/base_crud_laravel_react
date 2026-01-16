@@ -7,17 +7,7 @@ class HistoriaClinicaAnamnesis extends BaseModel
     use HasFactory;
     protected $table = 'historia_clinica_anamnesis';
     public static string $title = 'Anamnesis';
-    protected static $simpleModalFormFieldDefinitions = [
-        ['id_historia_clinica', 'HISTORIA', 'text'],
-        ['fecha', 'FECHA', 'date', 'required'],
-        ['hora', 'HORA', 'time'],
-        ['temperatura', 'TEMPERATURA (°C)', 'number'],
-        ['frecuencia_cardiaca', 'FRECUENCIA CARDIACA (lpm)', 'number'],
-        ['frecuencia_respiratoria', 'FRECUENCIA RESPIRATORIA (rpm)', 'number'],
-        ['tiempo_llenado_capilar', 'TIEMPO LLENADO CAPILAR (seg)', 'number'],
-        ['peso', 'PESO (kg)', 'number'],
-        ['archivo', 'ARCHIVO', 'file'],
-    ];
+
     protected static $validationRules = [
         'id_historia_clinica' => 'required|integer|exists:historia_clinica,id_historia_clinica',
         'fecha' => 'required|date',
@@ -28,7 +18,7 @@ class HistoriaClinicaAnamnesis extends BaseModel
         'tiempo_llenado_capilar' => 'nullable|numeric',
         'peso' => 'nullable|numeric',
     ];
-    public static function getQuery() {
+    public static function getQuery(): array {
         $t1 = (new self)->getTable();
         $query = DB::table($t1)->select([
                 "$t1.id_$t1",

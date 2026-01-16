@@ -7,14 +7,6 @@ class HistoriaClinicaMedicamento extends BaseModel
     use HasFactory;
     protected $table = 'historia_clinica_medicamento';
     public static string $title = 'Medicamento';
-    protected static $simpleModalFormFieldDefinitions = [
-        ['id_historia_clinica', 'HISTORIA', 'text', 'required'],
-        ['id_medicamento', 'MEDICAMENTO', 'select', 'required'],
-        ['dosis', 'DOSIS', 'text', 'required'],
-        ['precio', 'PRECIO S/', 'number', 'required'],
-        ['fecha', 'FECHA', 'date', 'required'],
-        ['archivo', 'ARCHIVO', 'file'],
-    ];
     protected static $validationRules = [
         'id_historia_clinica' => 'required|integer|exists:historia_clinica,id_historia_clinica',
         'id_medicamento' => 'required|integer|exists:medicamento,id_medicamento',
@@ -34,7 +26,7 @@ class HistoriaClinicaMedicamento extends BaseModel
         ['FECHA REGISTRO', 'created_at'],
     ];
     protected $appends = ['nombre_medicamento'];
-    public static function getQuery() {
+    public static function getQuery(): array {
         $t1 = (new self)->getTable(); // historia_clinica_medicamento
         $t2 = 'medicamento';
         $query = DB::table("$t1")

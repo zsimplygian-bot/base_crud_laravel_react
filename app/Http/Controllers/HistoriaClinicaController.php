@@ -24,6 +24,14 @@ class HistoriaClinicaController extends BaseController
         HistoriaClinicaProcedimiento::where('id_historia_clinica', $idHistoria)->delete();
         HistoriaClinicaMedicamento::where('id_historia_clinica', $idHistoria)->delete();
     }
+
+    public function records(int $id)
+    {
+        return response()->json([
+            'data' => HistoriaClinica::getRelatedRecords($id),
+        ]);
+    }
+
     public function generatePDF($id)
     {
         $historia_clinica = HistoriaClinica::with([

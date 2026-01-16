@@ -1,31 +1,25 @@
 // components/smart-dropdown.tsx
-import { forwardRef } from "react"
+import { forwardRef, memo } from "react"
 import { cn } from "@/lib/utils"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuItem, DropdownMenuCheckboxItem, DropdownMenuLabel } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuItem,
+  DropdownMenuCheckboxItem, DropdownMenuLabel, } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { Link } from "@inertiajs/react"
 import { Badge } from "@/components/ui/badge"
+import { Link } from "@inertiajs/react"
 import type { LucideIcon } from "lucide-react"
-
-const KEY = "lp"
-
 type Base = {
   label?: string
   icon?: LucideIcon
   color?: string
   disabled?: boolean
   action?: () => void
-  to?: string
-  back?: boolean
-  save?: boolean
-  external?: boolean
+  to?: string // Permite navegación
+  external?: boolean // Link externo
 }
-
 export type SDItem =
   | { separator: true }
   | (Base & { type?: "item"; custom?: React.ReactNode })
   | (Base & { type: "checkbox"; checked: boolean; onChange: (v: boolean) => void })
-
 interface Props {
   triggerIcon?: LucideIcon
   triggerLabel?: string | React.ReactNode
@@ -34,165 +28,147 @@ interface Props {
   triggerBadge?: string | number
   triggerBadgeClassName?: string
   label?: string
+  labelExtra?: React.ReactNode
   items: SDItem[]
   align?: "start" | "center" | "end"
   closeOnSelect?: boolean
 }
-
-export const SmartDropdown = forwardRef<HTMLButtonElement, Props>(
-  (
+export const SmartDropdown = memo(
+  forwardRef<HTMLButtonElement, Props>(function SmartDropdown(
     {
       triggerIcon: Icon,
       triggerLabel,
       triggerButtonClassName,
-      triggerVariant,
+      triggerVariant = "default",
       triggerBadge,
       triggerBadgeClassName,
       label,
+      labelExtra,
       items,
       align = "end",
       closeOnSelect = true,
     },
     ref
-  ) => {
+  ) {
     const showLabel = !!(triggerLabel && String(triggerLabel).trim())
-    const computedVariant = triggerVariant || "default"
-
-    const trigger = (
-      <Button
-        ref={ref}
-        variant={computedVariant}
-        className={cn(showLabel ? "px-3" : "w-9 px-0", "rounded-full relative", triggerButtonClassName)}
-      >
-        {Icon && <Icon className="size-4" />}
-        {showLabel && <span>{triggerLabel}</span>}
-        {triggerBadge && (
-          <Badge
-            variant=""
-            className={cn(
-              `absolute -top-1 -right-1 text-[10px] leading-none h-4 px-1 flex items-center justify-center rounded-full`,
-              triggerBadgeClassName
-            )}
-          >
-            {triggerBadge}
-          </Badge>
-        )}
-      </Button>
-    )
-
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+        <DropdownMenuTrigger asChild>
+          <Button
+            ref={ref}
+            {...{
+              variant: triggerVariant,
+              className: cn(
+                showLabel ? "px-3" : "w-9 px-0",
+                "rounded-full relative flex items-center gap-2",
+                triggerButtonClassName
+              ),
+            }}
+          >
+            {Icon && <Icon className="size-4" />}
+            {showLabel && <span>{triggerLabel}</span>}
+            {triggerBadge && (
+              <Badge
+                className={cn(
+                  "absolute -top-1 -right-1 text-[10px] h-4 px-1 rounded-full",
+                  triggerBadgeClassName
+                )}
+              >
+                {triggerBadge}
+              </Badge>
+            )}
+          </Button>
+        </DropdownMenuTrigger>
         <DropdownMenuContent align={align}>
-          {label && (
+          {(label || labelExtra) && (
             <>
-              <DropdownMenuLabel>{label}</DropdownMenuLabel>
+              <DropdownMenuLabel className="flex items-center justify-between gap-2">
+                {label && <span>{label}</span>}
+                {labelExtra && (
+                  <div onClick={e => e.stopPropagation()}>
+                    {labelExtra}
+                  </div>
+                )}
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
             </>
           )}
-
           {items.map((it, i) => {
             if ("separator" in it) return <DropdownMenuSeparator key={i} />
             const ItemIcon = it.icon
-
-            // Checkbox item
             if (it.type === "checkbox") {
               return (
                 <DropdownMenuCheckboxItem
                   key={i}
-                  checked={it.checked}
-                  disabled={it.disabled}
-                  className="cursor-pointer hover:bg-accent"
-                  onCheckedChange={it.onChange}
-                  onSelect={(e: any) => {
-                    if (!closeOnSelect) e.preventDefault?.()
+                  {...{
+                    checked: it.checked,
+                    disabled: it.disabled,
+                    onCheckedChange: it.onChange,
+                    onSelect: e => !closeOnSelect && e.preventDefault(),
                   }}
                 >
-                  {ItemIcon && <ItemIcon className="size-4 opacity-80 mr-2" />}
+                  {ItemIcon && <ItemIcon className="size-4 mr-2 opacity-80" />}
                   {it.label}
                 </DropdownMenuCheckboxItem>
               )
             }
-
-            // Custom item
             if (it.custom) {
               return (
                 <DropdownMenuItem
                   key={i}
-                  asChild
-                  className="cursor-pointer hover:bg-accent"
-                  onSelect={(e: any) => {
-                    if (!closeOnSelect) e.preventDefault?.()
+                  {...{
+                    asChild: true,
+                    onSelect: e => !closeOnSelect && e.preventDefault(),
                   }}
-                  onClick={() => it.action?.()}
                 >
                   {it.custom}
                 </DropdownMenuItem>
               )
             }
-
-            // Navigation item (to/back/save)
-            if (it.to || it.back) {
-              const href = it.back
-                ? typeof window !== "undefined"
-                  ? localStorage.getItem(KEY) || "/"
-                  : "/"
-                : it.to
-
-              const handleClick = () => {
-                if (it.save) localStorage.setItem(KEY, location.pathname + location.search)
-                it.action?.()
-              }
-
-              const content = (
-                <div className={cn("flex items-center gap-2 w-full", it.color)}>
-                  {ItemIcon && <ItemIcon className="size-4 opacity-80" />}
-                  {it.label}
-                </div>
-              )
-
+            const content = (
+              <>
+                {ItemIcon && <ItemIcon className="size-4 opacity-80" />}
+                <span className={it.color}>{it.label}</span>
+              </>
+            )
+            if (it.to) {
               return (
                 <DropdownMenuItem
                   key={i}
-                  asChild
-                  className="cursor-pointer hover:bg-accent"
-                  onSelect={(e: any) => {
-                    if (!closeOnSelect) e.preventDefault?.()
+                  {...{
+                    asChild: true,
+                    disabled: it.disabled,
+                    onSelect: e => !closeOnSelect && e.preventDefault(),
+                    className: "flex items-center gap-2",
                   }}
                 >
                   {it.external ? (
-                    <a href={href} target="_blank" rel="noopener noreferrer" onClick={handleClick}>
+                    <a href={it.to} target="_blank" rel="noreferrer">
                       {content}
                     </a>
                   ) : (
-                    <Link href={href} onClick={handleClick}>
-                      {content}
-                    </Link>
+                    <Link href={it.to}>{content}</Link>
                   )}
                 </DropdownMenuItem>
               )
             }
-
-            // Default action item
             return (
               <DropdownMenuItem
                 key={i}
-                disabled={it.disabled}
-                className="cursor-pointer hover:bg-accent flex items-center gap-2"
-                onSelect={(e: any) => {
-                  if (!closeOnSelect) e.preventDefault?.()
+                {...{
+                  disabled: it.disabled,
+                  onClick: it.action,
+                  onSelect: e => !closeOnSelect && e.preventDefault(),
+                  className: "flex items-center gap-2",
                 }}
-                onClick={() => it.action?.()}
               >
-                {ItemIcon && <ItemIcon className="size-4 opacity-80" />}
-                <span className={it.color}>{it.label}</span>
+                {content}
               </DropdownMenuItem>
             )
           })}
         </DropdownMenuContent>
       </DropdownMenu>
     )
-  }
+  })
 )
-
 SmartDropdown.displayName = "SmartDropdown"

@@ -24,7 +24,7 @@ class HistoriaClinica extends BaseModel
         ['DETALLE', 'detalle'],
         ['TOTAL', 'precio'],
         ['OBSERVACIONES', 'observaciones'],
-        ['ESTADO', 'estado'],
+        ['ESTADO', 'estado_historia_clinica'],
         ['FECHA REGISTRO', 'created_at'],
     ];
     public static function getQuery(): array
@@ -67,10 +67,29 @@ class HistoriaClinica extends BaseModel
             );
         return ['query' => $query, 'alias' => $t1];
     }
+    // App\Models\HistoriaClinica.php
+    public static function getRelatedRecords(int $id): array
+    {
+        return [
+            'seguimientos' => HistoriaClinicaSeguimiento::getQuery()['query']
+                ->where('id_historia_clinica', $id)
+                ->get(),
+            'procedimientos' => HistoriaClinicaProcedimiento::getQuery()['query']
+                ->where('id_historia_clinica', $id)
+                ->get(),
+            'medicamentos' => HistoriaClinicaMedicamento::getQuery()['query']
+                ->where('id_historia_clinica', $id)
+                ->get(),
+            'anamnesis' => HistoriaClinicaAnamnesis::getQuery()['query']
+                ->where('id_historia_clinica', $id)
+                ->get(),
+        ];
+    }
     public function historia_seguimientos(): HasMany { return $this->hasMany(HistoriaClinicaSeguimiento::class, 'id_historia_clinica'); }
     public function historia_procedimientos(): HasMany { return $this->hasMany(HistoriaClinicaProcedimiento::class, 'id_historia_clinica'); }
     public function historia_medicamentos(): HasMany { return $this->hasMany(HistoriaClinicaMedicamento::class, 'id_historia_clinica'); }
     public function historia_anamnesis(): HasMany { return $this->hasMany(HistoriaClinicaAnamnesis::class, 'id_historia_clinica'); }
     public function mascota() { return $this->belongsTo(Mascota::class, 'id_mascota'); }
     public function estado_historia_clinica() { return $this->belongsTo(EstadoHistoriaClinica::class, 'id_estado_historia_clinica'); }
+    public function motivo_historia_clinica() { return $this->belongsTo(MotivoHistoriaClinica::class, 'id_motivo_historia_clinica'); }
 }

@@ -6,14 +6,6 @@ class HistoriaClinicaSeguimiento extends BaseModel
 {
     use HasFactory;
     protected $table = 'historia_clinica_seguimiento';
-    public static string $title = 'Seguimiento';
-    protected static $simpleModalFormFieldDefinitions = [
-        ['id_historia_clinica', 'HISTORIA', 'text', 'required'],
-        ['detalle', 'DETALLE', 'textarea', 'required'],
-        ['observaciones', 'OBSERVACIONES', 'textarea'],
-        ['fecha', 'FECHA', 'date', 'required'],
-        ['ARCHIVO', 'archivo'],
-    ];
     protected static $validationRules = [
         'id_historia_clinica' => 'required|integer|exists:historia_clinica,id_historia_clinica',
         'detalle' => 'required|string',
@@ -29,18 +21,26 @@ class HistoriaClinicaSeguimiento extends BaseModel
         ['ARCHIVO', 'archivo'],
         ['FECHA REGISTRO', 'created_at'],
     ];
-    public static function getQuery() {
+    public static function getQuery(): array
+    {
         $t1 = (new self)->getTable();
         $query = DB::table($t1)->select([
-                "$t1.id_$t1",
-                "$t1.id_historia_clinica",
-                "$t1.detalle",
-                "$t1.observaciones",
-                "$t1.fecha",
-                "$t1.archivo",
-                "$t1.created_at",
-            ]);
-        return ['query' => $query, 'alias' => $t1];
+            "$t1.id_$t1",
+            "$t1.id_historia_clinica",
+            "$t1.detalle",
+            "$t1.observaciones",
+            "$t1.fecha",
+            "$t1.archivo",
+            "$t1.created_at",
+        ]);
+
+        return [
+            'query' => $query,
+            'alias' => $t1,
+        ];
     }
-    public function parent() { return $this->belongsTo(HistoriaClinica::class, $this->parentForeignKey, 'id'); }
+    public function parent()
+    {
+        return $this->belongsTo(HistoriaClinica::class, 'id_historia_clinica');
+    }
 }

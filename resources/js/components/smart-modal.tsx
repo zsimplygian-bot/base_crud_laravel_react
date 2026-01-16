@@ -20,7 +20,7 @@ export const SmartModal = ({ open, onOpenChange, title, description, children, t
           <SheetTitle>{title.toUpperCase()}</SheetTitle>
           {description && <SheetDescription>{description}</SheetDescription>}
         </SheetHeader>
-        <div className="p-4">{children}</div>
+        <div className="p-4 -mt-6">{children}</div>
       </SheetContent>
     </Sheet>
   ) : (

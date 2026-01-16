@@ -28,7 +28,6 @@ class Mascota extends BaseModel
         ['EDAD ACTUAL', 'edad_actual'],
         ['COLOR', 'color'],
         ['PESO', 'peso'],
-        ['IMAGEN', 'archivo'],
         ['FECHA REGISTRO', 'created_at'],
     ];
     public static function getQuery(): array
