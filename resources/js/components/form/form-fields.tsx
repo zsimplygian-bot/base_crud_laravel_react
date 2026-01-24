@@ -1,10 +1,9 @@
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Combobox } from "@/components/ui/combobox";
-import DatePicker from "@/components/ui/datepicker";
-import { TimePicker } from "@/components/ui/timepicker";
-import { FieldFile } from "@/components/form/field-file";
-
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Combobox } from "@/components/ui/combobox"
+import SmartDateTimePicker from "@/components/ui/datetimepicker"
+import { FieldFile } from "@/components/form/field-file"
+import { Textarea } from "@/components/ui/textarea"
 export const FormField = ({
   id,
   label,
@@ -20,30 +19,34 @@ export const FormField = ({
   onSelect,
   setData,
   view,
+  hidden,
 }) => {
-  const baseProps = { id, value, disabled, placeholder };
-
+  const baseProps = { id, value, disabled, placeholder }
   return (
-    <div className="group relative w-full overflow-visible">
-      <Label htmlFor={id} className="bg-background absolute -top-2 left-2 px-1 text-sm z-10">
-        {label}
-      </Label>
-
+    <div className={`group relative w-full overflow-visible ${hidden ? "hidden" : ""}`}>
+      {!hidden && (
+        <Label
+          htmlFor={id}
+          className="bg-background absolute -top-2 left-2 px-1 text-sm z-10"
+        >
+          {label}
+        </Label>
+      )}
       {type === "combobox" && (
         <Combobox {...{ ...baseProps, options, loading, open, setOpen, onSelect }} />
       )}
-
-      {type === "date" && <DatePicker {...{ ...baseProps, onChange }} />}
-
-      {type === "time" && <TimePicker {...{ ...baseProps, onChange }} />}
-
+      {["date", "time", "datetime"].includes(type) && (
+        <SmartDateTimePicker {...{ type, value, onChange, disabled }} />
+      )}
       {type === "file" && (
         <FieldFile {...{ id, value, setData, disabled, view }} />
       )}
-
-      {!["combobox", "date", "time", "file"].includes(type) && (
+      {type === "textarea" && (
+        <Textarea {...{ ...baseProps, onChange }} />
+      )}
+      {!["combobox", "date", "time", "datetime", "file", "textarea"].includes(type) && (
         <Input {...{ ...baseProps, type, onChange }} />
       )}
     </div>
-  );
-};
+  )
+}

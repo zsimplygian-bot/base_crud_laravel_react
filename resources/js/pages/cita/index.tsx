@@ -6,8 +6,7 @@ const formFields = {
   fields: [
     { id: "id_mascota", label: "Mascota", type: "combobox" },
     { id: "id_motivo_cita", label: "Motivo cita", type: "combobox" },
-    { id: "fecha", label: "Fecha", type: "date" },
-    { id: "hora", label: "Hora", type: "time" },
+    { id: "fecha", label: "Fecha", type: "datetime" },
     { id: "observaciones", label: "Observaciones" },
     { id: "id_estado_cita", label: "Estado cita", type: "combobox", default: "1" },
   ]

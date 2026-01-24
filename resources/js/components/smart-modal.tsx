@@ -1,4 +1,4 @@
-// SmartModal.tsx
+// components/smart-modal.tsx
 import { ReactNode } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "./ui/sheet";

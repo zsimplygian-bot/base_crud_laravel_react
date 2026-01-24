@@ -8,16 +8,15 @@ class Cita extends BaseModel {
     protected static $validationRules = [
         'id_mascota'     => 'required|integer',
         'fecha'          => 'required|date',
-        'hora'           => 'required',
         'id_motivo_cita' => 'required|integer',
         'observaciones'  => 'nullable|string',
         'id_estado_cita' => 'required|integer',
     ];
     protected static $tableColumns = [
         ['ID', 'id'],
-        ['MASCOTA - DUEÑO', 'mascota'],
+        ['MASCOTA', 'mascota'],
+        ['DUEÑO', 'cliente'],
         ['FECHA', 'fecha'],
-        ['HORA', 'hora'],
         ['MOTIVO', 'motivo_cita'],
         ['ESTADO', 'estado_cita'],
         ['FECHA REGISTRO', 'created_at'],
@@ -37,9 +36,9 @@ class Cita extends BaseModel {
                 ->leftJoin($t5, "$t2.id_$t5", '=', "$t5.id_$t5")
                 ->select([
                     "$t1.id_$t1 as id",
-                    DB::raw("CONCAT($t2.mascota,' - ',$t5.cliente) as mascota"),
+                    "$t2.mascota",
+                    "$t5.cliente",
                     "$t1.fecha",
-                    "$t1.hora",
                     "$t4.motivo_cita",
                     "$t3.estado_cita",
                     "$t1.created_at",
@@ -61,12 +60,10 @@ class Cita extends BaseModel {
                 "$t3.cliente",
                 "$t4.motivo_cita",
                 "$t1.fecha",
-                "$t1.hora",
             ])
             ->where("$t1.id_estado_cita", 1) // Pendientes
             ->whereRaw("$t1.fecha >= CURDATE()")
             ->orderBy("$t1.fecha")
-            ->orderBy("$t1.hora")
             ->get();
     }
     public static function eventosEntreFechas(string $start, string $end) {
@@ -86,8 +83,7 @@ class Cita extends BaseModel {
                 "$t1.id_estado_cita",
                 "$t1.fecha_hora_notificacion",
                 "$t1.fecha",
-                "$t1.hora",
-                DB::raw("CONCAT($t1.fecha,'T',$t1.hora) as start"),
+                DB::raw("CONCAT($t1.fecha) as start"),
             ])
             ->whereBetween("$t1.fecha", [$start, $end])
             ->get();

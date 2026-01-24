@@ -11,13 +11,13 @@ const formFields = {
     { id: "edad", label: "Edad" },
     { id: "color", label: "Color" },
     { id: "peso", label: "Peso" },
-    { id: "observaciones", label: "Observaciones" },
+    { id: "observaciones", label: "Observaciones", type: "textarea" },
     { id: "archivo", label: "Imagen", type: "file" },
   ],
 };
 const searchFields = formFields.fields.map(f => ({
   ...f,
-  defaultVisible: [ "id_cliente", "id_raza", "id_sexo",
+  defaultVisible: [ "mascota", "id_cliente", "id_raza", "id_sexo",
   ].includes(f.id),
 }));
 export default function DatatablePage() {

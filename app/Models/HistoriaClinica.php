@@ -18,7 +18,8 @@ class HistoriaClinica extends BaseModel
     ];
     protected static $tableColumns = [
         ['ID', 'id'],
-        ['MASCOTA - DUEÑO', 'mascota'],
+        ['MASCOTA', 'mascota'],
+        ['DUEÑO', 'cliente'],
         ['FECHA', 'fecha'],
         ['MOTIVO', 'motivo_historia_clinica'],
         ['DETALLE', 'detalle'],
@@ -45,7 +46,8 @@ class HistoriaClinica extends BaseModel
             ->leftJoin($t7, "$t7.id_$t1", '=', "$t1.id_$t1")
             ->select([
                 "$t1.id_$t1 as id",
-                DB::raw("CONCAT($t2.mascota,' - ',$t3.cliente) as mascota"),
+                "$t2.mascota",
+                "$t3.cliente",
                 "$t1.fecha",
                 "$t5.motivo_historia_clinica as motivo_historia_clinica",
                 "$t1.detalle",

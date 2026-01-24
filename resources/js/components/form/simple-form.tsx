@@ -6,9 +6,7 @@ import { Save, Edit, Trash } from "lucide-react";
 import { FormField } from "@/components/form/form-fields";
 import { getLista, getListaSync } from "@/hooks/use-listas-cache";
 import axios from "axios";
-
 const isCombobox = (f: any) => f.type === "combobox";
-
 export const SimpleForm = ({
   mode,
   endpoint,
@@ -25,7 +23,6 @@ export const SimpleForm = ({
     delete: { submit: "Eliminar", disabled: true, showSubmit: true, method: "delete", icon: Trash, className: "bg-red-600 hover:bg-red-700 text-white" },
     info: { submit: null, disabled: true, showSubmit: false, method: null },
   }[mode];
-
   const normalizedFields = useMemo(
     () =>
       fields.map(f => ({
@@ -35,7 +32,6 @@ export const SimpleForm = ({
       })),
     [fields]
   );
-
   const initialData = useMemo(
     () =>
       Object.fromEntries(
@@ -46,14 +42,12 @@ export const SimpleForm = ({
       ),
     [normalizedFields]
   );
-
   const { data, setData, submit, processing, errors, reset } = useForm(initialData);
   const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
   const [record, setRecord] = useState<any>(null);
   const [listsReady, setListsReady] = useState(false);
   const filledRef = useRef(false);
   const shouldFetchRecord = mode !== "store" && !!recordId;
-
   // Cargar listas
   useEffect(() => {
     if (!open) return;
@@ -66,19 +60,16 @@ export const SimpleForm = ({
     filledRef.current = false;
     loadLists();
   }, [open, normalizedFields]);
-
-  // Aplicar defaults si es store y listas listas
+  // Aplicar defaults en store
   useEffect(() => {
     if (!open || !listsReady || mode !== "store") return;
     reset(initialData);
   }, [open, listsReady, mode, initialData, reset]);
-
   // Obtener registro
   useEffect(() => {
     if (!shouldFetchRecord || !listsReady) return;
     axios.get(`${endpoint}/${recordId}`).then(res => setRecord(res.data));
   }, [shouldFetchRecord, listsReady, recordId, endpoint]);
-
   // Llenar datos en update / delete
   useEffect(() => {
     if (!record || !listsReady || filledRef.current) return;
@@ -87,19 +78,17 @@ export const SimpleForm = ({
       setData(f.name, record[f.name] != null ? String(record[f.name]) : "");
     });
   }, [record, listsReady, normalizedFields, setData]);
-
-  // ------------------ HANDLE SUBMIT ------------------
+  // Submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const hasFile = Object.values(data).some(v => v instanceof File);
     const url = MODE.method === "post" ? endpoint : `${endpoint}/${recordId}`;
-
     if (hasFile) {
       const formData = new FormData();
-      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
       if (!token) return;
-      formData.append('_token', token);
-      if (MODE.method !== "post") formData.append('_method', MODE.method);
+      formData.append("_token", token);
+      if (MODE.method !== "post") formData.append("_method", MODE.method);
       Object.entries(data).forEach(([k, v]) => {
         formData.append(k, v instanceof File ? v : String(v ?? ""));
       });
@@ -111,32 +100,39 @@ export const SimpleForm = ({
           reset();
           onSuccess?.();
         },
-        onError: err => setData((prev: any) => ({ ...prev, errors: err })),
       });
       return;
     }
-
-    // Sin archivos usa Inertia default
     MODE.method &&
-      submit(
-        MODE.method,
-        url,
-        {
-          forceFormData: false,
-          onFinish: () => {
-            reset();
-            onSuccess?.();
-          }
-        }
-      );
+      submit(MODE.method, url, {
+        forceFormData: false,
+        onFinish: () => {
+          reset();
+          onSuccess?.();
+        },
+      });
   };
-
-  // ------------------ RENDER ------------------
+  // Render
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-4 overflow-visible">
         {normalizedFields.map(field => {
           const lista = isCombobox(field) && getListaSync(field.lista);
+          // Campo oculto: existe en data pero no se renderiza visualmente
+          if (field.hidden) {
+            return (
+              <FormField
+                key={field.name}
+                {...{
+                  id: field.name,
+                  type: "hidden",
+                  value: data[field.name],
+                  hidden: true,
+                  onChange: v => setData(field.name, v),
+                }}
+              />
+            );
+          }
           return (
             <div key={field.name} className="space-y-1.5 overflow-visible">
               <FormField
@@ -163,7 +159,6 @@ export const SimpleForm = ({
             </div>
           );
         })}
-
         {MODE.showSubmit && (
           <div className="flex justify-end">
             <SmartButton
@@ -176,7 +171,6 @@ export const SimpleForm = ({
           </div>
         )}
       </form>
-
       {ExtendedForm && extendedFields && (
         <ExtendedForm {...{ data, recordId, mode, extendedFields }} />
       )}

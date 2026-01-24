@@ -3,14 +3,17 @@ import axios from "axios"
 import { NewRecordButton } from "@/components/datatable/toolbar/new-record-button"
 import { ActionButtons } from "@/components/datatable/base/action-buttons"
 import { Textarea } from "@/components/ui/textarea"
+
 export const ExtendedForm = ({ extendedFields, recordId, mode }) => {
   if (!extendedFields || !recordId) return null
+
   const VIEW_TO_KEY = {
     historia_clinica_seguimiento: "seguimientos",
     historia_clinica_procedimiento: "procedimientos",
     historia_clinica_medicamento: "medicamentos",
     historia_clinica_anamnesis: "anamnesis",
   }
+
   const blocks = useMemo(
     () =>
       Object.values(extendedFields).filter(
@@ -18,7 +21,9 @@ export const ExtendedForm = ({ extendedFields, recordId, mode }) => {
       ),
     [extendedFields]
   )
+
   const [recordsMap, setRecordsMap] = useState<Record<string, any>>({})
+
   const fetchRecords = useCallback(() => {
     if (!blocks.length) return
     axios
@@ -26,41 +31,58 @@ export const ExtendedForm = ({ extendedFields, recordId, mode }) => {
       .then(r => setRecordsMap(r.data?.data ?? {}))
       .catch(() => {})
   }, [blocks.length, recordId])
+
   useEffect(() => {
     fetchRecords()
   }, [fetchRecords])
-  // Agrupar registros por fecha sin la hora
+
+  // Agrupar registros por campo fecha (DATE o DATETIME)
   const recordsByDay = useMemo(() => {
     const dayMap: Record<string, any[]> = {}
+
     blocks.forEach(block => {
       const key = VIEW_TO_KEY[block.view]
+
       ;(recordsMap[key] ?? []).forEach(record => {
-        const day = record.created_at
-          ? new Date(record.created_at).toISOString().split("T")[0]
+        const rawFecha = record.fecha
+        const day = rawFecha
+          ? String(rawFecha).split(" ")[0] // Extrae solo YYYY-MM-DD si es DATETIME
           : "unknown"
+
         if (!dayMap[day]) dayMap[day] = []
+
         dayMap[day].push({
           ...record,
           _title: block.title,
           _view: block.view,
-          _displayFields: block.recordFields?.length ? block.recordFields : block.fields,
+          _displayFields: block.recordFields?.length
+            ? block.recordFields
+            : block.fields,
           _formFields: block.fields,
         })
       })
     })
+
     return Object.keys(dayMap)
       .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
       .map(day => ({ day, records: dayMap[day] }))
   }, [blocks, recordsMap])
+
   const buildTextareaValue = record =>
     record._displayFields
       .map(f => {
         const val = record[f.name ?? f.id]
-        return val != null && val !== "" ? (f.label ? `${f.label}: ${val}` : String(val)) : null
+        return val != null && val !== ""
+          ? f.label
+            ? `${f.label}: ${val}`
+            : String(val)
+          : null
       })
       .filter(Boolean)
       .join("\n")
+
   const hasRecords = recordsByDay.some(day => day.records.length > 0)
+
   return (
     <div className="space-y-2">
       {mode === "update" && blocks.length > 0 && (
@@ -68,43 +90,69 @@ export const ExtendedForm = ({ extendedFields, recordId, mode }) => {
           {blocks.map(block => (
             <NewRecordButton
               key={block.view}
-              {...{ view: block.view, title: block.title, formFields: {
+              {...{
+                view: block.view,
+                title: block.title,
+                formFields: {
                   fields: block.fields.map(f =>
-                    f.id === "id_historia_clinica" ? { ...f, value: recordId } : f
+                    f.id === "id_historia_clinica"
+                      ? { ...f, value: recordId }
+                      : f
                   ),
-                }, onSuccess: fetchRecords,
+                },
+                onSuccess: fetchRecords,
               }}
             />
           ))}
         </div>
-      )} 
+      )}
+
       <div className="max-h-[43vh] overflow-y-auto space-y-3 pr-1">
         {!hasRecords && (
           <div className="text-xs italic text-muted-foreground">
             Sin información adicional
           </div>
         )}
+
         {recordsByDay.map(({ day, records }) =>
           records.length > 0 ? (
             <div key={day}>
-              <div className="text-xs font-medium text-muted-foreground">{day}</div>
+              <div className="text-xs font-medium text-muted-foreground">
+                {day}
+              </div>
+
               {records.map((record, i) => {
                 const value = buildTextareaValue(record)
                 const row_id = record[`id_${record._view}`]
+
                 return (
-                  <div key={`${record._title}-${row_id ?? i}`} className="space-y-1">
+                  <div
+                    key={`${record._title}-${row_id ?? i}`}
+                    className="space-y-1"
+                  >
                     <div className="text-xs font-medium flex justify-between items-center">
                       <span>{record._title}</span>
                       {mode === "update" && row_id && (
                         <ActionButtons
-                          {...{ row_id, row: record, view: record._view, title: record._title,
-                            formFields: { fields: record._formFields }, onSuccess: fetchRecords,
+                          {...{
+                            row_id,
+                            row: record,
+                            view: record._view,
+                            title: record._title,
+                            formFields: { fields: record._formFields },
+                            onSuccess: fetchRecords,
                           }}
                         />
                       )}
                     </div>
+
                     {value && (
-                      <Textarea readOnly value={value} rows={4} className="resize-none bg-muted overflow-y-auto" />
+                      <Textarea
+                        readOnly
+                        value={value}
+                        rows={4}
+                        className="resize-none bg-muted overflow-y-auto"
+                      />
                     )}
                   </div>
                 )

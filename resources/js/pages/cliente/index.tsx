@@ -8,7 +8,11 @@ const formFields = {
     { id: "telefono", label: "Teléfono" },
   ],
 };
-const searchFields = formFields.fields.map(f => ({ ...f }));
+const searchFields = formFields.fields.map(f => ({
+  ...f,
+  defaultVisible: [ "cliente", "telefono",
+  ].includes(f.id),
+}));
 export default function DatatablePage() {
   return <DataTableLayout {...{ view, title, formFields, searchFields }} />;
 }
