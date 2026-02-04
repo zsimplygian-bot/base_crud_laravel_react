@@ -15,22 +15,22 @@ interface SmartModalProps {
 export const SmartModal = ({ open, onOpenChange, title, description, children, type = "dialog", side = "right", size }: SmartModalProps) =>
   type === "sheet" ? (
     <Sheet {...{ open, onOpenChange }}>
-      <SheetContent {...{ side, className: size || "" }}>
-        <SheetHeader>
+      <SheetContent {...{ side, className: `${size || ""} h-dvh max-h-dvh flex flex-col overflow-hidden` }}>
+        <SheetHeader className="shrink-0">
           <SheetTitle>{title.toUpperCase()}</SheetTitle>
           {description && <SheetDescription>{description}</SheetDescription>}
         </SheetHeader>
-        <div className="p-4 -mt-6">{children}</div>
+        <div className="flex-1 overflow-y-auto p-4 -mt-6">{children}</div>
       </SheetContent>
     </Sheet>
   ) : (
     <Dialog {...{ open, onOpenChange }}>
-      <DialogContent {...{ className: size || "" }}>
-        <DialogHeader>
+      <DialogContent {...{ className: `${size || ""} h-dvh max-h-dvh flex flex-col overflow-hidden` }}>
+        <DialogHeader className="shrink-0">
           <DialogTitle>{title.toUpperCase()}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        {children}
+        <div className="flex-1 overflow-y-auto">{children}</div>
       </DialogContent>
     </Dialog>
   );
