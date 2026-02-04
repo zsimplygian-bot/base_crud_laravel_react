@@ -30,20 +30,24 @@ class HistoriaClinica extends BaseModel
     ];
     public static function getQuery(): array
     {
-        $t1 = (new self)->getTable(); // historia_clinica
+        $t1 = (new self)->getTable();
         $t2 = 'mascota';
         $t3 = 'cliente';
         $t4 = 'estado_historia_clinica';
         $t5 = 'motivo_historia_clinica';
-        $t6 = 'historia_clinica_procedimiento';
-        $t7 = 'historia_clinica_medicamento';
+        $proc = DB::table('historia_clinica_procedimiento')
+            ->select('id_historia_clinica', DB::raw('SUM(precio) as total_procedimientos'))
+            ->groupBy('id_historia_clinica'); // Preagregado evita duplicados
+        $med = DB::table('historia_clinica_medicamento')
+            ->select('id_historia_clinica', DB::raw('SUM(precio) as total_medicamentos'))
+            ->groupBy('id_historia_clinica'); // Preagregado evita duplicados
         $query = DB::table($t1)
             ->leftJoin($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
             ->leftJoin($t3, "$t2.id_$t3", '=', "$t3.id_$t3")
             ->leftJoin($t4, "$t1.id_$t4", '=', "$t4.id_$t4")
             ->leftJoin($t5, "$t1.id_$t5", '=', "$t5.id_$t5")
-            ->leftJoin($t6, "$t6.id_$t1", '=', "$t1.id_$t1")
-            ->leftJoin($t7, "$t7.id_$t1", '=', "$t1.id_$t1")
+            ->leftJoinSub($proc, 'proc', 'proc.id_historia_clinica', '=', "$t1.id_$t1") // Join limpio
+            ->leftJoinSub($med, 'med', 'med.id_historia_clinica', '=', "$t1.id_$t1") // Join limpio
             ->select([
                 "$t1.id_$t1 as id",
                 "$t2.mascota",
@@ -54,19 +58,8 @@ class HistoriaClinica extends BaseModel
                 "$t1.observaciones",
                 "$t4.estado_historia_clinica",
                 "$t1.created_at",
-                DB::raw("COALESCE(SUM($t6.precio),0) + COALESCE(SUM($t7.precio),0) as precio"),
-            ])
-            ->groupBy(
-                "$t1.id_$t1",
-                "$t2.mascota",
-                "$t3.cliente",
-                "$t1.fecha",
-                "$t5.motivo_historia_clinica",
-                "$t1.detalle",
-                "$t1.observaciones",
-                "$t4.estado_historia_clinica",
-                "$t1.created_at"
-            );
+                DB::raw('COALESCE(proc.total_procedimientos,0) + COALESCE(med.total_medicamentos,0) as precio'), // Total real
+            ]);
         return ['query' => $query, 'alias' => $t1];
     }
     // App\Models\HistoriaClinica.php

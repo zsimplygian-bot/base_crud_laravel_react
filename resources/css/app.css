@@ -310,6 +310,15 @@
 .dark .fc .fc-button {
   border-radius: 8px !important;
 }
+/* Success: solo icono principal */
+[data-sonner-toast][data-type="success"] svg:not([data-close-button] svg) {
+  color: #22c55e;
+}
+
+/* Error: solo icono principal */
+[data-sonner-toast][data-type="error"] svg:not([data-close-button] svg) {
+  color: #ef4444;
+}
 
 /* === FULLCALENDAR DARK MODE FIX === */
 .dark .fc {

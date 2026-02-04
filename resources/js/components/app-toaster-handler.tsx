@@ -1,33 +1,18 @@
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
 import { usePage } from "@inertiajs/react"
 import { toast, Toaster } from "@/components/ui/sonner"
-
 export default function AppToasterHandler() {
   const { props } = usePage()
-  const shownRef = useRef<{ success?: boolean; error?: boolean }>({})
-
   useEffect(() => {
-    if (props.success && !shownRef.current.success) {
-      const msg = props.success as string
-      let borderColor = "#3b83f6d7"
-      if (msg.includes("actualizado")) borderColor = "#22c55ed5"
-      if (msg.includes("eliminado")) borderColor = "#ef4444da"
-
-      toast.success(msg, {
-        style: { border: `1.5px solid ${borderColor}` },
-      })
-
-      shownRef.current.success = true
+    toast.dismiss() // Limpia toasts anteriores
+    if (props.success) {
+      toast.success(String(props.success))
     }
-
-    if (props.error && !shownRef.current.error) {
-      toast.error(props.error as string, {
-        style: { border: "2px solid #ef4444" },
+    if (props.errors && Object.keys(props.errors).length) {
+      Object.values(props.errors).forEach((msg) => {
+        toast.error(String(msg))
       })
-
-      shownRef.current.error = true
     }
-  }, [props.success, props.error])
-
+  }, [props.success, props.errors])
   return <Toaster position="top-center" closeButton theme="dark" />
 }

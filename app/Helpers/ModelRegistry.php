@@ -7,7 +7,7 @@ class ModelRegistry
     {
         $modelMap = [
             'cliente'   => M\Cliente::class,
-            'user'   => M\Usuario::class,
+            'user'   => M\User::class,
             'mascota'   => M\Mascota::class,
             'cita'   => M\Cita::class,
             'historia_clinica'   => M\HistoriaClinica::class,

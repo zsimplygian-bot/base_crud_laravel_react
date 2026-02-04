@@ -32,6 +32,7 @@ const extendedFields = {
     { id: "detalle", label: "Detalle", type: "textarea" },
     { id: "observaciones", label: "Observaciones"},
     { id: "fecha", label: "Fecha", type: "datetime" },
+    { id: "archivo", label: "Imagen", type: "file" },
   ],
   recordFields: [
     { id: "detalle", label: "Detalle" },
@@ -46,11 +47,13 @@ const extendedFields = {
     { id: "dosis", label: "Dosis"},
     { id: "precio", label: "Precio S/", type: "number" },
     { id: "fecha", label: "Fecha", type: "datetime" },
+    { id: "archivo", label: "Imagen", type: "file" },
   ],
   recordFields: [
     { id: "nombre_medicamento", label: "MEDICAMENTO" },
     { id: "dosis", label: "Dosis" },
     { id: "precio", label: "Precio S/" },
+    
   ]},
   procedimientoFields: {
   title: "Procedimientos",
@@ -61,6 +64,7 @@ const extendedFields = {
     { id: "detalle", label: "Detalle"},
     { id: "precio", label: "Precio S/", type: "number" },
     { id: "fecha", label: "Fecha", type: "datetime" },
+    { id: "archivo", label: "Imagen", type: "file" },
   ],
   recordFields: [
     { id: "nombre_procedimiento"},
@@ -79,6 +83,7 @@ const extendedFields = {
     { id: "frecuencia_respiratoria", label: "Frecuencia respiratoria (rpm)", type: "number" },
     { id: "tiempo_llenado_capilar", label: "Tiempo llenado capilar (seg)", type: "number" },
     { id: "peso", label: "Peso (kg)", type: "number" },
+    { id: "archivo", label: "Imagen", type: "file" },
   ],
   recordFields: [
     { id: "fecha", label: "Fecha", type: "date" },

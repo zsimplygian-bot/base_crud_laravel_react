@@ -26,7 +26,7 @@ abstract class BaseController extends Controller
     public function update(Request $request, $id) { return $this->persist($request, $id); }
     public function show($id): JsonResponse
     {
-        $record = $this->model::findOrFail($id); // 👈 Eloquent puro
+        $record = $this->model::findOrFail($id);
         return response()->json($record);
     }
     public function destroy($id)

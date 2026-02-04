@@ -1,12 +1,10 @@
 <?php
 namespace App\Http\Controllers\Api;
-
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Helpers\ListadoQueryBuilder;
 use App\Helpers\ModelRegistry;
 use Illuminate\Support\Facades\Validator;
-
 class ListadoController extends Controller
 {
     public function index(Request $request)

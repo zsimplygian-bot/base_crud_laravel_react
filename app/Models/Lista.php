@@ -17,6 +17,7 @@ class Lista
         'especie',
         'unidad_tiempo',
         'raza',
+        'rol',
     ];
     protected static array $columnasTablasSimples = [
         // Si alguna tabla tiene columnas personalizadas, defínela aquí.

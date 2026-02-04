@@ -3,97 +3,80 @@
 namespace App\Services;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Intervention\Image\Laravel\Facades\Image;
 
 class FileService
 {
     protected array $allowed = [
-        'jpg'  => 'image',
+        'jpg' => 'image',
         'jpeg' => 'image',
-        'png'  => 'image',
+        'png' => 'image',
         'webp' => 'image',
-        'gif'  => 'image',
-        'pdf'  => 'document',
+        'gif' => 'image',
+        'pdf' => 'document',
     ];
 
     public function handleUpload(
         Request $request,
         $model,
-        string $view,
+        string $entity,
         string $field = 'archivo'
     ): void {
         $file = $request->file($field);
-        if (!$file || !$file->isValid()) { return; }
+        if (!$file || !$file->isValid()) { return; } // Archivo inválido
 
-        $ext  = strtolower($file->getClientOriginalExtension());
+        $ext = strtolower($file->getClientOriginalExtension());
         $type = $this->allowed[$ext] ?? null;
         if (!$type) { throw new \Exception('Tipo de archivo no permitido'); }
 
         $id = $model->getKey();
+        $disk = Storage::disk('public');
 
-        $basePath = public_path("media/{$view}");
-        $finalDir = "{$basePath}/{$id}";
-        $tempDir  = "{$basePath}/{$id}_swap";
+        $basePath = "{$entity}/{$id}"; // Ruta lógica por entidad
+        $tempPath = "{$basePath}_swap"; // Directorio temporal para swap
 
-        if (is_dir($tempDir)) { $this->deleteDir($tempDir); }
-        mkdir($tempDir, 0777, true);
+        $disk->deleteDirectory($tempPath); // Limpieza previa
+        $disk->makeDirectory($tempPath); // Crear directorio temporal
 
-        if (is_dir($finalDir)) {
-            $this->copyDir($finalDir, $tempDir); // Mantener otros archivos
+        if ($disk->exists($basePath)) {
+            foreach ($disk->allFiles($basePath) as $filePath) {
+                $disk->copy(
+                    $filePath,
+                    str_replace($basePath, $tempPath, $filePath)
+                ); // Mantener otros archivos
+            }
         }
 
         $filename = match ($type) {
-            'image'    => 'image.jpg',
+            'image' => 'image.jpg',
             'document' => 'document.pdf',
         };
 
         if ($type === 'image') {
-            $this->saveImage($file, "{$tempDir}/{$filename}");
+            $this->saveImage($file, "{$tempPath}/{$filename}", $disk); // Imagen procesada
         } else {
-            $file->move($tempDir, $filename);
+            $disk->putFileAs($tempPath, $file, $filename); // Documento directo
         }
 
-        $this->deleteDir($finalDir); // Limpio y total
-        rename($tempDir, $finalDir); // Swap completo
+        $disk->deleteDirectory($basePath); // Borrar versión anterior
+        $disk->move($tempPath, $basePath); // Swap final
 
-        $model->{$field} = $filename;
+        $model->{$field} = "{$basePath}/{$filename}"; // Guardar ruta relativa
         $model->save();
     }
 
-    protected function saveImage($file, string $path): void
+    protected function saveImage($file, string $path, $disk): void
     {
         $image = Image::read($file);
 
         if ($image->width() > 1024) {
-            $image->scale(width: 1024);
+            $image->scale(width: 1024); // Redimension seguro
         }
 
-        $image->toJpeg(90)->save($path);
+        $disk->put($path, (string) $image->toJpeg(90)); // Guardado optimizado
 
-        $image = null;
+        $image = null; // Liberar memoria
         gc_collect_cycles();
-    }
-
-    protected function deleteDir(string $dir): void
-    {
-        if (!is_dir($dir)) { return; }
-
-        foreach (scandir($dir) as $item) {
-            if ($item === '.' || $item === '..') { continue; }
-            $path = "{$dir}/{$item}";
-            is_dir($path) ? $this->deleteDir($path) : @unlink($path);
-        }
-
-        @rmdir($dir);
-    }
-
-    protected function copyDir(string $src, string $dst): void
-    {
-        foreach (scandir($src) as $item) {
-            if ($item === '.' || $item === '..') { continue; }
-            $from = "{$src}/{$item}";
-            $to   = "{$dst}/{$item}";
-            is_dir($from) ? $this->copyDir($from, $to) : copy($from, $to);
-        }
     }
 }
