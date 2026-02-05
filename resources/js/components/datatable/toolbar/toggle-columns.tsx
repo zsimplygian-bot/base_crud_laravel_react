@@ -2,29 +2,20 @@
 import { memo, useCallback, useMemo, useEffect } from "react";
 import { SmartDropdown } from "@/components/smart-dropdown";
 import { EyeIcon } from "lucide-react";
-
 interface Column { header: string; accessor: string; }
-
 interface ToggleColumnsProps {
   columns: Column[];
   columnVisibility: Record<string, boolean>;
   setColumnVisibility: (v: Record<string, boolean>) => void;
 }
-
 export const ToggleColumns = memo(function ToggleColumns({
   columns, columnVisibility, setColumnVisibility
 }: ToggleColumnsProps) {
-
-  useEffect(() => {
-    console.log("ToggleColumns.columns:", columns); // Log de columnas recibidas
-  }, [columns]);
-
   const toggle = useCallback(
     (key: string, value: boolean) =>
       setColumnVisibility({ ...columnVisibility, [key]: value }),
     [columnVisibility, setColumnVisibility]
   );
-
   const items = useMemo(
     () =>
       columns.map(c => ({
@@ -35,7 +26,6 @@ export const ToggleColumns = memo(function ToggleColumns({
       })),
     [columns, columnVisibility, toggle]
   );
-
   return (
     <SmartDropdown
       {...{ label: "Columnas visibles", items, closeOnSelect: false, triggerIcon: EyeIcon }}

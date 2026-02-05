@@ -26,19 +26,13 @@ const BadgeStatus = memo(({ value, map }: { value: any; map: Record<string, stri
 const ImageCell = memo(({ src }: { src?: string }) => {
   if (!src) return "—";
 
-  console.log("[ImageCell] Ruta de imagen:", src);
-
   useEffect(() => {
     if (!src) return;
-    fetch(src, { method: "HEAD" })
-      .then(res => res.ok ? console.log("[ImageCell] Archivo encontrado:", src) : console.warn("[ImageCell] NO encontrado:", src))
-      .catch(err => console.error("[ImageCell] Error:", err));
+    fetch(src, { method: "HEAD" }).catch(() => {});
   }, [src]);
 
-  // TEMPORAL: mostrar imagen directamente
   return <img src={src} className="h-12 w-12 object-cover rounded-md border" alt="Archivo" />;
 });
-
 
 // RENDER HELPERS
 const renderEdad = (v: any) => { 
@@ -93,15 +87,11 @@ const R: Record<string, RenderFn> = {
   estado_historia_clinica: v => <BadgeStatus value={v} map={CONFIG.estado_historia_clinica} />,
   estado_cita: v => <BadgeStatus value={v} map={CONFIG.estado_cita} />,
   estado_mascota: v => <BadgeStatus value={v} map={CONFIG.estado_mascota} />,
-archivo: (_, row, view) => {
-  if (!row?.id || !view) return "—"; // Validación mínima
-
-  const path = `/media/${view}/${row.id}/image.jpg`; // Ruta canónica
-  console.log("[ImageCell] Ruta de imagen:", path); // Debug controlado
-
-  return <ImageCell src={path} />;
-},
-
+  archivo: (_, row, view) => {
+    if (!row?.id || !view) return "—";
+    const path = `/media/${view}/${row.id}/image.jpg`;
+    return <ImageCell src={path} />;
+  },
   raza: renderRaza,
   sexo: renderSexo,
   color: renderColor,
@@ -113,14 +103,12 @@ archivo: (_, row, view) => {
 export const useRenderCellContent = (defaultView?: string) => {
   return useCallback((key: string, row?: any, view?: string) => {
     const v = $(row, key);
-    console.log("[useRenderCellContent] key:", key, "valor:", v); // 👈 Ver valor original
     if (v == null || (typeof v === "string" && v.trim() === "") || (Array.isArray(v) && v.length === 0)) return "—";
     const renderFn = R[key];
     if (typeof renderFn === "function") return renderFn(v, row, view || defaultView);
     if (key.toLowerCase().includes("archivo") && view) {
       const file = Array.isArray(v) ? v.find(f => f)?.trim() : String(v).trim();
       const path = `/images/${view}/${file}`;
-      console.log("[useRenderCellContent fallback] Ruta de imagen:", path);
       return <ImageCell src={path} />;
     }
     return v;

@@ -6,7 +6,9 @@ import { Save, Edit, Trash } from "lucide-react";
 import { FormField } from "@/components/form/form-fields";
 import { getLista, getListaSync } from "@/hooks/use-listas-cache";
 import axios from "axios";
+
 const isCombobox = (f: any) => f.type === "combobox";
+
 export const SimpleForm = ({
   mode,
   endpoint,
@@ -18,20 +20,43 @@ export const SimpleForm = ({
   onSuccess,
 }: any) => {
   const MODE = {
-    store: { submit: "Registrar", disabled: false, showSubmit: true, method: "post", icon: Save, className: "bg-blue-600 hover:bg-blue-700 text-white" },
-    update: { submit: "Actualizar", disabled: false, showSubmit: true, method: "put", icon: Edit, className: "bg-green-600 hover:bg-green-700 text-white" },
-    delete: { submit: "Eliminar", disabled: true, showSubmit: true, method: "delete", icon: Trash, className: "bg-red-600 hover:bg-red-700 text-white" },
+    store: {
+      submit: "Registrar",
+      disabled: false,
+      showSubmit: true,
+      method: "post",
+      icon: Save,
+      className: "bg-blue-600 hover:bg-blue-700 text-white",
+    },
+    update: {
+      submit: "Actualizar",
+      disabled: false,
+      showSubmit: true,
+      method: "put",
+      icon: Edit,
+      className: "bg-green-600 hover:bg-green-700 text-white",
+    },
+    delete: {
+      submit: "Eliminar",
+      disabled: true,
+      showSubmit: true,
+      method: "delete",
+      icon: Trash,
+      className: "bg-red-600 hover:bg-red-700 text-white",
+    },
     info: { submit: null, disabled: true, showSubmit: false, method: null },
   }[mode];
+
   const normalizedFields = useMemo(
     () =>
       fields.map(f => ({
         ...f,
         name: f.name ?? f.id,
-        lista: isCombobox(f) ? (f.name ?? f.id) : f.lista,
+        lista: isCombobox(f) ? f.name ?? f.id : f.lista,
       })),
     [fields]
   );
+
   const initialData = useMemo(
     () =>
       Object.fromEntries(
@@ -42,12 +67,15 @@ export const SimpleForm = ({
       ),
     [normalizedFields]
   );
+
   const { data, setData, submit, processing, errors, reset } = useForm(initialData);
+
   const [openMap, setOpenMap] = useState<Record<string, boolean>>({});
   const [record, setRecord] = useState<any>(null);
   const [listsReady, setListsReady] = useState(false);
   const filledRef = useRef(false);
   const shouldFetchRecord = mode !== "store" && !!recordId;
+
   // Cargar listas
   useEffect(() => {
     if (!open) return;
@@ -60,16 +88,19 @@ export const SimpleForm = ({
     filledRef.current = false;
     loadLists();
   }, [open, normalizedFields]);
+
   // Aplicar defaults en store
   useEffect(() => {
     if (!open || !listsReady || mode !== "store") return;
     reset(initialData);
   }, [open, listsReady, mode, initialData, reset]);
+
   // Obtener registro
   useEffect(() => {
     if (!shouldFetchRecord || !listsReady) return;
     axios.get(`${endpoint}/${recordId}`).then(res => setRecord(res.data));
   }, [shouldFetchRecord, listsReady, recordId, endpoint]);
+
   // Llenar datos en update / delete
   useEffect(() => {
     if (!record || !listsReady || filledRef.current) return;
@@ -78,20 +109,36 @@ export const SimpleForm = ({
       setData(f.name, record[f.name] != null ? String(record[f.name]) : "");
     });
   }, [record, listsReady, normalizedFields, setData]);
+
   // Submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const hasFile = Object.values(data).some(v => v instanceof File);
+    console.log("Formulario enviado", { mode, endpoint, recordId, data });
+
+    // ⚡ Detecta si hay archivo o flag de borrado
+    const hasFileOrRemove = Object.entries(data).some(
+      ([k, v]) => v instanceof File || k.endsWith("_remove")
+    );
+
     const url = MODE.method === "post" ? endpoint : `${endpoint}/${recordId}`;
-    if (hasFile) {
+
+    if (hasFileOrRemove) {
       const formData = new FormData();
       const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content");
       if (!token) return;
+
       formData.append("_token", token);
       if (MODE.method !== "post") formData.append("_method", MODE.method);
+
       Object.entries(data).forEach(([k, v]) => {
-        formData.append(k, v instanceof File ? v : String(v ?? ""));
+        if (v === null || v === undefined) return;
+        if (v instanceof File) {
+          formData.append(k, v);
+        } else {
+          formData.append(k, String(v));
+        }
       });
+
       router.post(url, formData, {
         forceFormData: true,
         preserveScroll: true,
@@ -101,24 +148,27 @@ export const SimpleForm = ({
           onSuccess?.();
         },
       });
+
       return;
     }
+
+    // Sin archivo ni flag → submit normal JSON
     MODE.method &&
       submit(MODE.method, url, {
-        forceFormData: false,
         onFinish: () => {
           reset();
           onSuccess?.();
         },
       });
   };
+
   // Render
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="space-y-4 overflow-visible">
         {normalizedFields.map(field => {
           const lista = isCombobox(field) && getListaSync(field.lista);
-          // Campo oculto: existe en data pero no se renderiza visualmente
+          // Campo oculto
           if (field.hidden) {
             return (
               <FormField

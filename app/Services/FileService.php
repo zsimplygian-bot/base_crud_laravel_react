@@ -9,74 +9,74 @@ use Intervention\Image\Laravel\Facades\Image;
 class FileService
 {
     protected array $allowed = [
-        'jpg' => 'image',
-        'jpeg' => 'image',
-        'png' => 'image',
-        'webp' => 'image',
-        'gif' => 'image',
-        'pdf' => 'document',
+        'jpg' => 'image', 'jpeg' => 'image', 'png' => 'image',
+        'webp' => 'image', 'gif' => 'image', 'pdf' => 'document',
     ];
 
-    public function handleUpload(
-        Request $request,
-        $model,
-        string $entity,
-        string $field = 'archivo'
-    ): void {
-        $file = $request->file($field);
-        if (!$file || !$file->isValid()) { return; } // Archivo inválido
+    public function handleUpload(Request $request, $model, string $entity, string $field = 'archivo'): void
+{
+    
+    // ⚡ BORRAR ARCHIVO SI EL FRONTENVIA EL FLAG
+    if ($request->boolean($field.'_remove', false)) {
+        $this->deleteFile($model, $entity, $field);
+        return;
+    }
 
-        $ext = strtolower($file->getClientOriginalExtension());
-        $type = $this->allowed[$ext] ?? null;
-        if (!$type) { throw new \Exception('Tipo de archivo no permitido'); }
+    // NO HAY ARCHIVO NUEVO → no hacer nada
+    if (!$request->hasFile($field)) return;
 
-        $id = $model->getKey();
+    $file = $request->file($field);
+    if (!$file || !$file->isValid()) return;
+
+    $ext = strtolower($file->getClientOriginalExtension());
+    $type = $this->allowed[$ext] ?? null;
+    if (!$type) throw new \Exception('Tipo de archivo no permitido');
+
+    $id = $model->getKey();
+    $disk = Storage::disk('public');
+
+    $basePath = "{$entity}/{$id}";
+    $tempPath = "{$basePath}_swap";
+
+    $disk->deleteDirectory($tempPath);
+    $disk->makeDirectory($tempPath);
+
+    if ($disk->exists($basePath)) {
+        foreach ($disk->allFiles($basePath) as $filePath) {
+            $disk->copy($filePath, str_replace($basePath, $tempPath, $filePath));
+        }
+    }
+
+    $filename = $type === 'image' ? 'image.jpg' : 'document.pdf';
+
+    if ($type === 'image') $this->saveImage($file, "{$tempPath}/{$filename}", $disk);
+    else $disk->putFileAs($tempPath, $file, $filename);
+
+    $disk->deleteDirectory($basePath);
+    $disk->move($tempPath, $basePath);
+
+    $model->{$field} = "{$basePath}/{$filename}";
+    $model->save();
+}
+
+
+    protected function deleteFile($model, string $entity, string $field): void
+    {
         $disk = Storage::disk('public');
-
-        $basePath = "{$entity}/{$id}"; // Ruta lógica por entidad
-        $tempPath = "{$basePath}_swap"; // Directorio temporal para swap
-
-        $disk->deleteDirectory($tempPath); // Limpieza previa
-        $disk->makeDirectory($tempPath); // Crear directorio temporal
-
+        $basePath = "{$entity}/{$model->getKey()}";
         if ($disk->exists($basePath)) {
-            foreach ($disk->allFiles($basePath) as $filePath) {
-                $disk->copy(
-                    $filePath,
-                    str_replace($basePath, $tempPath, $filePath)
-                ); // Mantener otros archivos
-            }
+            $disk->deleteDirectory($basePath);
         }
-
-        $filename = match ($type) {
-            'image' => 'image.jpg',
-            'document' => 'document.pdf',
-        };
-
-        if ($type === 'image') {
-            $this->saveImage($file, "{$tempPath}/{$filename}", $disk); // Imagen procesada
-        } else {
-            $disk->putFileAs($tempPath, $file, $filename); // Documento directo
-        }
-
-        $disk->deleteDirectory($basePath); // Borrar versión anterior
-        $disk->move($tempPath, $basePath); // Swap final
-
-        $model->{$field} = "{$basePath}/{$filename}"; // Guardar ruta relativa
+        $model->{$field} = null;
         $model->save();
     }
 
     protected function saveImage($file, string $path, $disk): void
     {
         $image = Image::read($file);
-
-        if ($image->width() > 1024) {
-            $image->scale(width: 1024); // Redimension seguro
-        }
-
-        $disk->put($path, (string) $image->toJpeg(90)); // Guardado optimizado
-
-        $image = null; // Liberar memoria
+        if ($image->width() > 1024) $image->scale(width: 1024);
+        $disk->put($path, (string) $image->toJpeg(90));
+        $image = null;
         gc_collect_cycles();
     }
 }

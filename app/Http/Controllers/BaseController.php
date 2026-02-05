@@ -42,23 +42,25 @@ abstract class BaseController extends Controller
         return redirect()->back()->with('success', 'Registro eliminado exitosamente.');
     }
     protected function persist(Request $request, $id = null)
-    {
-        $data = $this->validateData($request);
-        if (method_exists($this, 'validateExtra')) {
-            $this->validateExtra($request, $id);
-        }
-        $model = $id ? $this->model::findOrFail($id) : new $this->model;
-        $model->fill($data);
-        $model->{$id ? 'updater_id' : 'creater_id'} = auth()?->id();
-        $model->save();
-        if ($request->hasFile('archivo')) {
-            $this->files->handleUpload($request, $model, $this->view, 'archivo');
-        }
-        return redirect()->back()->with(
-            'success',
-            $id ? 'Registro actualizado exitosamente.' : 'Registro creado exitosamente.'
-        );
+{
+    $data = $this->validateData($request);
+    if (method_exists($this, 'validateExtra')) {
+        $this->validateExtra($request, $id);
     }
+    $model = $id ? $this->model::findOrFail($id) : new $this->model;
+    $model->fill($data);
+    $model->{$id ? 'updater_id' : 'creater_id'} = auth()?->id();
+    $model->save();
+
+    // ⚡ Llamar siempre a handleUpload para que pueda borrar si archivo_remove=true
+    $this->files->handleUpload($request, $model, $this->view, 'archivo');
+
+    return redirect()->back()->with(
+        'success',
+        $id ? 'Registro actualizado exitosamente.' : 'Registro creado exitosamente.'
+    );
+}
+
     protected function validateData(Request $request): array
     {
         $input = $request->input('data', $request->all());
