@@ -13,7 +13,7 @@ export const FieldFile = ({ id, value, setData, disabled }: any) => {
   const [openPreview, setOpenPreview] = useState(false);
   const [removed, setRemoved] = useState(false);
 
-  // Cargar archivo existente solo si no fue eliminado
+  // ⚡ Cargar archivo existente solo si no fue eliminado
   useEffect(() => {
     if (!value || removed) {
       setPreview(null);
@@ -23,18 +23,18 @@ export const FieldFile = ({ id, value, setData, disabled }: any) => {
 
     let url: string;
     if (typeof value === "string") {
-      url = value.startsWith("http") ? value : `/storage/${value}`;
+      // Agregar query string para evitar caching
+      url = value.startsWith("http") ? value : `/storage/${value}?t=${Date.now()}`;
       setIsImage(/\.(jpg|jpeg|png|webp|gif)$/i.test(value));
       setPreview(url);
     } else if (value instanceof File) {
-      // Nuevo archivo seleccionado
       setIsImage(value.type.startsWith("image/"));
       if (value.type.startsWith("image/")) {
         const reader = new FileReader();
         reader.onload = () => setPreview(reader.result as string);
         reader.readAsDataURL(value);
       } else {
-        setPreview(value.name); // mostrar nombre para PDFs
+        setPreview(value.name); // mostrar nombre para PDF
       }
     }
   }, [value, removed]);
@@ -54,7 +54,7 @@ export const FieldFile = ({ id, value, setData, disabled }: any) => {
       reader.readAsDataURL(file);
       setIsImage(true);
     } else {
-      setPreview(file.name); // nombre para PDF
+      setPreview(file.name);
       setIsImage(false);
     }
   };
@@ -96,7 +96,7 @@ export const FieldFile = ({ id, value, setData, disabled }: any) => {
             tooltip={isImage ? "Ver imagen" : "Ver documento"}
             onClick={() => {
               if (!isImage) {
-                // Para PDF, abrir en nueva pestaña si preview es nombre
+                // PDF → abrir en nueva pestaña
                 const url = typeof value === "string" ? `/storage/${value}` : preview;
                 window.open(url, "_blank");
               } else {
