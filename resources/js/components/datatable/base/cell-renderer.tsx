@@ -1,5 +1,5 @@
 // components/datatable/body/cell-renderer.tsx
-import React, { useCallback, memo, useEffect} from "react";
+import React, { useCallback, memo, useEffect } from "react";
 import { SmartBadge } from "@/components/smart-badge";
 import { SmartModal } from "@/components/smart-modal";
 import { PhoneIcon, Mars, Venus } from "lucide-react";
@@ -75,6 +75,11 @@ const renderColor = (v: any) => {
   return <SmartBadge className="size-7 rounded-full border border-gray-600 p-0" style={{ background: bg }} />;
 };
 
+// NUEVO: RENDER EMOJI
+const renderEmoji = (v: any) => (
+  <span className="text-[2.5em] leading-none">{v}</span> // Tamaño 1.5x
+);
+
 // RENDER MAP
 type RenderFn = (v: any, row?: any, view?: string) => React.ReactNode;
 
@@ -97,6 +102,7 @@ const R: Record<string, RenderFn> = {
   color: renderColor,
   edad: renderEdad,
   edad_actual: renderEdad,
+  emoji: renderEmoji, // Registro del campo emoji
 };
 
 // HOOK DE RENDER CELDA

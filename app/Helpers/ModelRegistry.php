@@ -11,6 +11,7 @@ class ModelRegistry
             'mascota'   => M\Mascota::class,
             'cita'   => M\Cita::class,
             'historia_clinica'   => M\HistoriaClinica::class,
+            'categoria'   => M\Categoria::class,
             'especie'   => M\Especie::class,
             'raza'   => M\Raza::class,
             'motivo_cita'   => M\MotivoCita::class,

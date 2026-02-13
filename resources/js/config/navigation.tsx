@@ -45,6 +45,7 @@ const rawSidebar: NavDef[] = [
     [
       ["Medicamentos", Syringe, "/medicamento"],
       ["Procedimientos", ClipboardList, "/procedimiento"],
+      ["Categoria", ClipboardList, "/categoria"],
       ["Especie", PawPrint, "/especie"],
       ["Raza", PawPrint, "/raza"],
       ["Motivo cita", Calendar, "/motivo_cita"],

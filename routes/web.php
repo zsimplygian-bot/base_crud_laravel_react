@@ -27,6 +27,7 @@ $resourcesWithForms = [ // Recursos principales con formularios
     'historia_clinica_seguimiento'  => C\HistoriaClinicaSeguimientoController::class,
     'historia_clinica_procedimiento'  => C\HistoriaClinicaProcedimientoController::class,
     'historia_clinica_medicamento'  => C\HistoriaClinicaMedicamentoController::class,
+    'categoria'           => C\CategoriaController::class,
     'especie'           => C\EspecieController::class,
     'raza'              => C\RazaController::class,
     'motivo_cita'           => C\MotivoCitaController::class,

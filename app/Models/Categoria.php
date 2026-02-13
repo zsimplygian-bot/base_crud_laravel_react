@@ -2,17 +2,17 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-class Especie extends BaseModel
+class Categoria extends BaseModel
 {
     use HasFactory;
-    protected $table = 'especie';
+    protected $table = 'categoria';
     protected static $validationRules = [
-        'especie' => 'required|string|max:100',
+        'categoria' => 'required|string|max:100',
         'emoji' => 'nullable|string|max:100',
     ];
     protected static $tableColumns = [
         ['ID', 'id'],
-        ['ESPECIE', 'especie'],
+        ['CATEGORIA', 'categoria'],
         ['EMOJI', 'emoji'],
     ];
     public static function getQuery(): array
@@ -22,7 +22,7 @@ class Especie extends BaseModel
             'alias' => $t1,
             'query' => DB::table($t1)->select([
                 "$t1.id_$t1 as id",
-                "$t1.especie",
+                "$t1.categoria",
                 "$t1.emoji",
             ]),
         ];
