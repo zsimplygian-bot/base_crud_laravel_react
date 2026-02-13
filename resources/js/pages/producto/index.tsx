@@ -1,9 +1,9 @@
 import { DataTableLayout } from "@/layouts/datatable-layout";
-const view = "medicamento";
-const title = "Medicamento";
+const view = "producto";
+const title = "Producto";
 const formFields = {
   fields: [
-    { id: "medicamento", label: "Medicamento", required: true },
+    { id: "producto", label: "Producto", required: true },
     { id: "descripcion", label: "Descripción" },
   ],
 };

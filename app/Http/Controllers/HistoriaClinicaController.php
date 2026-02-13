@@ -4,7 +4,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\HistoriaClinica;
 use App\Models\HistoriaClinicaSeguimiento;
 use App\Models\HistoriaClinicaProcedimiento;
-use App\Models\HistoriaClinicaMedicamento;
+use App\Models\HistoriaClinicaProducto;
 use App\Models\HistoriaClinicaAnamnesis;
 use Illuminate\Http\Request;
 class HistoriaClinicaController extends BaseController
@@ -21,7 +21,7 @@ class HistoriaClinicaController extends BaseController
         HistoriaClinicaSeguimiento::where('id_historia_clinica', $idHistoria)->delete();
         HistoriaClinicaAnamnesis::where('id_historia_clinica', $idHistoria)->delete();
         HistoriaClinicaProcedimiento::where('id_historia_clinica', $idHistoria)->delete();
-        HistoriaClinicaMedicamento::where('id_historia_clinica', $idHistoria)->delete();
+        HistoriaClinicaProducto::where('id_historia_clinica', $idHistoria)->delete();
     }
     public function records(int $id)
     {
@@ -35,7 +35,7 @@ class HistoriaClinicaController extends BaseController
             'mascota.cliente',
             'historia_seguimientos',
             'historia_procedimientos',
-            'historia_medicamentos',
+            'historia_productos',
             'historia_anamnesis'
         ])->findOrFail($id);
         $data = $this->preparePDFData($historia_clinica);

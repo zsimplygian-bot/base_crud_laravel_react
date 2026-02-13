@@ -11,7 +11,7 @@ export const ExtendedForm = ({ extendedFields, recordId, mode }) => {
   const VIEW_TO_KEY = {
     historia_clinica_seguimiento: "seguimientos",
     historia_clinica_procedimiento: "procedimientos",
-    historia_clinica_medicamento: "medicamentos",
+    historia_clinica_producto: "productos",
     historia_clinica_anamnesis: "anamnesis",
   }
   const blocks = useMemo(

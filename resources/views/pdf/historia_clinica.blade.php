@@ -68,11 +68,11 @@ th{background:#f2f2f2;font-weight:bold}
             ]),
             'precio'=>$p->precio ?? 0
         ]))
-        ->merge($hc->historia_medicamentos->map(fn($m)=>[
+        ->merge($hc->historia_productos->map(fn($m)=>[
             'fecha_raw'=>$m->fecha,
-            'tipo'=>'Medicamento',
+            'tipo'=>'Producto',
             'detalle'=>array_filter([
-                $na($m->medicamento?->medicamento) ? "Medicamento: {$m->medicamento->medicamento}" : null,
+                $na($m->producto?->producto) ? "Producto: {$m->producto->producto}" : null,
                 $na($m->dosis) ? "Dosis: {$m->dosis}" : null,
                 $m->precio ? "Precio: S/ ".number_format($m->precio,2) : null,
                 $na($m->observaciones) ? "Observaciones: {$m->observaciones}" : null,

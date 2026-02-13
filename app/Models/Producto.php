@@ -2,17 +2,17 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-class Medicamento extends BaseModel
+class Producto extends BaseModel
 {
     use HasFactory;
-    protected $table = 'medicamento';
+    protected $table = 'producto';
     protected static $validationRules = [
-        'medicamento' => 'required|string|max:255',
+        'producto' => 'required|string|max:255',
         'descripcion' => 'nullable|string',
     ];
     protected static $tableColumns = [
         ['ID', 'id'],
-        ['MEDICAMENTO', 'medicamento'],
+        ['PRODUCTO', 'producto'],
         ['DESCRIPCIÓN', 'descripcion'],
         ['FECHA REGISTRO', 'created_at'],
     ];
@@ -23,7 +23,7 @@ class Medicamento extends BaseModel
             'alias' => $t1,
             'query' => DB::table($t1)->select([
                 "$t1.id_$t1 as id",
-                "$t1.medicamento",
+                "$t1.producto",
                 "$t1.descripcion",
                 "$t1.created_at",
             ]),
@@ -32,6 +32,6 @@ class Medicamento extends BaseModel
     protected $appends = ['label'];
     public function getLabelAttribute(): string
     {
-        return $this->medicamento; // Texto mostrado en combobox
+        return $this->producto; // Texto mostrado en combobox
     }
 }

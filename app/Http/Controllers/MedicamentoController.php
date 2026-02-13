@@ -1,11 +1,11 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\Medicamento;
-class MedicamentoController extends BaseController
+use App\Models\Producto;
+class ProductoController extends BaseController
 {
     public function __construct()
     {
-        $this->model = Medicamento::class;
+        $this->model = Producto::class;
         parent::__construct();
     }
 }

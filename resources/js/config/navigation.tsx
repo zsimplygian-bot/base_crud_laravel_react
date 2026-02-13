@@ -43,7 +43,7 @@ const rawSidebar: NavDef[] = [
     BookOpen,
     undefined,
     [
-      ["Medicamentos", Syringe, "/medicamento"],
+      ["Productos", Syringe, "/producto"],
       ["Procedimientos", ClipboardList, "/procedimiento"],
       ["Categoria", ClipboardList, "/categoria"],
       ["Especie", PawPrint, "/especie"],

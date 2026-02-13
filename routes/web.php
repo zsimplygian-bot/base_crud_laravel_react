@@ -26,13 +26,13 @@ $resourcesWithForms = [ // Recursos principales con formularios
     'historia_clinica_anamnesis'  => C\HistoriaClinicaAnamnesisController::class,
     'historia_clinica_seguimiento'  => C\HistoriaClinicaSeguimientoController::class,
     'historia_clinica_procedimiento'  => C\HistoriaClinicaProcedimientoController::class,
-    'historia_clinica_medicamento'  => C\HistoriaClinicaMedicamentoController::class,
+    'historia_clinica_producto'  => C\HistoriaClinicaProductoController::class,
     'categoria'           => C\CategoriaController::class,
     'especie'           => C\EspecieController::class,
     'raza'              => C\RazaController::class,
     'motivo_cita'           => C\MotivoCitaController::class,
     'motivo_historia_clinica' => C\MotivoHistoriaClinicaController::class,
-    'medicamento'       => C\MedicamentoController::class,
+    'producto'       => C\ProductoController::class,
     'procedimiento'     => C\ProcedimientoController::class,
 ];
 Route::get('/calendario', function () { // Calendario de citas

@@ -38,8 +38,8 @@ class HistoriaClinica extends BaseModel
         $proc = DB::table('historia_clinica_procedimiento')
             ->select('id_historia_clinica', DB::raw('SUM(precio) as total_procedimientos'))
             ->groupBy('id_historia_clinica'); // Preagregado evita duplicados
-        $med = DB::table('historia_clinica_medicamento')
-            ->select('id_historia_clinica', DB::raw('SUM(precio) as total_medicamentos'))
+        $med = DB::table('historia_clinica_producto')
+            ->select('id_historia_clinica', DB::raw('SUM(precio) as total_productos'))
             ->groupBy('id_historia_clinica'); // Preagregado evita duplicados
         $query = DB::table($t1)
             ->leftJoin($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
@@ -58,7 +58,7 @@ class HistoriaClinica extends BaseModel
                 "$t1.observaciones",
                 "$t4.estado_historia_clinica",
                 "$t1.created_at",
-                DB::raw('COALESCE(proc.total_procedimientos,0) + COALESCE(med.total_medicamentos,0) as precio'), // Total real
+                DB::raw('COALESCE(proc.total_procedimientos,0) + COALESCE(med.total_productos,0) as precio'), // Total real
             ]);
         return ['query' => $query, 'alias' => $t1];
     }
@@ -72,7 +72,7 @@ class HistoriaClinica extends BaseModel
             'procedimientos' => HistoriaClinicaProcedimiento::getQuery()['query']
                 ->where('id_historia_clinica', $id)
                 ->get(),
-            'medicamentos' => HistoriaClinicaMedicamento::getQuery()['query']
+            'productos' => HistoriaClinicaProducto::getQuery()['query']
                 ->where('id_historia_clinica', $id)
                 ->get(),
             'anamnesis' => HistoriaClinicaAnamnesis::getQuery()['query']
@@ -82,7 +82,7 @@ class HistoriaClinica extends BaseModel
     }
     public function historia_seguimientos(): HasMany { return $this->hasMany(HistoriaClinicaSeguimiento::class, 'id_historia_clinica'); }
     public function historia_procedimientos(): HasMany { return $this->hasMany(HistoriaClinicaProcedimiento::class, 'id_historia_clinica'); }
-    public function historia_medicamentos(): HasMany { return $this->hasMany(HistoriaClinicaMedicamento::class, 'id_historia_clinica'); }
+    public function historia_productos(): HasMany { return $this->hasMany(HistoriaClinicaProducto::class, 'id_historia_clinica'); }
     public function historia_anamnesis(): HasMany { return $this->hasMany(HistoriaClinicaAnamnesis::class, 'id_historia_clinica'); }
     public function mascota() { return $this->belongsTo(Mascota::class, 'id_mascota'); }
     public function estado_historia_clinica() { return $this->belongsTo(EstadoHistoriaClinica::class, 'id_estado_historia_clinica'); }

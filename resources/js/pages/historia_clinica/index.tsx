@@ -38,19 +38,19 @@ const extendedFields = {
     { id: "detalle", label: "Detalle" },
     { id: "observaciones", label: "Observaciones" },
   ]},
-  medicamentoFields: {
-  title: "Medicamentos",
-  view: "historia_clinica_medicamento",
+  productoFields: {
+  title: "Productos",
+  view: "historia_clinica_producto",
   fields: [
     { id: "id_historia_clinica", label: "Historia clínica", hidden: true },
-    { id: "id_medicamento", label: "Medicamento", type: "combobox" },
+    { id: "id_producto", label: "Producto", type: "combobox" },
     { id: "dosis", label: "Dosis"},
     { id: "precio", label: "Precio S/", type: "number" },
     { id: "fecha", label: "Fecha", type: "datetime" },
     { id: "archivo", label: "Imagen", type: "file" },
   ],
   recordFields: [
-    { id: "nombre_medicamento", label: "MEDICAMENTO" },
+    { id: "nombre_producto", label: "Producto" },
     { id: "dosis", label: "Dosis" },
     { id: "precio", label: "Precio S/" },
     

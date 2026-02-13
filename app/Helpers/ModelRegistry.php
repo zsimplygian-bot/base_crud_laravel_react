@@ -16,7 +16,7 @@ class ModelRegistry
             'raza'   => M\Raza::class,
             'motivo_cita'   => M\MotivoCita::class,
             'motivo_historia_clinica'   => M\MotivoHistoriaClinica::class,
-            'medicamento'   => M\Medicamento::class,
+            'producto'   => M\Producto::class,
             'procedimiento'   => M\Procedimiento::class,
         ];
         if (!array_key_exists($view, $modelMap)) {

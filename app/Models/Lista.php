@@ -5,7 +5,7 @@ class Lista
 {
     protected static array $tablasPermitidas = [
         'sexo',
-        'medicamento',
+        'producto',
         'procedimiento',
         'cliente',
         'mascota',
