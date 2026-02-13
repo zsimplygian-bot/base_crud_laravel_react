@@ -8,9 +8,7 @@ const formFields = {
   ],
 };
 const searchFields = formFields.fields.map(f => ({
-  ...f,
-  defaultVisible: [ "especie",
-  ].includes(f.id),
+  ...f, defaultVisible: [ "especie" ].includes(f.id),
 }));
 export default function DatatablePage() {
   return ( <DataTableLayout {...{ view, title, formFields, searchFields }} width="1/3"

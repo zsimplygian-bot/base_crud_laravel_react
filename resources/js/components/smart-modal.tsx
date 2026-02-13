@@ -66,14 +66,14 @@ export const SmartModal = ({
           `,
         }}
       >
-        <DialogHeader className="shrink-0">
+        <DialogHeader>
           <DialogTitle>{title.toUpperCase()}</DialogTitle>
           {description && (
             <DialogDescription>{description}</DialogDescription>
           )}
         </DialogHeader>
 
-        <div className="overflow-y-auto">
+        <div className="">
           {children}
         </div>
       </DialogContent>

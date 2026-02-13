@@ -8,12 +8,12 @@ class Especie extends BaseModel
     protected $table = 'especie';
     protected static $validationRules = [
         'especie' => 'required|string|max:100',
-        'emoji' => 'nullable|string|max:100',
+        'emoji_especie' => 'nullable|string|max:100',
     ];
     protected static $tableColumns = [
         ['ID', 'id'],
         ['ESPECIE', 'especie'],
-        ['EMOJI', 'emoji'],
+        ['EMOJI', 'emoji_especie'],
     ];
     public static function getQuery(): array
     {
@@ -23,7 +23,7 @@ class Especie extends BaseModel
             'query' => DB::table($t1)->select([
                 "$t1.id_$t1 as id",
                 "$t1.especie",
-                "$t1.emoji",
+                "$t1.emoji_especie",
             ]),
         ];
     }

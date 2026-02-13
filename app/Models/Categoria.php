@@ -8,7 +8,7 @@ class Categoria extends BaseModel
     protected $table = 'categoria';
     protected static $validationRules = [
         'categoria' => 'required|string|max:100',
-        'emoji' => 'nullable|string|max:100',
+        'emoji_categoria' => 'nullable|string|max:100',
     ];
     protected static $tableColumns = [
         ['ID', 'id'],
@@ -23,7 +23,7 @@ class Categoria extends BaseModel
             'query' => DB::table($t1)->select([
                 "$t1.id_$t1 as id",
                 "$t1.categoria",
-                "$t1.emoji",
+                "$t1.emoji_categoria",
             ]),
         ];
     }

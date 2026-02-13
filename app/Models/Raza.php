@@ -12,8 +12,8 @@ class Raza extends BaseModel
     ];
     protected static $tableColumns = [
         ['ID','id'],
+        ['ESPECIE', 'emoji_especie'],
         ['RAZA','raza'],
-        ['FECHA REGISTRO','created_at'],
     ];
     public static function getQuery(): array
     {
@@ -25,8 +25,8 @@ class Raza extends BaseModel
                 ->leftJoin($t2, "$t1.id_$t2", '=', "$t2.id_$t2")
                 ->select([
                     "$t1.id_$t1 as id",
-                    DB::raw("CONCAT($t2.especie,' - ',$t1.raza) as raza"),
-                    "$t1.created_at",
+                    "$t1.raza",
+                    "$t2.emoji_especie",
                 ]),
         ];
     }

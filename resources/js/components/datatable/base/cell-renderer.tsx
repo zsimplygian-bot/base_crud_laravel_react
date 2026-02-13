@@ -1,20 +1,25 @@
 // components/datatable/body/cell-renderer.tsx
 import React, { useCallback, memo, useEffect } from "react";
 import { SmartBadge } from "@/components/smart-badge";
-import { SmartModal } from "@/components/smart-modal";
 import { PhoneIcon, Mars, Venus } from "lucide-react";
 
 const cls = (...classes: any[]) => classes.filter(Boolean).join(" ");
 const normalize = (v: any) => String(v || "").trim().replace(/\s+/g, " ").toUpperCase();
 export const $ = (obj: any, path: string) => path.split(".").reduce((a, k) => a?.[k], obj);
-const fmt = (v: any, prefix = "", suffix = "", prec = 1) => (v != null ? `${prefix}${Number(v).toFixed(prec)}${suffix}` : "—");
+const fmt = (v: any, prefix = "", suffix = "", prec = 1) =>
+  v != null ? `${prefix}${Number(v).toFixed(prec)}${suffix}` : "—";
 
 const CONFIG = {
   estado_historia_clinica: { ACTIVO: "green", ATENDIDO: "green", ABIERTO: "green", REFERIDO: "yellow", CERRADO: "gray", "EN OBSERVACIÓN": "gray" },
   estado_cita: { ATENDIDO: "green", CANCELADO: "red", PENDIENTE: "gray" },
   estado_mascota: { SANO: "green", ENFERMO: "red", FALLECIDO: "gray", TRATAMIENTO: "yellow" },
-  especies: { canino: "🐶", felino: "🐱", conejo: "🐰", ave: "🐦" },
-  colores: { negro: "#000", negras: "#000", marrón: "#7B3F00", marron: "#7B3F00", acero: "#A8A9AD", cenizo: "#B2BEB5", crema: "#fff0bf", blanco: "#fff", gris: "#808080", plomo: "#808080", dorado: "#DAA520", rojo: "#f00", azul: "#00f", verde: "#008000", rosa: "#FFC0CB", naranja: "#FFA500", morado: "#800080", caramelo: "#FF7F50", beige: "#F5F5DC", fuego: "#FF4500" },
+  colores: {
+    negro: "#000", negras: "#000", marrón: "#7B3F00", marron: "#7B3F00",
+    acero: "#A8A9AD", cenizo: "#B2BEB5", crema: "#fff0bf", blanco: "#fff",
+    gris: "#808080", plomo: "#808080", dorado: "#DAA520", rojo: "#f00",
+    azul: "#00f", verde: "#008000", rosa: "#FFC0CB", naranja: "#FFA500",
+    morado: "#800080", caramelo: "#FF7F50", beige: "#F5F5DC", fuego: "#FF4500"
+  },
   ignoreColorWords: new Set(["con", "y", "de", "manchas", "claro", "oscuro"]),
 };
 
@@ -25,21 +30,20 @@ const BadgeStatus = memo(({ value, map }: { value: any; map: Record<string, stri
 
 const ImageCell = memo(({ src }: { src?: string }) => {
   if (!src) return "—";
-
   useEffect(() => {
-    if (!src) return;
     fetch(src, { method: "HEAD" }).catch(() => {});
   }, [src]);
-
   return <img src={src} className="h-12 w-12 object-cover rounded-md border" alt="Archivo" />;
 });
 
 // RENDER HELPERS
-const renderEdad = (v: any) => { 
+const renderEdad = (v: any) => {
   const m = parseInt(v, 10);
   if (isNaN(m) || m < 0) return "—";
   const y = Math.floor(m / 12), mo = m % 12;
-  return y ? mo ? `${y} ${y === 1 ? "año" : "años"}, ${mo} ${mo === 1 ? "mes" : "meses"}` : `${y} ${y === 1 ? "año" : "años"}` : `${mo} ${mo === 1 ? "mes" : "meses"}`;
+  return y
+    ? mo ? `${y} ${y === 1 ? "año" : "años"}, ${mo} ${mo === 1 ? "mes" : "meses"}` : `${y} ${y === 1 ? "año" : "años"}`
+    : `${mo} ${mo === 1 ? "mes" : "meses"}`;
 };
 
 const renderTelefono = (v: any) => {
@@ -54,10 +58,7 @@ const renderTelefono = (v: any) => {
 
 const renderRaza = (v: any) => {
   if (!v) return "—";
-  const key = Object.keys(CONFIG.especies).find(k => v.toLowerCase().startsWith(k));
-  const icon = key ? CONFIG.especies[key] : "🐾";
-  const clean = key ? v.replace(new RegExp(`^${key}\\s*-?\\s*`, "i"), "") : v;
-  return <span className="flex items-center gap-2"><span className="text-xl">{icon}</span>{clean}</span>;
+  return <span>{v}</span>; // Texto plano
 };
 
 const renderSexo = (v: any) => {
@@ -75,9 +76,9 @@ const renderColor = (v: any) => {
   return <SmartBadge className="size-7 rounded-full border border-gray-600 p-0" style={{ background: bg }} />;
 };
 
-// NUEVO: RENDER EMOJI
+// RENDER EMOJI
 const renderEmoji = (v: any) => (
-  <span className="text-[2.5em] leading-none">{v}</span> // Tamaño 1.5x
+  <span className="text-[2.5em] leading-none">{v}</span> // Emoji grande
 );
 
 // RENDER MAP
@@ -102,14 +103,13 @@ const R: Record<string, RenderFn> = {
   color: renderColor,
   edad: renderEdad,
   edad_actual: renderEdad,
-  emoji: renderEmoji, // Registro del campo emoji
 };
-
 // HOOK DE RENDER CELDA
 export const useRenderCellContent = (defaultView?: string) => {
   return useCallback((key: string, row?: any, view?: string) => {
     const v = $(row, key);
     if (v == null || (typeof v === "string" && v.trim() === "") || (Array.isArray(v) && v.length === 0)) return "—";
+    if (key.startsWith("emoji")) return renderEmoji(v); // Prefijo emoji*
     const renderFn = R[key];
     if (typeof renderFn === "function") return renderFn(v, row, view || defaultView);
     if (key.toLowerCase().includes("archivo") && view) {
@@ -120,7 +120,6 @@ export const useRenderCellContent = (defaultView?: string) => {
     return v;
   }, [defaultView]);
 };
-
 // REGISTRAR RENDERER EXTERNO
 export const registerRenderer = (key: string, fn: RenderFn) => {
   if (typeof fn === "function") R[key] = fn;

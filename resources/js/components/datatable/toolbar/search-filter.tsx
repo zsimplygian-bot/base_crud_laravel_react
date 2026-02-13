@@ -74,7 +74,7 @@ export const SearchFilter = memo(function SearchFilter({
     <div className={`flex items-start ${safeVisibleFields.length > 0 ? "gap-2" : ""}`}>
       <SmartDropdown
         {...{
-          label: "Buscar por",
+          label: "Buscar por:",
           triggerIcon: SearchIcon,
           items,
           closeOnSelect: false,

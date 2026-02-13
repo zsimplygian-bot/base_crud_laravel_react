@@ -28,7 +28,7 @@ export const ToggleColumns = memo(function ToggleColumns({
   );
   return (
     <SmartDropdown
-      {...{ label: "Columnas visibles", items, closeOnSelect: false, triggerIcon: EyeIcon }}
+      {...{ label: "Columnas visibles:", items, closeOnSelect: false, triggerIcon: EyeIcon }}
     />
   );
 });

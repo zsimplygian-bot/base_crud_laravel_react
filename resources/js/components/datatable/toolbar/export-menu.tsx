@@ -10,5 +10,5 @@ export const ExportMenu = memo(function ExportMenu({ view, columns, data }: Expo
             { label: "Excel", icon: FileSpreadsheetIcon, action: exportToExcel },
             { label: "PDF", icon: FileTextIcon, action: exportToPDF },
     ], [exportToCSV, exportToExcel, exportToPDF] );
-  return ( <SmartDropdown {...{ label: "Exportar", triggerIcon: DownloadIcon, items }} /> );
+  return ( <SmartDropdown {...{ label: "Exportar en:", triggerIcon: DownloadIcon, items }} /> );
 });
