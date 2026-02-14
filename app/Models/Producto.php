@@ -8,14 +8,14 @@ class Producto extends BaseModel
     protected $table = 'producto';
     protected static $validationRules = [
         'producto' => 'required|string|max:255',
-        'id_categoria' => 'required|integer',
+        'id_categoria_producto' => 'required|integer',
         'descripcion' => 'nullable|string',
         'precio' => 'nullable|float',
     ];
     protected static $tableColumns = [
         ['ID', 'id'],
         ['PRODUCTO', 'producto'],
-        ['CATEGORIA', 'categoria'],
+        ['CATEGORIA', 'categoria_producto'],
         ['DESCRIPCIÓN', 'descripcion'],
         ['PRECIO', 'precio'],
         ['FECHA REGISTRO', 'created_at'],
@@ -23,7 +23,7 @@ class Producto extends BaseModel
     public static function getQuery(): array
     {
         $t1 = (new self)->getTable();
-        $t2 = 'categoria';
+        $t2 = 'categoria_producto';
         return [
             'alias' => $t1,
             'query' => DB::table($t1)
@@ -31,7 +31,7 @@ class Producto extends BaseModel
             ->select([
                 "$t1.id_$t1 as id",
                 "$t1.producto",
-                "$t2.categoria",
+                "$t2.categoria_producto",
                 "$t1.descripcion",
                 "$t1.precio",
                 "$t1.created_at",
@@ -43,5 +43,5 @@ class Producto extends BaseModel
     {
         return $this->producto; // Texto mostrado en combobox
     }
-    public function categoria() { return $this->belongsTo(Categoria::class, 'id_categoria'); } // Relación raza
+    public function categoria_producto() { return $this->belongsTo(CategoriaProducto::class, 'id_categoria_producto'); } // Relación raza
 }

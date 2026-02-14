@@ -7,7 +7,7 @@ class Lista
         'sexo','producto','procedimiento','cliente','mascota','estado_cita',
         'estado_mascota','motivo_cita','motivo_historia_clinica',
         'estado_historia_clinica','especie','unidad_tiempo','raza',
-        'rol','categoria',
+        'rol','categoria_producto','categoria_procedimiento',
     ];
     protected static array $columnasTablasSimples = [
         // 'especialidad' => ['id_especialidad as id','especialidad as label'],
@@ -18,7 +18,8 @@ class Lista
     ];
     // Tablas que tienen emoji y su campo correspondiente
     protected static array $tablasConEmoji = [
-        'categoria' => 'emoji_categoria',
+        'categoria_producto' => 'emoji_categoria_producto',
+        'categoria_procedimiento' => 'emoji_categoria_procedimiento',
         'sexo'      => 'emoji_sexo',
         'especie'   => 'emoji_especie',
     ];

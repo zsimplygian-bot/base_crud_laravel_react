@@ -2,18 +2,18 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-class Categoria extends BaseModel
+class Motivo extends BaseModel
 {
     use HasFactory;
-    protected $table = 'categoria';
+    protected $table = 'motivo';
     protected static $validationRules = [
-        'categoria' => 'required|string|max:100',
-        'emoji_categoria' => 'nullable|string|max:100',
+        'motivo' => 'required|string|max:100',
+        'emoji_motivo' => 'nullable|string|max:100',
     ];
     protected static $tableColumns = [
-        ['ID', 'id'],
-        ['CATEGORIA', 'categoria'],
-        ['EMOJI', 'emoji'],
+        ['ID','id'],
+        ['MOTIVO','motivo'],
+        ['EMOJI','emoji_motivo'],
     ];
     public static function getQuery(): array
     {
@@ -22,8 +22,8 @@ class Categoria extends BaseModel
             'alias' => $t1,
             'query' => DB::table($t1)->select([
                 "$t1.id_$t1 as id",
-                "$t1.categoria",
-                "$t1.emoji_categoria",
+                "$t1.motivo",
+                "$t1.emoji_motivo",
             ]),
         ];
     }

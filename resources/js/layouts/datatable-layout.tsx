@@ -71,12 +71,24 @@ export const DataTableLayout = ({
             </div>
           </div>
           <SmartTable
-            {...{ columns, rows: data, loading, error, columnVisibility, sortBy, sortOrder, renderCell }}
-            onSortChange={(by, order) => { setSortBy(by); setSortOrder(order ?? "desc"); }}
+            {...{
+              columns,
+              rows: data,
+              loading,
+              error: error?.message ?? null, // Convierte Error → string
+              columnVisibility,
+              sortBy,
+              sortOrder,
+              renderCell,
+            }}
+            onSortChange={(by, order) => {
+              setSortBy(by);
+              setSortOrder(order ?? "desc");
+            }}
             actions={row => (
               <ActionButtons
                 {...{ row_id: row.id, view, title, formFields, extendedFields }}
-                onSuccess={fetchData} // Editar/Eliminar solo refresca
+                onSuccess={fetchData}
               />
             )}
           />

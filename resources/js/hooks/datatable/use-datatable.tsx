@@ -72,20 +72,25 @@ export const useDataTable = ({
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ query, ui }));
   }, [query, ui, isRestored, STORAGE_KEY]);
   const fetchData = useCallback(async () => {
-    if (!isRestored) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await axios.get("/api/index", { params: buildParams() });
-      setData(res.data.data ?? []);
-      setColumns(res.data.columns ?? []);
-      setTotalRows(res.data.params?.total ?? 0);
-    } catch (e: any) {
-      setError(e);
-    } finally {
-      setLoading(false);
-    }
-  }, [isRestored, buildParams]);
+  if (!isRestored) return;
+  setLoading(true);
+  setError(null);
+  try {
+    const res = await axios.get("/api/index", { params: buildParams() });
+    setData(res.data.data ?? []);
+    setColumns(res.data.columns ?? []);
+    setTotalRows(res.data.params?.total ?? 0);
+  } catch (e: any) {
+    setError(
+      e?.response?.data?.message
+        ? new Error(e.response.data.message) // Error backend
+        : new Error(e.message ?? "Error desconocido") // Error general
+    );
+  } finally {
+    setLoading(false);
+  }
+}, [isRestored, buildParams]);
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);

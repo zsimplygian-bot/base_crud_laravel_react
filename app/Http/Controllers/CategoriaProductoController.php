@@ -1,11 +1,11 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\Categoria;
+use App\Models\CategoriaProducto;
 use App\Http\Controllers\BaseController;
-class CategoriaController extends BaseController
+class CategoriaProductoController extends BaseController
 {
     public function __construct() {
-        $this->model = Categoria::class; 
+        $this->model = CategoriaProducto::class; 
         parent::__construct();
     }
 }
