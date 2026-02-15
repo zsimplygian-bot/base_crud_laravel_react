@@ -6,7 +6,7 @@ const formFields = {
     { id: "id_mascota", label: "Mascota - Dueño", type: "combobox" },
     { id: "fecha", label: "Fecha", type: "datetime", required: true },
     { id: "id_motivo_historia_clinica", label: "Motivo historia", type: "combobox" },
-    { id: "id_motivo", label: "Motivo historia", type: "combobox" },
+    { id: "id_motivo", label: "Motivo cita", type: "combobox" },
     { id: "detalle", label: "Detalle", type: "textarea" },
     { id: "observaciones", label: "Observaciones", type: "textarea" },
     { id: "id_estado_historia_clinica", label: "Estado", type: "combobox", default: "1" },
