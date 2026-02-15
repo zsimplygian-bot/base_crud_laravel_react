@@ -50,8 +50,6 @@ const rawSidebar: NavDef[] = [
       ["Especie", PawPrint, "/especie"],
       ["Raza", PawPrint, "/raza"],
       ["Motivo", Calendar, "/motivo"],
-      ["Motivo cita", Calendar, "/motivo_cita"],
-      ["Motivo historia", Calendar, "/motivo_historia_clinica"],
       ["Usuario", User, "/user"],
     ],
   ],
