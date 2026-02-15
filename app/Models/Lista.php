@@ -5,7 +5,7 @@ class Lista
 {
     protected static array $tablasPermitidas = [
         'sexo','producto','procedimiento','cliente','mascota','estado_cita',
-        'estado_mascota','motivo_cita','motivo_historia_clinica',
+        'estado_mascota','motivo_cita','motivo_historia_clinica', 'motivo',
         'estado_historia_clinica','especie','unidad_tiempo','raza',
         'rol','categoria_producto','categoria_procedimiento',
     ];
@@ -21,6 +21,7 @@ class Lista
         'categoria_producto' => 'emoji_categoria_producto',
         'categoria_procedimiento' => 'emoji_categoria_procedimiento',
         'sexo'      => 'emoji_sexo',
+        'motivo'      => 'emoji_motivo',
         'especie'   => 'emoji_especie',
     ];
     /* ===================== Helpers ===================== */

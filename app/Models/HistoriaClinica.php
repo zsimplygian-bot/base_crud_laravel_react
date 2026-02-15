@@ -12,6 +12,7 @@ class HistoriaClinica extends BaseModel
         'id_mascota' => 'required|int',
         'fecha' => 'required|date',
         'id_motivo_historia_clinica' => 'required|int',
+        'id_motivo' => 'required|int',
         'detalle' => 'nullable|string',
         'observaciones' => 'nullable|string',
         'id_estado_historia_clinica' => 'required|int',
@@ -22,6 +23,7 @@ class HistoriaClinica extends BaseModel
         ['DUEÑO', 'cliente'],
         ['FECHA', 'fecha'],
         ['MOTIVO', 'motivo_historia_clinica'],
+        ['MOTIVO', 'emoji_motivo'],
         ['DETALLE', 'detalle'],
         ['TOTAL', 'precio'],
         ['OBSERVACIONES', 'observaciones'],
@@ -35,6 +37,7 @@ class HistoriaClinica extends BaseModel
         $t3 = 'cliente';
         $t4 = 'estado_historia_clinica';
         $t5 = 'motivo_historia_clinica';
+        $t6 = 'motivo';
         $proc = DB::table('historia_clinica_procedimiento')
             ->select('id_historia_clinica', DB::raw('SUM(precio) as total_procedimientos'))
             ->groupBy('id_historia_clinica'); // Preagregado evita duplicados
@@ -46,6 +49,7 @@ class HistoriaClinica extends BaseModel
             ->leftJoin($t3, "$t2.id_$t3", '=', "$t3.id_$t3")
             ->leftJoin($t4, "$t1.id_$t4", '=', "$t4.id_$t4")
             ->leftJoin($t5, "$t1.id_$t5", '=', "$t5.id_$t5")
+            ->leftJoin($t6, "$t1.id_$t6", '=', "$t6.id_$t6")
             ->leftJoinSub($proc, 'proc', 'proc.id_historia_clinica', '=', "$t1.id_$t1") // Join limpio
             ->leftJoinSub($med, 'med', 'med.id_historia_clinica', '=', "$t1.id_$t1") // Join limpio
             ->select([
@@ -54,6 +58,7 @@ class HistoriaClinica extends BaseModel
                 "$t3.cliente",
                 "$t1.fecha",
                 "$t5.motivo_historia_clinica as motivo_historia_clinica",
+                "$t6.emoji_motivo",
                 "$t1.detalle",
                 "$t1.observaciones",
                 "$t4.estado_historia_clinica",
