@@ -16,8 +16,6 @@ class ModelRegistry
             'especie'   => M\Especie::class,
             'raza'   => M\Raza::class,
             'motivo'   => M\Motivo::class,
-            'motivo_cita'   => M\MotivoCita::class,
-            'motivo_historia_clinica'   => M\MotivoHistoriaClinica::class,
             'producto'   => M\Producto::class,
             'procedimiento'   => M\Procedimiento::class,
         ];

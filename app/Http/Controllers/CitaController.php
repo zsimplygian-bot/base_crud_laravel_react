@@ -31,14 +31,31 @@ class CitaController extends BaseController
         $citas = Cita::proximas();
         return response()->json($citas);
     }
-    public function atender($id)
-    {
-        $cita = Cita::findOrFail($id);
-        $cita->update([
-            'id_estado_cita' => 2,
-        ]);
-        return redirect()->to('/historia_clinica/form/create');
-    }
+     public function atender($id)
+{
+    Cita::where('id_cita', $id)->update([
+        'id_estado_cita' => 2, // Atendida
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'id_estado_cita' => 2,
+    ]);
+}
+
+public function cancelar($id)
+{
+    Cita::where('id_cita', $id)->update([
+        'id_estado_cita' => 3, // Cancelada
+    ]);
+
+    return response()->json([
+        'success' => true,
+        'id_estado_cita' => 3,
+    ]);
+}
+
+
     public function eventos(Request $request)
     {
         $start = $request->query('start');
@@ -56,7 +73,7 @@ class CitaController extends BaseController
                 'start'   => $item->start,
                 'mascota' => $item->mascota,
                 'cliente' => $item->cliente,
-                'motivo'  => $item->motivo_cita,
+                'motivo'  => $item->motivo,
                 'fecha'  => $item->fecha,
                 'hora'  => $item->hora,
                 'fecha_hora_notificacion'  => $item->fecha_hora_notificacion,
@@ -71,7 +88,7 @@ class CitaController extends BaseController
         $t1 = (new Cita)->getTable();
         $t2 = 'mascota';
         $t3 = 'cliente';
-        $t4 = 'motivo_cita';
+        $t4 = 'motivo';
         $t5 = 'estado_cita';
 
         $cita = DB::table($t1)
@@ -89,7 +106,7 @@ class CitaController extends BaseController
                 "$t1.hora",
                 "$t1.fecha_hora_atencion",
                 "$t1.fecha_hora_notificacion",
-                "$t4.motivo_cita",
+                "$t4.motivo",
                 "$t5.estado_cita as estado",
                 "$t1.observaciones"
             ])

@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { Loader2 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
-
 type Props = {
   to?: string
   type?: "button" | "submit" | "reset"
@@ -21,7 +20,6 @@ type Props = {
   disabled?: boolean
   onClick?: (e: React.MouseEvent) => void | Promise<void>
 }
-
 export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartButton(
   {
     to,
@@ -41,18 +39,15 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
   ref
 ) {
   const [loading, setLoading] = useState(false)
-
   const handleClick = async (e: React.MouseEvent) => {
     if (type !== "submit") e.preventDefault() // Seguridad extra
     if (disabled || loading || !onClick) return
-
     const r = onClick(e)
     if (r instanceof Promise) {
       setLoading(true)
       try { await r } finally { setLoading(false) }
     }
   }
-
   const content = loading ? (
     <>
       <Loader2 className="size-4 animate-spin" />
@@ -67,7 +62,6 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
       {Icon && iconPosition === "right" && <Icon className="size-4" />}
     </>
   )
-
   const button = (
     <Button
       {...{
@@ -88,9 +82,7 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
       {to ? <Link href={to}>{content}</Link> : content}
     </Button>
   )
-
   if (!tooltip) return button
-
   return (
     <Tooltip>
       <TooltipTrigger asChild>{button}</TooltipTrigger>

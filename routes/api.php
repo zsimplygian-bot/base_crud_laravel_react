@@ -7,6 +7,8 @@ use App\Http\Controllers\CitaController;
 use App\Http\Controllers\HistoriaClinicaController;
 use App\Http\Controllers\Api\DashboardChartsController;
 use App\Http\Controllers\ClienteController;
+Route::post('/cita/{id}/atender', [CitaController::class, 'atender']);
+Route::post('/cita/{id}/cancelar', [CitaController::class, 'cancelar']);
 Route::get('/cliente/{id}', [ClienteController::class, 'show']);
 Route::get('/cita/{id}/info', [CitaController::class, 'info']);
 Route::post('/cita/{id}/notificar', [CitaController::class, 'notificar']);

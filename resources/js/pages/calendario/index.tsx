@@ -169,7 +169,7 @@ export default function Calendario() {
                 <p><strong>Fecha:</strong> {formatFecha(detalleData.fecha)}</p>
                 <p><strong>Hora:</strong> {detalleData.hora || "-"}</p>
                 <p><strong>Notificación:</strong> {detalleData.fecha_hora_notificacion || "-"}</p>
-                <p><strong>Motivo:</strong> {detalleData.motivo_cita}</p>
+                <p><strong>Motivo:</strong> {detalleData.motivo}</p>
                 <p><strong>Estado:</strong> {detalleData.estado}</p>
 
                 {detalleData.observaciones && (
@@ -180,7 +180,7 @@ export default function Calendario() {
                 <div className="mt-6">
                   <WhatsAppButton
                     telefono={detalleData.telefono}
-                    mensaje={`Hola ${detalleData.cliente}, te invitamos a una cita con ${detalleData.mascota} el ${detalleData.fecha} a alrededor de las ${detalleData.hora || "-"}. Motivo: ${detalleData.motivo_cita}`}
+                    mensaje={`Hola ${detalleData.cliente}, te invitamos a una cita con ${detalleData.mascota} el ${detalleData.fecha} a alrededor de las ${detalleData.hora || "-"}. Motivo: ${detalleData.motivo}`}
                     citaId={detalleData.id}
                   />
                 </div>

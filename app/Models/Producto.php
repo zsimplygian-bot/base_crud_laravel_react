@@ -10,7 +10,7 @@ class Producto extends BaseModel
         'producto' => 'required|string|max:255',
         'id_categoria_producto' => 'required|integer',
         'descripcion' => 'nullable|string',
-        'precio' => 'nullable|float',
+        'precio' => 'required|numeric',
     ];
     protected static $tableColumns = [
         ['ID', 'id'],

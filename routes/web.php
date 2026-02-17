@@ -32,8 +32,6 @@ $resourcesWithForms = [ // Recursos principales con formularios
     'especie'           => C\EspecieController::class,
     'raza'              => C\RazaController::class,
     'motivo'           => C\MotivoController::class,
-    'motivo_cita'           => C\MotivoCitaController::class,
-    'motivo_historia_clinica' => C\MotivoHistoriaClinicaController::class,
     'producto'       => C\ProductoController::class,
     'procedimiento'     => C\ProcedimientoController::class,
 ];

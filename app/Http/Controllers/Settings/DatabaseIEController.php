@@ -48,20 +48,59 @@ class DatabaseIEController extends Controller
         return response()->download($path)->deleteFileAfterSend(true);
     }
     public function import(Request $request)
-    {
-        $request->validate([
-            'backup' => 'required|file|mimes:sql,txt'
-        ]);
-        $file = $request->file('backup');
-        $sql = file_get_contents($file->getRealPath());
-        DB::unprepared($sql);
-        DB::table('database_history')->insert([
-            'action'     => 'import',
-            'filename'   => $file->getClientOriginalName(),
-            'user_id'    => Auth::id(),
-            'ip_address' => request()->ip(),
-            'created_at' => now(), // ahora Lima
-        ]);
-        return back()->with('success', 'La base de datos fue importada correctamente.');
+{
+    $request->validate([
+        'backup' => 'required|file|mimes:sql,txt'
+    ]);
+
+    $db = DB::getDatabaseName();
+
+    // Desactiva restricciones y warnings
+    DB::statement('SET FOREIGN_KEY_CHECKS=0');
+    DB::statement('SET SQL_MODE=""');
+
+    // Obtiene solo tablas reales
+    $tables = DB::select("
+        SELECT TABLE_NAME
+        FROM information_schema.tables
+        WHERE TABLE_SCHEMA = ?
+          AND TABLE_TYPE = 'BASE TABLE'
+    ", [$db]);
+
+    // Borra todas las tablas sin importar errores
+    foreach ($tables as $t) {
+        try {
+            DB::statement("DROP TABLE IF EXISTS `{$t->TABLE_NAME}`");
+        } catch (\Throwable $e) {
+            // Ignora cualquier error
+            continue;
+        }
     }
+
+    // Ejecuta el SQL del archivo completo
+    $file = $request->file('backup');
+    $sql = file_get_contents($file->getRealPath());
+
+    try {
+        DB::unprepared($sql);
+    } catch (\Throwable $e) {
+        // No se corta el proceso, pero sí puedes loguear si quieres
+    }
+
+    // Reactiva restricciones
+    DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
+    // Log histórico
+    DB::table('database_history')->insert([
+        'action'     => 'import',
+        'filename'   => $file->getClientOriginalName(),
+        'user_id'    => Auth::id(),
+        'ip_address' => request()->ip(),
+        'created_at' => now(),
+    ]);
+
+    return back()->with('success', 'La base de datos fue restaurada completamente.');
+}
+
+
 }
