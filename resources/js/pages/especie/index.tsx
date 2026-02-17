@@ -1,15 +1,6 @@
-import { DataTableLayout } from "@/layouts/datatable-layout";
-const view = "especie";
-const title = "Especie";
-const formFields = {
-  fields: [
-    { id: "especie", label: "Especie", required: true },
-    { id: "emoji", label: "Emoji", required: true },
-  ],
-};
-const searchFields = formFields.fields.map(f => ({
-  ...f, defaultVisible: [ "especie" ].includes(f.id),
-}));
+import { DataTableLayout } from "@/layouts/datatable-layout"
+import { FORM_CONFIG } from "@/config/forms"
+const { view, title, fields } = FORM_CONFIG.especie
 export default function DatatablePage() {
-  return <DataTableLayout {...{ view, title, formFields, searchFields, width:"1/3" }} />;
+  return <DataTableLayout {...{ view, title, fields, width:"1/3" }} />;
 }

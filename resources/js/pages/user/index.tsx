@@ -1,15 +1,7 @@
-import { DataTableLayout } from "@/layouts/datatable-layout";
-const view = "user";
-const title = "Usuarios";
-const formFields = {
-  fields: [
-    { id: "name", label: "Usuario", required: true },
-    { id: "id_rol", label: "Rol", type: "combobox", required: true },
-    { id: "email", label: "Email", required: true },
-    { id: "archivo", label: "Imagen", type: "file" },
-  ],
-};
-const searchFields = formFields.fields.map(f => ({ ...f }));
+import { DataTableLayout } from "@/layouts/datatable-layout"
+import { FORM_CONFIG } from "@/config/forms"
+const { view, title, fields } = FORM_CONFIG.user  
 export default function DatatablePage() {
-  return <DataTableLayout {...{ view, title, formFields, searchFields }} />;
+  return <DataTableLayout {...{ view, title, fields, width:"1/3" }} />;
 }
+

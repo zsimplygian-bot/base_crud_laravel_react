@@ -27,14 +27,15 @@ export const Combobox = ({
 }) => {
   const [search, setSearch] = useState("")
 
-  // Resuelve la config del form desde id
+  // Resuelve el form exacto desde el id del campo
   const resolvedForm = useMemo(() => {
-    const key = id?.startsWith("id_") ? id.replace("id_", "") : id
-    return FORM_CONFIG?.[key]
+    if (!id) return null
+    const key = id.startsWith("id_") ? id.slice(3) : id
+    return FORM_CONFIG[key] ?? null
   }, [id])
 
   const selectedLabel = useMemo(() => {
-    if (value === "" || value === null) return ""
+    if (value === "" || value == null) return ""
     return options.find(o => String(o.id) === String(value))?.label ?? ""
   }, [options, value])
 
@@ -45,7 +46,7 @@ export const Combobox = ({
   }, [options, search])
 
   const handleSelect = useCallback(
-    (idSelected: any) => {
+    idSelected => {
       onSelect(String(value) === String(idSelected) ? "" : idSelected)
       setOpen(false)
       setSearch("")
@@ -54,78 +55,75 @@ export const Combobox = ({
   )
 
   return (
-    <>
-      <Popover {...{ open, onOpenChange: setOpen }} modal={false}>
-        <PopoverTrigger asChild>
-          <div className="relative w-full">
-            <Input
+    <Popover {...{ open, onOpenChange: setOpen }} modal={false}>
+      <PopoverTrigger asChild>
+        <div className="relative w-full">
+          <Input
+            {...{
+              id,
+              disabled,
+              value: selectedLabel,
+              placeholder,
+              readOnly: true,
+            }}
+            className="w-full cursor-pointer"
+          />
+        </div>
+      </PopoverTrigger>
+
+      {/* Sin ancho fijo */}
+      <PopoverContent className="p-0">
+        <Command>
+          <div className="flex items-center px-2 py-1 gap-1">
+            <CommandInput
               {...{
-                id,
                 disabled,
-                value: selectedLabel,
-                placeholder,
-                readOnly: true,
+                value: search,
+                onValueChange: setSearch,
+                placeholder: "Buscar...",
               }}
-              className="w-full pr-10 cursor-pointer"
             />
-          </div>
-        </PopoverTrigger>
 
-        <PopoverContent className="p-0 w-full">
-          <Command>
-            <div className="relative flex items-center px-2 py-1">
-              <CommandInput
+            {resolvedForm && (
+              <NewRecordButton
                 {...{
-                  disabled,
-                  value: search,
-                  onValueChange: setSearch,
-                  placeholder: "Buscar...",
+                  view: resolvedForm.view,
+                  title: resolvedForm.title,
+                  fields: resolvedForm.fields,
                 }}
-                className="pr-10"
               />
+            )}
+          </div>
 
-              {/* NewRecordButton integrado dentro del input */}
-              {resolvedForm && (
-                <NewRecordButton
-                  view={resolvedForm.view}
-                  title={resolvedForm.title}
-                  formFields={{ fields: resolvedForm.fields }}
-                  disabled={false}
-                  buttonClassName="h-7 w-7 p-0"
-                />
-              )}
-            </div>
+          <CommandList>
+            {loading && <CommandEmpty>Cargando...</CommandEmpty>}
 
-            <CommandList>
-              {loading && <CommandEmpty>Cargando...</CommandEmpty>}
+            {!loading && filteredOptions.length === 0 && (
+              <CommandEmpty>No hay opciones.</CommandEmpty>
+            )}
 
-              {!loading && filteredOptions.length === 0 && (
-                <CommandEmpty>No hay opciones.</CommandEmpty>
-              )}
-
-              <CommandGroup>
-                {filteredOptions.map(opt => {
-                  const isSelected = String(value) === String(opt.id)
-                  return (
-                    <CommandItem
-                      key={opt.id}
-                      value={opt.label}
-                      onSelect={() => handleSelect(opt.id)}
-                    >
-                      {opt.label}
-                      {isSelected && (
-                        <CommandShortcut>
-                          <CheckIcon className="w-4 h-4" />
-                        </CommandShortcut>
-                      )}
-                    </CommandItem>
-                  )
-                })}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    </>
+            <CommandGroup>
+              {filteredOptions.map(opt => {
+                const isSelected = String(value) === String(opt.id)
+                return (
+                  <CommandItem
+                    key={opt.id}
+                    value={opt.label}
+                    onSelect={() => handleSelect(opt.id)}
+                  >
+                    {opt.label}
+                    {isSelected && (
+                      <CommandShortcut>
+                        <CheckIcon className="w-4 h-4" />
+                      </CommandShortcut>
+                    )}
+                  </CommandItem>
+                )
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   )
 }

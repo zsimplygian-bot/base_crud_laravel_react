@@ -1,16 +1,6 @@
-import { DataTableLayout } from "@/layouts/datatable-layout";
-import { Combobox } from "@headlessui/react";
-const view = "producto";
-const title = "Producto";
-const formFields = {
-  fields: [
-    { id: "producto", label: "Producto", required: true },
-    { id: "id_categoria_producto", label: "Categoría", type: "combobox",},
-    { id: "descripcion", label: "Descripción" },
-    { id: "precio", label: "Precio" },
-  ],
-};
-const searchFields = formFields.fields.map(f => ({ ...f }));
+import { DataTableLayout } from "@/layouts/datatable-layout"
+import { FORM_CONFIG } from "@/config/forms"
+const { view, title, fields } = FORM_CONFIG.producto
 export default function DatatablePage() {
-  return <DataTableLayout {...{ view, title, formFields, searchFields }} />;
+  return <DataTableLayout {...{ view, title, fields }} />;
 }

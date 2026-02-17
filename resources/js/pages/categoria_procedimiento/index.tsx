@@ -1,16 +1,6 @@
-// pages/categoria/index.tsx
-import { DataTableLayout } from "@/layouts/datatable-layout";
-const view = "categoria_procedimiento";
-const title = "Categoria Procedimiento";
-const formFields = {
-  fields: [
-    { id: "categoria_procedimiento", label: "Categoria procedimiento", required: true },
-    { id: "emoji_categoria_procedimiento", label: "Emoji", required: true },
-  ],
-};
-const searchFields = formFields.fields.map(f => ({
-  ...f, defaultVisible: [ "categoria_procedimiento" ].includes(f.id),
-}));
+import { DataTableLayout } from "@/layouts/datatable-layout"
+import { FORM_CONFIG } from "@/config/forms"
+const { view, title, fields } = FORM_CONFIG.categoriaProcedimiento
 export default function DatatablePage() {
-  return <DataTableLayout {...{ view, title, formFields, searchFields, width:"1/3" }} />;
+  return <DataTableLayout {...{ view, title, fields, width:"1/3" }} />;
 }
