@@ -8,7 +8,6 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandItem,
-  CommandShortcut,
 } from "./command"
 import { CheckIcon } from "lucide-react"
 import { NewRecordButton } from "@/components/datatable/toolbar/new-record-button"
@@ -27,7 +26,6 @@ export const Combobox = ({
 }) => {
   const [search, setSearch] = useState("")
 
-  // Resuelve el form exacto desde el id del campo
   const resolvedForm = useMemo(() => {
     if (!id) return null
     const key = id.startsWith("id_") ? id.slice(3) : id
@@ -57,7 +55,7 @@ export const Combobox = ({
   return (
     <Popover {...{ open, onOpenChange: setOpen }} modal={false}>
       <PopoverTrigger asChild>
-        <div className="relative w-full">
+        <div className="w-full">
           <Input
             {...{
               id,
@@ -66,64 +64,68 @@ export const Combobox = ({
               placeholder,
               readOnly: true,
             }}
-            className="w-full cursor-pointer"
           />
         </div>
       </PopoverTrigger>
 
-      {/* Sin ancho fijo */}
-      <PopoverContent className="p-0">
-        <Command>
-          <div className="flex items-center px-2 py-1 gap-1">
-            <CommandInput
-              {...{
-                disabled,
-                value: search,
-                onValueChange: setSearch,
-                placeholder: "Buscar...",
-              }}
-            />
+      <PopoverContent className="p-0 w-fit">
+  <Command>
+    <div className="inline-block">
+      {/* Header */}
+      <div className="relative w-full p-1">
+        <CommandInput
+          {...{
+            disabled,
+            value: search,
+            onValueChange: setSearch,
+            placeholder: "Buscar...",
+          }}
+          className="w-full pr-9"
+        />
 
-            {resolvedForm && (
-              <NewRecordButton
-                {...{
-                  view: resolvedForm.view,
-                  title: resolvedForm.title,
-                  fields: resolvedForm.fields, buttonClassName: "h-7 w-7 p-0",
-                }}
-              />
-            )}
-          </div>
+        {resolvedForm && (
+          <NewRecordButton
+            {...{
+              view: resolvedForm.view,
+              title: resolvedForm.title,
+              fields: resolvedForm.fields,
+              buttonClassName:
+                "absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 p-0",
+            }}
+          />
+        )}
+      </div>
 
-          <CommandList>
-            {loading && <CommandEmpty>Cargando...</CommandEmpty>}
+      <CommandList>
+        {loading && <CommandEmpty>Cargando...</CommandEmpty>}
 
-            {!loading && filteredOptions.length === 0 && (
-              <CommandEmpty>No hay opciones.</CommandEmpty>
-            )}
+        {!loading && filteredOptions.length === 0 && (
+          <CommandEmpty>No hay opciones.</CommandEmpty>
+        )}
 
-            <CommandGroup>
-              {filteredOptions.map(opt => {
-                const isSelected = String(value) === String(opt.id)
-                return (
-                  <CommandItem
-                    key={opt.id}
-                    value={opt.label}
-                    onSelect={() => handleSelect(opt.id)}
-                  >
-                    {opt.label}
-                    {isSelected && (
-                      <CommandShortcut>
-                        <CheckIcon className="w-4 h-4" />
-                      </CommandShortcut>
-                    )}
-                  </CommandItem>
-                )
-              })}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
+        <CommandGroup>
+          {filteredOptions.map(opt => {
+            const isSelected = String(value) === String(opt.id)
+            return (
+              <CommandItem
+                key={opt.id}
+                value={opt.label}
+                onSelect={() => handleSelect(opt.id)}
+                className="relative pr-6"
+              >
+                {opt.label}
+                {isSelected && (
+                  <CheckIcon className="absolute right-1 h-4 w-4" />
+                )}
+              </CommandItem>
+            )
+          })}
+        </CommandGroup>
+      </CommandList>
+    </div>
+  </Command>
+</PopoverContent>
+
     </Popover>
   )
 }

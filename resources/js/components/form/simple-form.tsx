@@ -10,9 +10,9 @@ import axios from "axios"
 const isCombobox = (f: any) => f?.type === "combobox"
 
 const fieldCols = (w?: string) => {
-  if (w === "1/2") return "col-span-6"
-  if (w === "1/3") return "col-span-4"
-  if (w === "1/4") return "col-span-3"
+  if (w === "1/2") return "col-span-12 md:col-span-6"
+  if (w === "1/3") return "col-span-12 md:col-span-4"
+  if (w === "1/4") return "col-span-12 md:col-span-3"
   return "col-span-12"
 }
 
@@ -107,10 +107,8 @@ export const SimpleForm = ({ mode, endpoint, recordId, fields, extendedFields, E
       <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-x-4 gap-y-4 overflow-visible">
         {normalizedFields.map(f => {
           const lista = isCombobox(f) && getListaSync(f.lista)
-
           if (f.hidden)
             return <FormField key={f.name} id={f.name} type="hidden" value={data[f.name]} hidden onChange={v => setData(f.name, v)} />
-
           return (
             <div key={f.name} className={`overflow-visible ${fieldCols(f.width)}`}>
               <FormField
