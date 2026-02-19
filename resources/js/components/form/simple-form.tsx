@@ -9,140 +9,79 @@ import axios from "axios"
 
 const isCombobox = (f: any) => f?.type === "combobox"
 
-export const SimpleForm = ({
-  mode,
-  endpoint,
-  recordId,
-  fields,
-  extendedFields,
-  ExtendedForm,
-  open,
-  onSuccess,
-}: any) => {
-  // Blindaje total
-  const safeFields = Array.isArray(fields) ? fields : []
+const fieldCols = (w?: string) => {
+  if (w === "1/2") return "col-span-6"
+  if (w === "1/3") return "col-span-4"
+  if (w === "1/4") return "col-span-3"
+  return "col-span-12"
+}
 
+export const SimpleForm = ({ mode, endpoint, recordId, fields, extendedFields, ExtendedForm, open, onSuccess }: any) => {
+  const safeFields = Array.isArray(fields) ? fields : []
   const MODE = {
-    store: {
-      submit: "Registrar",
-      disabled: false,
-      showSubmit: true,
-      method: "post",
-      icon: Save,
-      className: "bg-blue-600 hover:bg-blue-700 text-white",
-    },
-    update: {
-      submit: "Actualizar",
-      disabled: false,
-      showSubmit: true,
-      method: "put",
-      icon: Edit,
-      className: "bg-green-600 hover:bg-green-700 text-white",
-    },
-    delete: {
-      submit: "Eliminar",
-      disabled: true,
-      showSubmit: true,
-      method: "delete",
-      icon: Trash,
-      className: "bg-red-600 hover:bg-red-700 text-white",
-    },
+    store: { submit: "Registrar", disabled: false, showSubmit: true, method: "post", icon: Save, className: "bg-blue-600 hover:bg-blue-700 text-white" },
+    update: { submit: "Actualizar", disabled: false, showSubmit: true, method: "put", icon: Edit, className: "bg-green-600 hover:bg-green-700 text-white" },
+    delete: { submit: "Eliminar", disabled: true, showSubmit: true, method: "delete", icon: Trash, className: "bg-red-600 hover:bg-red-700 text-white" },
     info: { submit: null, disabled: true, showSubmit: false, method: null },
   }[mode]
 
   const normalizedFields = useMemo(
-    () =>
-      safeFields.map(f => ({
-        ...f,
-        name: f.name ?? f.id,
-        lista: isCombobox(f) ? f.name ?? f.id : f.lista,
-      })),
+    () => safeFields.map(f => ({ ...f, name: f.name ?? f.id, lista: isCombobox(f) ? f.name ?? f.id : f.lista })),
     [safeFields]
   )
 
   const initialData = useMemo(
-    () =>
-      Object.fromEntries(
-        normalizedFields.map(f => [
-          f.name,
-          f.value != null
-            ? String(f.value)
-            : f.default != null
-            ? String(f.default)
-            : "",
-        ])
-      ),
+    () => Object.fromEntries(normalizedFields.map(f => [f.name, f.value != null ? String(f.value) : f.default != null ? String(f.default) : ""])),
     [normalizedFields]
   )
 
   const form = useForm(initialData)
   const { data, setData, submit, processing, errors, reset } = form
-
   const [openMap, setOpenMap] = useState<Record<string, boolean>>({})
   const [record, setRecord] = useState<any>(null)
   const [listsReady, setListsReady] = useState(false)
   const filledRef = useRef(false)
 
-  const shouldFetchRecord = mode !== "store" && !!recordId
-
-  // Cargar listas siempre frescas al abrir
   useEffect(() => {
     if (!open) return
-    const loadLists = async () => {
-      const comboFields = normalizedFields.filter(isCombobox)
-      await Promise.all(comboFields.map(f => getLista(f.lista)))
-      setListsReady(true)
-    }
     setListsReady(false)
     filledRef.current = false
+    const loadLists = async () => {
+      await Promise.all(normalizedFields.filter(isCombobox).map(f => getLista(f.lista)))
+      setListsReady(true)
+    }
     loadLists()
   }, [open, normalizedFields])
 
-  // Reset en store
   useEffect(() => {
-    if (!open || !listsReady || mode !== "store") return
-    reset(initialData)
+    if (open && listsReady && mode === "store") reset(initialData)
   }, [open, listsReady, mode, initialData, reset])
 
-  // Obtener registro
   useEffect(() => {
-    if (!shouldFetchRecord || !listsReady) return
-    axios.get(`${endpoint}/${recordId}`).then(res => setRecord(res.data))
-  }, [shouldFetchRecord, listsReady, recordId, endpoint])
+    if (mode !== "store" && recordId && listsReady)
+      axios.get(`${endpoint}/${recordId}`).then(res => setRecord(res.data))
+  }, [mode, recordId, listsReady, endpoint])
 
-  // Llenar datos
   useEffect(() => {
     if (!record || !listsReady || filledRef.current) return
     filledRef.current = true
-    normalizedFields.forEach(f => {
-      setData(f.name, record[f.name] != null ? String(record[f.name]) : "")
-    })
+    normalizedFields.forEach(f => setData(f.name, record[f.name] != null ? String(record[f.name]) : ""))
   }, [record, listsReady, normalizedFields, setData])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-
-    const hasFileOrRemove = Object.entries(data).some(
-      ([k, v]) => v instanceof File || k.endsWith("_remove")
-    )
-
+    const hasFileOrRemove = Object.entries(data).some(([k, v]) => v instanceof File || k.endsWith("_remove"))
     const url = MODE.method === "post" ? endpoint : `${endpoint}/${recordId}`
 
     if (hasFileOrRemove) {
       const formData = new FormData()
-      const token = document
-        .querySelector('meta[name="csrf-token"]')
-        ?.getAttribute("content")
+      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content")
       if (!token) return
-
       formData.append("_token", token)
       if (MODE.method !== "post") formData.append("_method", MODE.method)
-
       Object.entries(data).forEach(([k, v]) => {
-        if (v == null) return
-        formData.append(k, v instanceof File ? v : String(v))
+        if (v != null) formData.append(k, v instanceof File ? v : String(v))
       })
-
       router.post(url, formData, {
         forceFormData: true,
         preserveScroll: true,
@@ -155,84 +94,56 @@ export const SimpleForm = ({
       return
     }
 
-    MODE.method &&
-      submit(MODE.method, url, {
-        onFinish: () => {
-          reset()
-          onSuccess?.()
-        },
-      })
+    MODE.method && submit(MODE.method, url, {
+      onFinish: () => {
+        reset()
+        onSuccess?.()
+      },
+    })
   }
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="space-y-4 overflow-visible">
-        {normalizedFields.map(field => {
-          const lista = isCombobox(field) && getListaSync(field.lista)
+      <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-x-4 gap-y-4 overflow-visible">
+        {normalizedFields.map(f => {
+          const lista = isCombobox(f) && getListaSync(f.lista)
 
-          if (field.hidden) {
-            return (
-              <FormField
-                key={field.name}
-                {...{
-                  id: field.name,
-                  type: "hidden",
-                  value: data[field.name],
-                  hidden: true,
-                  onChange: v => setData(field.name, v),
-                }}
-              />
-            )
-          }
+          if (f.hidden)
+            return <FormField key={f.name} id={f.name} type="hidden" value={data[f.name]} hidden onChange={v => setData(f.name, v)} />
 
           return (
-            <div key={field.name} className="space-y-1.5 overflow-visible">
+            <div key={f.name} className={`overflow-visible ${fieldCols(f.width)}`}>
               <FormField
-                {...{
-                  id: field.name,
-                  label: field.label,
-                  type: field.type,
-                  value: data[field.name],
-                  disabled: MODE.disabled,
-                  options: lista?.options ?? [],
-                  loading: !!lista?.loading,
-                  open: !!openMap[field.name],
-                  setOpen: v =>
-                    setOpenMap(p => ({ ...p, [field.name]: v })),
-                  onChange: v =>
-                    setData(
-                      field.name,
-                      v?.target ? v.target.value : v
-                    ),
-                  onSelect: id => {
-                    setData(field.name, String(id))
-                    setOpenMap(p => ({ ...p, [field.name]: false }))
-                  },
-                  setData,
-                  view: endpoint.split("/").pop(),
+                id={f.name}
+                label={f.label}
+                type={f.type}
+                value={data[f.name]}
+                disabled={MODE.disabled}
+                options={lista?.options ?? []}
+                loading={!!lista?.loading}
+                open={!!openMap[f.name]}
+                setOpen={v => setOpenMap(p => ({ ...p, [f.name]: v }))}
+                onChange={v => setData(f.name, v?.target ? v.target.value : v)}
+                onSelect={id => {
+                  setData(f.name, String(id))
+                  setOpenMap(p => ({ ...p, [f.name]: false }))
                 }}
+                setData={setData}
+                view={endpoint.split("/").pop()}
               />
-              <InputError message={errors[field.name]} />
+              <InputError message={errors[f.name]} />
             </div>
           )
         })}
 
         {MODE.showSubmit && (
-          <div className="flex justify-end">
-            <SmartButton
-              type="submit"
-              icon={MODE.icon}
-              disabled={processing}
-              className={MODE.className}
-              tooltip={MODE.submit}
-            />
+          <div className="col-span-12 flex justify-end">
+            <SmartButton type="submit" icon={MODE.icon} disabled={processing} className={MODE.className} tooltip={MODE.submit} />
           </div>
         )}
       </form>
 
-      {ExtendedForm && extendedFields && (
-        <ExtendedForm {...{ data, recordId, mode, extendedFields }} />
-      )}
+      {ExtendedForm && extendedFields && <ExtendedForm data={data} recordId={recordId} mode={mode} extendedFields={extendedFields} />}
     </div>
   )
 }

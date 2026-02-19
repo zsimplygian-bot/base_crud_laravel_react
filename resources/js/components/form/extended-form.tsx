@@ -5,191 +5,101 @@ import { ActionButtons } from "@/components/datatable/base/action-buttons"
 import { Textarea } from "@/components/ui/textarea"
 import { SmartButton } from "@/components/smart-button"
 import { FilePreviewDialog } from "@/components/file-preview-dialog"
-import { Image as ImageIcon, FileText } from "lucide-react"
-
+import { Image as ImageIcon, FileText, Plus, ClipboardList, Syringe, Stethoscope } from "lucide-react"
+export const VIEW_CONFIG = {
+  historia_clinica_seguimiento: { key: "seguimientos", className: "bg-gray-700 hover:bg-gray-800 text-white", icons: [Plus, ClipboardList] },
+  historia_clinica_producto: { key: "productos", className: "bg-green-700 hover:bg-green-800 text-white", icons: [Plus, Syringe] },
+  historia_clinica_procedimiento: { key: "procedimientos", className: "bg-blue-700 hover:bg-blue-800 text-white", icons: [Plus, Stethoscope] },
+  historia_clinica_anamnesis: { key: "anamnesis", className: "bg-red-700 hover:bg-red-800 text-white", icons: [Plus, FileText] },
+}
 export const ExtendedForm = ({ extendedFields, recordId, mode }) => {
   if (!extendedFields || !recordId) return null
-
-  const VIEW_TO_KEY = {
-    historia_clinica_seguimiento: "seguimientos",
-    historia_clinica_producto: "productos",
-    historia_clinica_procedimiento: "procedimientos",
-    historia_clinica_anamnesis: "anamnesis",
-  }
-
-  // Bloques válidos desde config
-  const blocks = useMemo(
-    () =>
-      Object.values(extendedFields).filter(
-        b => b && typeof b === "object" && b.view && Array.isArray(b.fields)
-      ),
-    [extendedFields]
-  )
-
+  const blocks = useMemo(() => Object.values(extendedFields).filter(b => b?.view && Array.isArray(b.fields)), [extendedFields])
   const [recordsMap, setRecordsMap] = useState({})
-  const [previewFile, setPreviewFile] = useState(null)
+  const [previewFile, setPreviewFile] = useState<string | null>(null)
   const [openPreview, setOpenPreview] = useState(false)
-
   const fetchRecords = useCallback(() => {
     if (!blocks.length) return
-    axios
-      .get(`/api/historia/${recordId}/records`)
-      .then(r => setRecordsMap(r.data?.data ?? {}))
-      .catch(() => {})
+    axios.get(`/api/historia/${recordId}/records`).then(r => setRecordsMap(r.data?.data ?? {})).catch(() => {})
   }, [blocks.length, recordId])
-
-  useEffect(() => {
-    fetchRecords()
-  }, [fetchRecords])
-
-  // Mantiene exactamente el comportamiento correcto de records
+  useEffect(fetchRecords, [fetchRecords])
   const recordsByDay = useMemo(() => {
-    const dayMap = {}
-
-    blocks.forEach(block => {
-      const key = VIEW_TO_KEY[block.view]
-      ;(recordsMap[key] ?? []).forEach(record => {
-        const day = record.fecha
-          ? String(record.fecha).split(" ")[0]
-          : "unknown"
-
-        if (!dayMap[day]) dayMap[day] = []
-
-        dayMap[day].push({
-          ...record,
-          _title: block.title,
-          _view: block.view,
-          _formFields: block.fields,
-          _displayFields: block.recordFields?.length
-            ? block.recordFields
-            : block.fields,
+    const map: any = {}
+    blocks.forEach(b =>
+      (recordsMap[VIEW_CONFIG[b.view]?.key] ?? []).forEach(r => {
+        const day = r.fecha?.split(" ")[0] ?? "unknown"
+        ;(map[day] ??= []).push({
+          ...r,
+          _title: b.title,
+          _view: b.view,
+          _formFields: b.fields,
+          _displayFields: b.recordFields?.length ? b.recordFields : b.fields,
         })
       })
-    })
-
-    return Object.keys(dayMap)
-      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
-      .map(day => ({ day, records: dayMap[day] }))
+    )
+    return Object.keys(map).sort((a, b) => +new Date(b) - +new Date(a)).map(day => ({ day, records: map[day] }))
   }, [blocks, recordsMap])
-
-  const buildTextareaValue = record =>
-    record._displayFields
-      .map(f => {
-        const val = record[f.id]
-        return val != null && val !== ""
-          ? f.label
-            ? `${f.label}: ${val}`
-            : String(val)
-          : null
-      })
-      .filter(Boolean)
-      .join("\n")
-
-  const hasRecords = recordsByDay.some(d => d.records.length > 0)
-
+  const buildValue = r => r._displayFields.map(f => r[f.id] ? (f.label ? `${f.label}: ${r[f.id]}` : r[f.id]) : null).filter(Boolean).join("\n")
   return (
     <div className="space-y-2">
-      {/* NEW RECORD BUTTONS – MISMO PATRÓN QUE ACTIONBUTTONS */}
-      {mode === "update" && blocks.length > 0 && (
+      {mode === "update" && (
         <div className="flex flex-wrap gap-2">
-          {blocks.map(block => (
-            <NewRecordButton
-              key={block.view}
-              {...{
-                view: block.view,
-                title: block.title,
-                fields: block.fields.map(f =>
-                  f.id === "id_historia_clinica"
-                    ? { ...f, value: recordId } // Inyecta FK
-                    : f
-                ),
-                onSuccess: fetchRecords,
-              }}
-            />
-          ))}
+          {blocks.map(b => {
+            const cfg = VIEW_CONFIG[b.view] ?? {}
+            return (
+              <NewRecordButton
+                key={b.view}
+                {...{
+                  view: b.view,
+                  title: b.title,
+                  icons: cfg.icons,
+                  buttonClassName: cfg.className,
+                  fields: b.fields.map(f => f.id === "id_historia_clinica" ? { ...f, value: recordId } : f),
+                  onSuccess: fetchRecords,
+                }}
+              />
+            )
+          })}
         </div>
       )}
-
-      <div className="overflow-y-auto space-y-3 pr-1">
-        {!hasRecords && (
-          <div className="text-xs italic text-muted-foreground">
-            Sin información adicional
-          </div>
+      <div className="space-y-3 pr-1 overflow-y-auto">
+        {!recordsByDay.some(d => d.records.length) && (
+          <div className="text-xs italic text-muted-foreground">Sin información adicional</div>
         )}
-
         {recordsByDay.map(({ day, records }) => (
           <div key={day}>
-            <div className="text-xs font-medium text-muted-foreground">
-              {day}
-            </div>
-
-            {records.map((record, i) => {
-              const value = buildTextareaValue(record)
-              const row_id = record[`id_${record._view}`]
-              const isImage =
-                record.archivo &&
-                /\.(jpg|jpeg|png|webp|gif)$/i.test(record.archivo)
-
+            <div className="text-sm font-medium text-muted-foreground">{day}</div>
+            {records.map((r, i) => {
+              const row_id = r[`id_${r._view}`]
+              const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(r.archivo ?? "")
+              const value = buildValue(r)
               return (
-                <div
-                  key={`${record._view}-${row_id ?? i}`}
-                  className="space-y-1"
-                >
-                  <div className="text-xs font-medium flex justify-between items-center">
-                    <span>{record._title}</span>
-
-                    <div className="flex items-center gap-1">
-                      {record.archivo && (
+                <div key={`${r._view}-${row_id ?? i}`} className="space-y-1">
+                  <div className="flex justify-between items-center text-xs font-medium">
+                    <span>{r._title}</span>
+                    <div className="flex gap-1">
+                      {r.archivo && (
                         <SmartButton
                           {...{
                             icon: isImage ? ImageIcon : FileText,
                             variant: "ghost",
-                            onClick: () => {
-                              setPreviewFile(record.archivo)
-                              setOpenPreview(true)
-                            },
+                            onClick: () => { setPreviewFile(r.archivo); setOpenPreview(true) },
                           }}
                         />
                       )}
-
                       {mode === "update" && row_id && (
-                        <ActionButtons
-                          {...{
-                            row_id,
-                            view: record._view,
-                            title: record._title,
-                            fields: record._formFields,
-                            onSuccess: fetchRecords,
-                          }}
-                        />
+                        <ActionButtons {...{ row_id, view: r._view, title: r._title, fields: r._formFields, onSuccess: fetchRecords }} />
                       )}
                     </div>
                   </div>
-
-                  {value && (
-                    <Textarea
-                      {...{
-                        readOnly: true,
-                        value,
-                        rows: 4,
-                        className: "resize-none bg-muted overflow-y-auto",
-                      }}
-                    />
-                  )}
+                  {value && <Textarea {...{ readOnly: true, value, rows: 4, className: "resize-none bg-muted" }} />}
                 </div>
               )
             })}
           </div>
         ))}
       </div>
-
-      <FilePreviewDialog
-        {...{
-          open: openPreview,
-          onOpenChange: setOpenPreview,
-          file: previewFile,
-        }}
-      />
+      <FilePreviewDialog {...{ open: openPreview, onOpenChange: setOpenPreview, file: previewFile }} />
     </div>
   )
 }

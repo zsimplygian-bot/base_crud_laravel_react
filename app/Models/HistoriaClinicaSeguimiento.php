@@ -2,15 +2,14 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-class HistoriaClinicaSeguimiento extends BaseModel
-{
+class HistoriaClinicaSeguimiento extends BaseModel {
     use HasFactory;
     protected $table = 'historia_clinica_seguimiento';
     protected static $validationRules = [
         'id_historia_clinica' => 'required|integer|exists:historia_clinica,id_historia_clinica',
         'detalle' => 'required|string',
         'observaciones' => 'nullable|string',
-        'fecha' => 'required|date',
+        'fecha' => 'required|datetime',
     ];
     protected static $tableColumns = [
         ['ID', 'id_historia_clinica_seguimiento'],
@@ -21,8 +20,7 @@ class HistoriaClinicaSeguimiento extends BaseModel
         ['ARCHIVO', 'archivo'],
         ['FECHA REGISTRO', 'created_at'],
     ];
-    public static function getQuery(): array
-    {
+    public static function getQuery(): array {
         $t1 = (new self)->getTable();
         $query = DB::table($t1)->select([
             "$t1.id_$t1",
@@ -33,11 +31,7 @@ class HistoriaClinicaSeguimiento extends BaseModel
             "$t1.archivo",
             "$t1.created_at",
         ]);
-
-        return [
-            'query' => $query,
-            'alias' => $t1,
-        ];
+        return [ 'query' => $query, 'alias' => $t1, ];
     }
     public function parent()
     {

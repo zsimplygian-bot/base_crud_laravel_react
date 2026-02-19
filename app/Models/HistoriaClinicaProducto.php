@@ -2,17 +2,15 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-class HistoriaClinicaProducto extends BaseModel
-{
+class HistoriaClinicaProducto extends BaseModel {
     use HasFactory;
     protected $table = 'historia_clinica_producto';
-    public static string $title = 'Producto';
     protected static $validationRules = [
         'id_historia_clinica' => 'required|integer|exists:historia_clinica,id_historia_clinica',
         'id_producto' => 'required|integer|exists:producto,id_producto',
         'dosis' => 'required|string|max:255',
         'precio' => 'required|numeric',
-        'fecha' => 'required|date',
+        'fecha' => 'required|datetime',
     ];
     protected static $tableColumns = [
         ['ID', 'id_historia_clinica_producto'],

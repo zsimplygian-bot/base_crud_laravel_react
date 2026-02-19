@@ -2,16 +2,12 @@
 namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-class HistoriaClinicaAnamnesis extends BaseModel
-{
+class HistoriaClinicaAnamnesis extends BaseModel {
     use HasFactory;
     protected $table = 'historia_clinica_anamnesis';
-    public static string $title = 'Anamnesis';
-
     protected static $validationRules = [
         'id_historia_clinica' => 'required|integer|exists:historia_clinica,id_historia_clinica',
-        'fecha' => 'required|date',
-        'hora' => 'nullable|string|max:10',
+        'fecha' => 'required|datetime',
         'temperatura' => 'nullable|numeric',
         'frecuencia_cardiaca' => 'nullable|numeric',
         'frecuencia_respiratoria' => 'nullable|numeric',
@@ -24,7 +20,6 @@ class HistoriaClinicaAnamnesis extends BaseModel
                 "$t1.id_$t1",
                 "$t1.id_historia_clinica",
                 "$t1.fecha",
-                "$t1.hora",
                 "$t1.temperatura",
                 "$t1.frecuencia_cardiaca",
                 "$t1.frecuencia_respiratoria",

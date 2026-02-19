@@ -15,7 +15,7 @@ class HistoriaClinica extends BaseModel
 
     protected static $validationRules = [
         'id_mascota' => 'required|int',
-        'fecha' => 'required|date',
+        'fecha' => 'required|datetime',
         'id_motivo' => 'required|int',
         'detalle' => 'nullable|string',
         'observaciones' => 'nullable|string',
@@ -30,7 +30,7 @@ class HistoriaClinica extends BaseModel
         ['MOTIVO', 'motivo'],
         ['MOTIVO', 'emoji_motivo'],
         ['DETALLE', 'detalle'],
-        ['TOTAL', 'precio'],
+        ['TOTAL (S/.)', 'precio'],
         ['OBSERVACIONES', 'observaciones'],
         ['ESTADO', 'estado_historia_clinica'],
         ['FECHA REGISTRO', 'created_at'],

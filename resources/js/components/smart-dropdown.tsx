@@ -1,7 +1,9 @@
 import { forwardRef, memo } from "react"
 import { cn } from "@/lib/utils"
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuItem,
-  DropdownMenuCheckboxItem, DropdownMenuLabel, } from "@/components/ui/dropdown-menu"
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
+  DropdownMenuSeparator, DropdownMenuItem, DropdownMenuCheckboxItem, DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Link } from "@inertiajs/react"
@@ -26,12 +28,19 @@ interface Props {
   triggerVariant?: string
   triggerBadge?: string | number
   triggerBadgeClassName?: string
+  iconSize?: number | string // Opcional
+  triggerSize?: "sm" | "md" | "lg" // Opcional
   label?: string
   labelExtra?: React.ReactNode
   items: SDItem[]
   align?: "start" | "center" | "end"
   closeOnSelect?: boolean
   itemsMaxHeight?: number | string
+}
+const sizeMap = {
+  sm: "h-7 min-w-7 text-xs",
+  md: "h-9 min-w-9 text-sm",
+  lg: "h-11 min-w-11 text-base",
 }
 export const SmartDropdown = memo(
   forwardRef<HTMLButtonElement, Props>(function SmartDropdown(
@@ -42,6 +51,8 @@ export const SmartDropdown = memo(
       triggerVariant = "default",
       triggerBadge,
       triggerBadgeClassName,
+      iconSize = 20, // Mismo tamaño que antes
+      triggerSize, // Undefined = no tocar tamaño
       label,
       labelExtra,
       items,
@@ -64,22 +75,20 @@ export const SmartDropdown = memo(
             onCheckedChange={it.onChange}
             onSelect={prevent}
           >
-            {it.icon && <it.icon className="size-4 mr-2 opacity-80" />}
+            {it.icon && <it.icon style={{ width: iconSize, height: iconSize }} className="mr-2 opacity-80" />}
             {it.label}
           </DropdownMenuCheckboxItem>
         )
       }
       const content = it.custom ?? (
         <>
-          {it.icon && <it.icon className="size-4 opacity-80" />}
+          {it.icon && <it.icon style={{ width: iconSize, height: iconSize }} className="opacity-80" />}
           <span className={it.color}>{it.label}</span>
         </>
       )
       const Wrapper = it.to
         ? it.external
-          ? ({ children }: any) => (
-              <a href={it.to} target="_blank" rel="noreferrer">{children}</a>
-            )
+          ? ({ children }: any) => <a href={it.to} target="_blank" rel="noreferrer">{children}</a>
           : ({ children }: any) => <Link href={it.to}>{children}</Link>
         : null
       return (
@@ -102,12 +111,13 @@ export const SmartDropdown = memo(
             ref={ref}
             variant={triggerVariant}
             className={cn(
-              triggerLabel ? "px-3" : "w-9 px-0",
               "rounded-full relative flex items-center gap-2",
+              triggerLabel ? "px-3" : "w-9 px-0", // Igual que antes
+              triggerSize && sizeMap[triggerSize], // Solo si se define
               triggerButtonClassName
             )}
           >
-            {Icon && <Icon className="size-4" />}
+            {Icon && <Icon style={{ width: iconSize, height: iconSize }} />}
             {triggerLabel}
             {showBadge && (
               <Badge
@@ -124,17 +134,14 @@ export const SmartDropdown = memo(
         <DropdownMenuContent align={align}>
           {(label || labelExtra) && (
             <>
-              <DropdownMenuLabel className="flex justify-between gap-2">
+              <DropdownMenuLabel className="flex items-center justify-between gap-2">
                 {label}
                 {labelExtra && <div onClick={e => e.stopPropagation()}>{labelExtra}</div>}
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
             </>
           )}
-          <div
-            className={itemsMaxHeight ? "overflow-y-auto" : undefined}
-            style={{ maxHeight: itemsMaxHeight }}
-          >
+          <div className={itemsMaxHeight ? "overflow-y-auto" : undefined} style={{ maxHeight: itemsMaxHeight }}>
             {items.map(renderItem)}
           </div>
         </DropdownMenuContent>
@@ -142,4 +149,4 @@ export const SmartDropdown = memo(
     )
   })
 )
-SmartDropdown.displayName = "SmartDropdown" 
+SmartDropdown.displayName = "SmartDropdown"

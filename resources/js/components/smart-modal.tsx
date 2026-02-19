@@ -41,7 +41,18 @@ export const SmartModal = ({
       <SheetContent
         {...{
           side,
-          className: `${size || ""} h-dvh max-h-dvh flex flex-col overflow-hidden`,
+          className: `
+            w-full
+            sm:max-w-md
+            md:max-w-lg
+            lg:max-w-xl
+            ${size || ""}
+            h-dvh
+            max-h-dvh
+            flex
+            flex-col
+            overflow-hidden
+          `,
         }}
       >
         <SheetHeader className="shrink-0">
@@ -61,19 +72,18 @@ export const SmartModal = ({
           className: `
             ${size || ""}
             max-h-[90dvh]
-            flex flex-col
+            flex
+            flex-col
             overflow-hidden
           `,
         }}
       >
         <DialogHeader>
           <DialogTitle>{title.toUpperCase()}</DialogTitle>
-          {description && (
-            <DialogDescription>{description}</DialogDescription>
-          )}
+          {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 
-        <div className="">
+        <div>
           {children}
         </div>
       </DialogContent>

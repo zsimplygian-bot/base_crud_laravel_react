@@ -10,6 +10,7 @@ type Props = {
   type?: "button" | "submit" | "reset"
   icon?: LucideIcon
   iconPosition?: "left" | "right"
+  iconSize?: number | string // Nuevo
   label?: React.ReactNode
   loadingLabel?: React.ReactNode
   tooltip?: string
@@ -23,9 +24,10 @@ type Props = {
 export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartButton(
   {
     to,
-    type = "button", // Evita submit accidental por defecto
+    type = "button",
     icon: Icon,
     iconPosition = "left",
+    iconSize = 20, // Default intacto
     label,
     loadingLabel,
     tooltip,
@@ -40,7 +42,7 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
 ) {
   const [loading, setLoading] = useState(false)
   const handleClick = async (e: React.MouseEvent) => {
-    if (type !== "submit") e.preventDefault() // Seguridad extra
+    if (type !== "submit") e.preventDefault()
     if (disabled || loading || !onClick) return
     const r = onClick(e)
     if (r instanceof Promise) {
@@ -48,18 +50,17 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
       try { await r } finally { setLoading(false) }
     }
   }
+  const IconEl = Icon && <Icon style={{ width: iconSize, height: iconSize }} />
   const content = loading ? (
     <>
-      <Loader2 className="size-4 animate-spin" />
-      {(loadingLabel ?? label ?? children) && (
-        <span>{loadingLabel ?? label ?? children}</span>
-      )}
+      <Loader2 style={{ width: iconSize, height: iconSize }} className="animate-spin" />
+      {(loadingLabel ?? label ?? children) && <span>{loadingLabel ?? label ?? children}</span>}
     </>
   ) : (
     <>
-      {Icon && iconPosition === "left" && <Icon className="size-4" />}
+      {Icon && iconPosition === "left" && IconEl}
       {(label ?? children) && <span>{label ?? children}</span>}
-      {Icon && iconPosition === "right" && <Icon className="size-4" />}
+      {Icon && iconPosition === "right" && IconEl}
     </>
   )
   const button = (
@@ -73,7 +74,7 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
         onClick: handleClick,
         style,
         className: cn(
-          label || children || loadingLabel ? "px-3" : "w-9 px-0",
+          label || children || loadingLabel ? "px-2" : "w-9 px-0",
           "rounded-full flex items-center gap-2",
           className
         ),
@@ -86,9 +87,7 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
   return (
     <Tooltip>
       <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent side="top">
-        <p>{tooltip}</p>
-      </TooltipContent>
+      <TooltipContent side="top"><p>{tooltip}</p></TooltipContent>
     </Tooltip>
   )
 })

@@ -1,16 +1,28 @@
-import { LayoutGrid, PawPrint, Calendar, Stethoscope, ClipboardList, Users, Syringe, BookOpen, User,
-  } from "lucide-react";
-// Tipo base mínimo y rápido de escribir
+import {
+  LayoutGrid,
+  PawPrint,
+  Calendar,
+  Stethoscope,
+  ClipboardList,
+  Users,
+  BookOpen,
+  User,
+  Package,
+  Tags,
+  Dog,
+  ListChecks,
+} from "lucide-react"
+// Tipo base mínimo
 type NavDef = [
   title: string,
   icon: any,
   href?: string,
   children?: NavDef[]
-];
-// Transformador dinámico del formato compacto → estructura final
+]
+// Transformador compacto → estructura final
 function buildNav(defs: NavDef[]) {
-  return defs.map((item) => {
-    const [title, icon, href, children] = item;
+  return defs.map(item => {
+    const [title, icon, href, children] = item
     return {
       title,
       icon,
@@ -22,37 +34,39 @@ function buildNav(defs: NavDef[]) {
             href: ch,
           }))
         : undefined,
-    };
-  });
+    }
+  })
 }
-// Definición *ultra simple*
+// Definición con iconos más semánticos
 const rawSidebar: NavDef[] = [
   ["Dashboard", LayoutGrid, "/dashboard"],
-  ["Historias clínicas", Stethoscope, "/historia_clinica"],
-  [ "Citas",
+  ["Historias clínicas", ClipboardList, "/historia_clinica"],
+  [
+    "Citas",
     Calendar,
     undefined,
     [
-      ["Listado", Calendar, "/cita"],
+      ["Listado", ListChecks, "/cita"],
       ["Calendario", Calendar, "/calendario"],
     ],
   ],
   ["Mascotas", PawPrint, "/mascota"],
   ["Dueños", Users, "/cliente"],
-  [  "Items",
+  [
+    "Items",
     BookOpen,
     undefined,
     [
-      ["Productos", Syringe, "/producto"],
-      ["Procedimientos", ClipboardList, "/procedimiento"],
-      ["Categoria productos", ClipboardList, "/categoria_producto"],
-      ["Categoria procedimientos", ClipboardList, "/categoria_procedimiento"],
-      ["Especie", PawPrint, "/especie"],
-      ["Raza", PawPrint, "/raza"],
-      ["Motivo", Calendar, "/motivo"],
-      ["Usuario", User, "/user"],
+      ["Productos", Package, "/producto"], // Inventario / productos
+      ["Procedimientos", Stethoscope, "/procedimiento"], // Actos médicos
+      ["Categoría productos", Tags, "/categoria_producto"], // Clasificación
+      ["Categoría procedimientos", Tags, "/categoria_procedimiento"], // Clasificación
+      ["Especie", Dog, "/especie"], // Tipo de animal
+      ["Raza", PawPrint, "/raza"], // Subtipo
+      ["Motivo", ClipboardList, "/motivo"], // Razón de cita
+      ["Usuarios", User, "/user"], // Gestión usuarios
     ],
   ],
-];
-export const sidebarItems = buildNav(rawSidebar);
-export const footerNavItems = buildNav([]);
+]
+export const sidebarItems = buildNav(rawSidebar)
+export const footerNavItems = buildNav([])

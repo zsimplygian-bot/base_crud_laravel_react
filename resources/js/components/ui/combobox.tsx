@@ -89,7 +89,7 @@ export const Combobox = ({
                 {...{
                   view: resolvedForm.view,
                   title: resolvedForm.title,
-                  fields: resolvedForm.fields,
+                  fields: resolvedForm.fields, buttonClassName: "h-7 w-7 p-0",
                 }}
               />
             )}

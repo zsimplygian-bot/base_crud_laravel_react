@@ -13,10 +13,10 @@ export const ActionButtons = ({ row_id, view, title, fields, extendedFields, onS
   const openForm = useCallback((t: ActionType) => { setAction(t); setOpen(true) }, [])
   const items = [
     { label: "Copiar ID", icon: CopyIcon, action: () => { navigator.clipboard.writeText(row_id); toast.success("ID copiado al portapapeles") } },
-    { key: "info", label: "Detalle", icon: EyeIcon, color: "text-blue-600", modal: { title: "Detalle", description: "Consulta los datos del registro." }, action: () => openForm("info") },
+    { key: "info", label: "Detalle", icon: EyeIcon, color: "text-blue-500", modal: { title: "Detalle", description: "Consulta los datos del registro." }, action: () => openForm("info") },
     ...(isAdmin ? [
-      { key: "update", label: "Editar", icon: EditIcon, color: "text-green-600", modal: { title: "Editar", description: "Actualiza los datos del registro." }, action: () => openForm("update") },
-      { key: "delete", label: "Eliminar", icon: TrashIcon, color: "text-red-600", modal: { title: "Eliminar", description: "Confirma para eliminar este registro." }, action: () => openForm("delete") }
+      { key: "update", label: "Editar", icon: EditIcon, color: "text-green-500", modal: { title: "Editar", description: "Actualiza los datos del registro." }, action: () => openForm("update") },
+      { key: "delete", label: "Eliminar", icon: TrashIcon, color: "text-red-500", modal: { title: "Eliminar", description: "Confirma para eliminar este registro." }, action: () => openForm("delete") }
     ] : []),
     ...(view === "historia_clinica" ? [
       { key: "print", label: "Imprimir", icon: FileTextIcon, color: "text-cyan-600",
