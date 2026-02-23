@@ -13,7 +13,7 @@ import { useRenderCellContent } from "@/components/datatable/base/cell-renderer"
 import { useDataTable } from "@/hooks/datatable/use-datatable"
 import { useMemo } from "react"
 const widthMap = { "1/4": "md:w-1/4", "1/3": "md:w-1/3", "1/2": "md:w-1/2" }
-export const DataTableLayout = ({ view, title, fields = [], footerFields, extendedFields, width }) => {
+export const DataTableLayout = ({ view, title, icon, fields = [], footerFields, extended_form, width }) => {
   const searchFields = useMemo(
     () => fields.filter(f => f.searchable).map(f => ({ ...f, defaultVisible: !!f.defaultVisible })),
     [fields] )
@@ -38,13 +38,13 @@ export const DataTableLayout = ({ view, title, fields = [], footerFields, extend
             <div className="flex gap-2 ml-auto flex-shrink-0">
               <ToggleColumns {...{ columns, columnVisibility, setColumnVisibility }} />
               <ExportMenu {...{ view, columns, data }} />
-              <NewRecordButton {...{ view, title, fields, onSuccess: () => setPageIndex(0) }} />
+              <NewRecordButton {...{ view, title, icon, fields, onSuccess: () => setPageIndex(0) }} />
             </div>
           </div>
           <SmartTable {...{ columns, rows: data, loading, error: error?.message ?? null,
               columnVisibility, sortBy, sortOrder, renderCell }}
             onSortChange={(by, order) => { setSortBy(by); setSortOrder(order ?? "desc") }}
-            actions={row => ( <ActionButtons {...{ row_id: row.id, view, title, fields, extendedFields, onSuccess: fetchData }} />
+            actions={row => ( <ActionButtons {...{ row_id: row.id, view, title, icon, fields, extended_form, onSuccess: fetchData }} />
             )}
           />
           <DataTableFooter {...{ data, totalRows, pageIndex, setPageIndex, pageSize, setPageSize, footerFields }} />

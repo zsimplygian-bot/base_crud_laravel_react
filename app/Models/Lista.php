@@ -6,7 +6,7 @@ class Lista
     protected static array $tablasPermitidas = [
         'sexo','producto','procedimiento','cliente','mascota','estado_cita',
         'estado_mascota','motivo',
-        'estado_historia_clinica','especie','unidad_tiempo','raza',
+        'estado_historia','especie','unidad_tiempo','raza',
         'rol','categoria_producto','categoria_procedimiento',
     ];
     protected static array $columnasTablasSimples = [

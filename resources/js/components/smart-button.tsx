@@ -8,9 +8,10 @@ import type { LucideIcon } from "lucide-react"
 type Props = {
   to?: string
   type?: "button" | "submit" | "reset"
-  icon?: LucideIcon
+  icon?: LucideIcon // Compatibilidad
+  icons?: LucideIcon[] // Extension
   iconPosition?: "left" | "right"
-  iconSize?: number | string // Nuevo
+  iconSize?: number | string
   label?: React.ReactNode
   loadingLabel?: React.ReactNode
   tooltip?: string
@@ -25,9 +26,10 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
   {
     to,
     type = "button",
-    icon: Icon,
+    icon,
+    icons = [],
     iconPosition = "left",
-    iconSize = 20, // Default intacto
+    iconSize = 20,
     label,
     loadingLabel,
     tooltip,
@@ -42,44 +44,40 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
 ) {
   const [loading, setLoading] = useState(false)
   const handleClick = async (e: React.MouseEvent) => {
-    if (type !== "submit") e.preventDefault()
-    if (disabled || loading || !onClick) return
-    const r = onClick(e)
-    if (r instanceof Promise) {
-      setLoading(true)
-      try { await r } finally { setLoading(false) }
-    }
+  if (!to && type !== "submit") e.preventDefault() // No bloquear navegación cuando hay to
+  if (disabled || loading || !onClick) return
+  const r = onClick(e)
+  if (r instanceof Promise) {
+    setLoading(true)
+    try { await r } finally { setLoading(false) }
   }
-  const IconEl = Icon && <Icon style={{ width: iconSize, height: iconSize }} />
+}
+  const finalIcons = icon ? [icon, ...icons] : icons // Icon legacy + iconos extra
+  const hasText = !!(label || children || loadingLabel)
+  const isIconOnlySingle = !hasText && finalIcons.length === 1
+  const IconsEl = finalIcons.length > 0 && (
+    <span className="flex items-center gap-1">
+      {finalIcons.map((Icon, i) => (
+        <Icon key={i} style={{ width: iconSize, height: iconSize }} /> // Render uniforme
+      ))}
+    </span>
+  )
   const content = loading ? (
     <>
       <Loader2 style={{ width: iconSize, height: iconSize }} className="animate-spin" />
-      {(loadingLabel ?? label ?? children) && <span>{loadingLabel ?? label ?? children}</span>}
+      {hasText && <span>{loadingLabel ?? label ?? children}</span>}
     </>
   ) : (
     <>
-      {Icon && iconPosition === "left" && IconEl}
-      {(label ?? children) && <span>{label ?? children}</span>}
-      {Icon && iconPosition === "right" && IconEl}
+      {iconPosition === "left" && IconsEl}
+      {hasText && <span>{label ?? children}</span>}
+      {iconPosition === "right" && IconsEl}
     </>
   )
   const button = (
-    <Button
-      {...{
-        ref,
-        type,
-        variant,
-        asChild: !!to,
-        disabled: disabled || loading,
-        onClick: handleClick,
-        style,
-        className: cn(
-          label || children || loadingLabel ? "px-2" : "w-9 px-0",
-          "rounded-full flex items-center gap-2",
-          className
-        ),
-      }}
-    >
+    <Button {...{ ref, type, variant, asChild: !!to, disabled: disabled || loading, onClick: handleClick,
+        style, className: cn( isIconOnlySingle ? "w-9 px-0" : "px-2", // Ancho inteligente
+          "rounded-full flex items-center gap-2", className ), }} >
       {to ? <Link href={to}>{content}</Link> : content}
     </Button>
   )

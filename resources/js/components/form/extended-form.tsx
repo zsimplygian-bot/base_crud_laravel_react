@@ -1,60 +1,97 @@
 import { useEffect, useMemo, useState, useCallback } from "react"
 import axios from "axios"
+import { FORM_CONFIG } from "@/config/forms"
 import { NewRecordButton } from "@/components/datatable/toolbar/new-record-button"
 import { ActionButtons } from "@/components/datatable/base/action-buttons"
 import { Textarea } from "@/components/ui/textarea"
 import { SmartButton } from "@/components/smart-button"
 import { FilePreviewDialog } from "@/components/file-preview-dialog"
-import { Image as ImageIcon, FileText, Plus, ClipboardList, Syringe, Stethoscope } from "lucide-react"
-export const VIEW_CONFIG = {
-  historia_clinica_seguimiento: { key: "seguimientos", className: "bg-gray-700 hover:bg-gray-800 text-white", icons: [Plus, ClipboardList] },
-  historia_clinica_producto: { key: "productos", className: "bg-green-700 hover:bg-green-800 text-white", icons: [Plus, Syringe] },
-  historia_clinica_procedimiento: { key: "procedimientos", className: "bg-blue-700 hover:bg-blue-800 text-white", icons: [Plus, Stethoscope] },
-  historia_clinica_anamnesis: { key: "anamnesis", className: "bg-red-700 hover:bg-red-800 text-white", icons: [Plus, FileText] },
-}
-export const ExtendedForm = ({ extendedFields, recordId, mode }) => {
-  if (!extendedFields || !recordId) return null
-  const blocks = useMemo(() => Object.values(extendedFields).filter(b => b?.view && Array.isArray(b.fields)), [extendedFields])
-  const [recordsMap, setRecordsMap] = useState({})
+import { Image as ImageIcon, FileText, Plus } from "lucide-react"
+
+export const ExtendedForm = ({ extended_form, recordId, mode, view }) => {
+  if (!extended_form || !recordId || !view) return null
+
+  // Resuelve los forms extendidos desde FORM_CONFIG usando solo strings
+  const blocks = useMemo(
+    () =>
+      extended_form
+        .map(v => FORM_CONFIG[v])
+        .filter(b => b?.view && Array.isArray(b.fields)),
+    [extended_form]
+  )
+
+  const [records, setRecords] = useState<any[]>([])
   const [previewFile, setPreviewFile] = useState<string | null>(null)
   const [openPreview, setOpenPreview] = useState(false)
+
+  // Un solo endpoint dinámico
   const fetchRecords = useCallback(() => {
-    if (!blocks.length) return
-    axios.get(`/api/historia/${recordId}/records`).then(r => setRecordsMap(r.data?.data ?? {})).catch(() => {})
-  }, [blocks.length, recordId])
+    axios
+      .get(`/api/${view}/${recordId}/records`)
+      .then(r => setRecords(r.data?.data ?? []))
+      .catch(() => {})
+  }, [view, recordId])
+
   useEffect(fetchRecords, [fetchRecords])
+
+  // Agrupa todos los registros por día
   const recordsByDay = useMemo(() => {
-    const map: any = {}
-    blocks.forEach(b =>
-      (recordsMap[VIEW_CONFIG[b.view]?.key] ?? []).forEach(r => {
-        const day = r.fecha?.split(" ")[0] ?? "unknown"
-        ;(map[day] ??= []).push({
-          ...r,
-          _title: b.title,
-          _view: b.view,
-          _formFields: b.fields,
-          _displayFields: b.recordFields?.length ? b.recordFields : b.fields,
-        })
+    const map: Record<string, any[]> = {}
+
+    records.forEach(r => {
+      const day = r.fecha?.split(" ")[0] ?? "unknown"
+      map[day] ??= []
+
+      const block = blocks.find(b => b.view === r._view)
+
+      map[day].push({
+        ...r,
+        _title: block?.title ?? r._view,
+        _view: r._view,
+        _formFields: block?.fields ?? [],
+        _displayFields: block?.recordFields?.length
+          ? block.recordFields
+          : block?.fields ?? [],
       })
-    )
-    return Object.keys(map).sort((a, b) => +new Date(b) - +new Date(a)).map(day => ({ day, records: map[day] }))
-  }, [blocks, recordsMap])
-  const buildValue = r => r._displayFields.map(f => r[f.id] ? (f.label ? `${f.label}: ${r[f.id]}` : r[f.id]) : null).filter(Boolean).join("\n")
+    })
+
+    return Object.keys(map)
+      .sort((a, b) => +new Date(b) - +new Date(a))
+      .map(day => ({ day, records: map[day] }))
+  }, [records, blocks])
+
+  const buildValue = r =>
+    r._displayFields
+      .map(f =>
+        r[f.id]
+          ? f.label
+            ? `${f.label}: ${r[f.id]}`
+            : r[f.id]
+          : null
+      )
+      .filter(Boolean)
+      .join("\n")
+
   return (
     <div className="space-y-2">
       {mode === "update" && (
         <div className="flex flex-wrap gap-2">
           {blocks.map(b => {
-            const cfg = VIEW_CONFIG[b.view] ?? {}
+            const idField = `id_${view}`
+
             return (
               <NewRecordButton
                 key={b.view}
                 {...{
                   view: b.view,
                   title: b.title,
-                  icons: cfg.icons,
-                  buttonClassName: cfg.className,
-                  fields: b.fields.map(f => f.id === "id_historia_clinica" ? { ...f, value: recordId } : f),
+                  icon: b.icon,
+                  icons: [Plus, b.icon].filter(Boolean),
+                  fields: b.fields.map(f =>
+                    f.id === idField
+                      ? { ...f, value: recordId }
+                      : f
+                  ),
                   onSuccess: fetchRecords,
                 }}
               />
@@ -62,44 +99,85 @@ export const ExtendedForm = ({ extendedFields, recordId, mode }) => {
           })}
         </div>
       )}
+
       <div className="space-y-3 pr-1 overflow-y-auto">
         {!recordsByDay.some(d => d.records.length) && (
-          <div className="text-xs italic text-muted-foreground">Sin información adicional</div>
+          <div className="text-xs italic text-muted-foreground">
+            Sin información adicional
+          </div>
         )}
+
         {recordsByDay.map(({ day, records }) => (
           <div key={day}>
-            <div className="text-sm font-medium text-muted-foreground">{day}</div>
+            <div className="text-sm font-medium text-muted-foreground">
+              {day}
+            </div>
+
             {records.map((r, i) => {
               const row_id = r[`id_${r._view}`]
-              const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(r.archivo ?? "")
+              const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(
+                r.archivo ?? ""
+              )
               const value = buildValue(r)
+
               return (
                 <div key={`${r._view}-${row_id ?? i}`} className="space-y-1">
                   <div className="flex justify-between items-center text-xs font-medium">
                     <span>{r._title}</span>
+
                     <div className="flex gap-1">
                       {r.archivo && (
                         <SmartButton
                           {...{
                             icon: isImage ? ImageIcon : FileText,
                             variant: "ghost",
-                            onClick: () => { setPreviewFile(r.archivo); setOpenPreview(true) },
+                            onClick: () => {
+                              setPreviewFile(r.archivo)
+                              setOpenPreview(true)
+                            },
                           }}
                         />
                       )}
+
                       {mode === "update" && row_id && (
-                        <ActionButtons {...{ row_id, view: r._view, title: r._title, fields: r._formFields, onSuccess: fetchRecords }} />
+                        <ActionButtons
+    {...{
+      row_id,
+      view: r._view,
+      title: r._title,
+      fields: r._formFields,
+      extended_form: FORM_CONFIG[r._view]?.extended_form, // Solo si existe
+      onSuccess: fetchRecords,
+    }}
+  />
                       )}
                     </div>
                   </div>
-                  {value && <Textarea {...{ readOnly: true, value, rows: 4, className: "resize-none bg-muted" }} />}
+
+                  {value && (
+                    <Textarea
+                      {...{
+                        readOnly: true,
+                        value,
+                        rows: 4,
+                        className: "resize-none bg-muted",
+                      }}
+                    />
+                  )}
                 </div>
               )
             })}
           </div>
         ))}
       </div>
-      <FilePreviewDialog {...{ open: openPreview, onOpenChange: setOpenPreview, file: previewFile }} />
+
+      <FilePreviewDialog
+        {...{
+          open: openPreview,
+          onOpenChange: setOpenPreview,
+          file: previewFile,
+        }}
+      />
     </div>
   )
 }

@@ -28,6 +28,7 @@ class Mascota extends BaseModel {
         ['EDAD', 'edad_meses'],
         ['COLOR', 'color'],
         ['PESO (kg)', 'peso'],
+        ['FOTO', 'archivo'],
         ['ESTADO', 'activo'],
         ['FECHA REGISTRO', 'created_at'],
     ];

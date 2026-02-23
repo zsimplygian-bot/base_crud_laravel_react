@@ -3,7 +3,12 @@ import { mascotaForm } from "./mascota.config"
 import { clienteForm } from "./cliente.config"
 import { citaForm } from "./cita.config"
 import { especieForm } from "./especie.config"
-import { historia_clinicaForm } from "./historia_clinica.config"
+import { historiaForm } from "./historia.config"
+import { historia_seguimientoForm } from "./historia_seguimiento.config"
+import { historia_productoForm } from "./historia_producto.config"
+import { historia_producto_dosisForm } from "./historia_producto_dosis.config"
+import { historia_procedimientoForm } from "./historia_procedimiento.config"
+import { historia_anamnesisForm } from "./historia_anamnesis.config"
 import { categoriaProcedimientoForm } from "./categoria_procedimiento.config"
 import { categoriaProductoForm } from "./categoria_producto.config"
 import { razaForm } from "./raza.config"
@@ -18,7 +23,12 @@ export const FORM_CONFIG = {
   categoriaProcedimiento: categoriaProcedimientoForm,
   categoriaProducto: categoriaProductoForm,
   especie: especieForm,
-  historia_clinica: historia_clinicaForm,
+  historia: historiaForm,
+  historia_seguimiento: historia_seguimientoForm,
+  historia_producto: historia_productoForm,
+  historia_producto_dosis: historia_producto_dosisForm,
+  historia_procedimiento: historia_procedimientoForm,
+  historia_anamnesis: historia_anamnesisForm,
   raza: razaForm, 
   motivo: motivoForm, 
   user: userForm, 

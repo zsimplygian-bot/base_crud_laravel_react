@@ -6,8 +6,8 @@ export default function Dashboard({ menus, stats }) {
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
       <Head title="Dashboard" />
-<div className="flex flex-1 flex-col p-4">
-      <DashboardCards menus={menus} />
+      <div className="flex flex-1 flex-col p-4">
+        <DashboardCards menus={menus} />
       </div>
     </AppLayout>
   );

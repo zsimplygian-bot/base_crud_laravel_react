@@ -40,7 +40,7 @@ function buildNav(defs: NavDef[]) {
 // Definición con iconos más semánticos
 const rawSidebar: NavDef[] = [
   ["Dashboard", LayoutGrid, "/dashboard"],
-  ["Historias clínicas", ClipboardList, "/historia_clinica"],
+  ["Historias clínicas", ClipboardList, "/historia"],
   [
     "Citas",
     Calendar,

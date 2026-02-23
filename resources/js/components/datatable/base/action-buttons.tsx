@@ -7,7 +7,7 @@ import { SmartModal } from "@/components/smart-modal"
 import { SimpleForm } from "@/components/form/simple-form"
 import { ExtendedForm } from "@/components/form/extended-form"
 type ActionType = "store" | "info" | "update" | "delete" | null
-export const ActionButtons = ({ row_id, view, title, fields, extendedFields, onSuccess }: any) => {
+export const ActionButtons = ({ row_id, view, title, icon, fields, extended_form, onSuccess }: any) => {
   const { auth } = usePage().props, isAdmin = auth?.user?.id_rol === 1
   const [open, setOpen] = useState(false), [action, setAction] = useState<ActionType>(null)
   const openForm = useCallback((t: ActionType) => { setAction(t); setOpen(true) }, [])
@@ -18,7 +18,7 @@ export const ActionButtons = ({ row_id, view, title, fields, extendedFields, onS
       { key: "update", label: "Editar", icon: EditIcon, color: "text-green-500", modal: { title: "Editar", description: "Actualiza los datos del registro." }, action: () => openForm("update") },
       { key: "delete", label: "Eliminar", icon: TrashIcon, color: "text-red-500", modal: { title: "Eliminar", description: "Confirma para eliminar este registro." }, action: () => openForm("delete") }
     ] : []),
-    ...(view === "historia_clinica" ? [
+    ...(view === "historia" ? [
       { key: "print", label: "Imprimir", icon: FileTextIcon, color: "text-cyan-600",
         action: () => window.open(`/${view}/pdf/${row_id}`, "_blank") // Navegación explícita
       }
@@ -29,8 +29,8 @@ export const ActionButtons = ({ row_id, view, title, fields, extendedFields, onS
     <>
       <SmartDropdown {...{ label: "Acciones", triggerIcon: MoreVertical, triggerVariant: "ghost", items }} />
       {action && activeItem?.modal && (
-        <SmartModal {...{ type: "sheet", open, onOpenChange: setOpen, title: `${activeItem.modal.title} ${title}`, description: activeItem.modal.description, size: "w-[90%] sm:w-[450px]" }}>
-          <SimpleForm {...{ mode: action, endpoint: `/${view}`, recordId: row_id, fields, extendedFields, ExtendedForm, open, onSuccess: () => { setOpen(false); onSuccess?.() } }} />
+        <SmartModal {...{ type: "sheet", open, onOpenChange: setOpen, title: `${activeItem.modal.title} ${title}`, icon, description: activeItem.modal.description, size: "w-[90%] sm:w-[450px]" }}>
+          <SimpleForm {...{ mode: action, endpoint: `/${view}`, recordId: row_id, fields, extended_form, ExtendedForm, open, onSuccess: () => { setOpen(false); onSuccess?.() } }} />
         </SmartModal>
       )}
     </>

@@ -1,13 +1,19 @@
 import { forwardRef, memo } from "react"
 import { cn } from "@/lib/utils"
 import {
-  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
-  DropdownMenuSeparator, DropdownMenuItem, DropdownMenuCheckboxItem, DropdownMenuLabel,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Link } from "@inertiajs/react"
 import type { LucideIcon } from "lucide-react"
+
 type BaseItem = {
   label?: string
   icon?: LucideIcon
@@ -17,10 +23,12 @@ type BaseItem = {
   to?: string
   external?: boolean
 }
+
 export type SDItem =
   | { separator: true }
   | (BaseItem & { type?: "item"; custom?: React.ReactNode })
   | (BaseItem & { type: "checkbox"; checked: boolean; onChange: (v: boolean) => void })
+
 interface Props {
   triggerIcon?: LucideIcon
   triggerLabel?: React.ReactNode
@@ -28,8 +36,8 @@ interface Props {
   triggerVariant?: string
   triggerBadge?: string | number
   triggerBadgeClassName?: string
-  iconSize?: number | string // Opcional
-  triggerSize?: "sm" | "md" | "lg" // Opcional
+  iconSize?: number | string
+  triggerSize?: "sm" | "md" | "lg"
   label?: string
   labelExtra?: React.ReactNode
   items: SDItem[]
@@ -37,11 +45,13 @@ interface Props {
   closeOnSelect?: boolean
   itemsMaxHeight?: number | string
 }
+
 const sizeMap = {
   sm: "h-7 min-w-7 text-xs",
   md: "h-9 min-w-9 text-sm",
   lg: "h-11 min-w-11 text-base",
 }
+
 export const SmartDropdown = memo(
   forwardRef<HTMLButtonElement, Props>(function SmartDropdown(
     {
@@ -51,8 +61,8 @@ export const SmartDropdown = memo(
       triggerVariant = "default",
       triggerBadge,
       triggerBadgeClassName,
-      iconSize = 20, // Mismo tamaño que antes
-      triggerSize, // Undefined = no tocar tamaño
+      iconSize = 20,
+      triggerSize,
       label,
       labelExtra,
       items,
@@ -64,74 +74,93 @@ export const SmartDropdown = memo(
   ) {
     const prevent = (e: Event) => !closeOnSelect && e.preventDefault()
     const showBadge = triggerBadge !== undefined && triggerBadge !== null && triggerBadge !== 0
+    const isIconOnly = !triggerLabel
+
+    const renderIcon = (Icon?: LucideIcon, className?: string) =>
+      Icon && <Icon style={{ width: iconSize, height: iconSize }} className={className} />
+
+    const wrapLink = (it: BaseItem, content: React.ReactNode) => {
+      if (!it.to) return content
+      if (it.external) return <a href={it.to} target="_blank" rel="noreferrer">{content}</a>
+      return <Link href={it.to}>{content}</Link>
+    }
+
     const renderItem = (it: SDItem, i: number) => {
       if ("separator" in it) return <DropdownMenuSeparator key={i} />
+
       if (it.type === "checkbox") {
         return (
           <DropdownMenuCheckboxItem
             key={i}
-            checked={it.checked}
-            disabled={it.disabled}
-            onCheckedChange={it.onChange}
-            onSelect={prevent}
+            {...{
+              checked: it.checked,
+              disabled: it.disabled,
+              onCheckedChange: it.onChange,
+              onSelect: prevent,
+            }}
           >
-            {it.icon && <it.icon style={{ width: iconSize, height: iconSize }} className="mr-2 opacity-80" />}
+            {renderIcon(it.icon, "mr-2 opacity-80")}
             {it.label}
           </DropdownMenuCheckboxItem>
         )
       }
+
       const content = it.custom ?? (
         <>
-          {it.icon && <it.icon style={{ width: iconSize, height: iconSize }} className="opacity-80" />}
+          {renderIcon(it.icon, "opacity-80")}
           <span className={it.color}>{it.label}</span>
         </>
       )
-      const Wrapper = it.to
-        ? it.external
-          ? ({ children }: any) => <a href={it.to} target="_blank" rel="noreferrer">{children}</a>
-          : ({ children }: any) => <Link href={it.to}>{children}</Link>
-        : null
+
       return (
         <DropdownMenuItem
           key={i}
-          asChild={!!Wrapper || !!it.custom}
-          disabled={it.disabled}
-          onClick={it.action}
-          onSelect={prevent}
-          className="flex items-center gap-2"
+          {...{
+            asChild: !!it.to || !!it.custom,
+            disabled: it.disabled,
+            onClick: it.action,
+            onSelect: prevent,
+            className: "flex items-center gap-2",
+          }}
         >
-          {Wrapper ? <Wrapper>{content}</Wrapper> : content}
+          {wrapLink(it, content)}
         </DropdownMenuItem>
       )
     }
+
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
-            ref={ref}
-            variant={triggerVariant}
-            className={cn(
-              "rounded-full relative flex items-center gap-2",
-              triggerLabel ? "px-3" : "w-9 px-0", // Igual que antes
-              triggerSize && sizeMap[triggerSize], // Solo si se define
-              triggerButtonClassName
-            )}
+            {...{
+              ref,
+              variant: triggerVariant,
+              className: cn(
+                "rounded-full relative flex items-center gap-2",
+                isIconOnly ? "w-9 px-0" : "px-3",
+                triggerSize && sizeMap[triggerSize],
+                triggerButtonClassName
+              ),
+            }}
           >
-            {Icon && <Icon style={{ width: iconSize, height: iconSize }} />}
+            {renderIcon(Icon)}
             {triggerLabel}
             {showBadge && (
               <Badge
-                className={cn(
-                  "absolute -top-1 -right-1 h-4 px-1 text-[10px] leading-none pt-[3px] rounded-full",
-                  triggerBadgeClassName
-                )}
+                {...{
+                  className: cn(
+                    "absolute -top-1 -right-1 h-4 px-1 text-[10px] leading-none pt-[3px] rounded-full",
+                    triggerBadgeClassName
+                  ),
+                }}
               >
                 {triggerBadge}
               </Badge>
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align={align}>
+
+        <DropdownMenuContent {...{ align }}>
           {(label || labelExtra) && (
             <>
               <DropdownMenuLabel className="flex items-center justify-between gap-2">
@@ -141,7 +170,13 @@ export const SmartDropdown = memo(
               <DropdownMenuSeparator />
             </>
           )}
-          <div className={itemsMaxHeight ? "overflow-y-auto" : undefined} style={{ maxHeight: itemsMaxHeight }}>
+
+          <div
+            {...{
+              className: itemsMaxHeight ? "overflow-y-auto" : undefined,
+              style: { maxHeight: itemsMaxHeight },
+            }}
+          >
             {items.map(renderItem)}
           </div>
         </DropdownMenuContent>
@@ -149,4 +184,5 @@ export const SmartDropdown = memo(
     )
   })
 )
+
 SmartDropdown.displayName = "SmartDropdown"

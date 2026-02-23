@@ -10,7 +10,7 @@ class ModelRegistry
             'user'   => M\User::class,
             'mascota'   => M\Mascota::class,
             'cita'   => M\Cita::class,
-            'historia_clinica'   => M\HistoriaClinica::class,
+            'historia'   => M\Historia::class,
             'categoria_producto'   => M\CategoriaProducto::class,
             'categoria_procedimiento'   => M\CategoriaProcedimiento::class,
             'especie'   => M\Especie::class,

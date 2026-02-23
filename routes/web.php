@@ -22,11 +22,12 @@ $resourcesWithForms = [ // Recursos principales con formularios
     'user'           => C\UserController::class,
     'mascota'           => C\MascotaController::class,
     'cita'              => C\CitaController::class,
-    'historia_clinica'  => C\HistoriaClinicaController::class,
-    'historia_clinica_anamnesis'  => C\HistoriaClinicaAnamnesisController::class,
-    'historia_clinica_seguimiento'  => C\HistoriaClinicaSeguimientoController::class,
-    'historia_clinica_procedimiento'  => C\HistoriaClinicaProcedimientoController::class,
-    'historia_clinica_producto'  => C\HistoriaClinicaProductoController::class,
+    'historia'  => C\HistoriaController::class,
+    'historia_anamnesis'  => C\HistoriaAnamnesisController::class,
+    'historia_seguimiento'  => C\HistoriaSeguimientoController::class,
+    'historia_procedimiento'  => C\HistoriaProcedimientoController::class,
+    'historia_producto'  => C\HistoriaProductoController::class,
+    'historia_producto_dosis'  => C\HistoriaProductoDosisController::class,
     'categoria_producto'           => C\CategoriaProductoController::class,
     'categoria_procedimiento'           => C\CategoriaProcedimientoController::class,
     'especie'           => C\EspecieController::class,
@@ -43,5 +44,5 @@ foreach ($resourcesWithForms as $uri => $controller) { // Recursos con rutas adi
     Route::get("$uri/form/{action}/{id?}", [$controller, 'handleAction'])->name("$uri.form");
     Route::post("$uri/form", [$controller, 'store'])->name("$uri.form.store");
 }
-Route::get('historia_clinica/pdf/{id}', [C\HistoriaClinicaController::class, 'generatePdf'])->name('historia_clinica.pdf');
+Route::get('historia/pdf/{id}', [C\HistoriaController::class, 'generatePdf'])->name('historia.pdf');
 require __DIR__ . '/settings.php';

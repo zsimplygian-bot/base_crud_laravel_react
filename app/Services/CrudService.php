@@ -59,7 +59,7 @@ class CrudService
             $this->files->handleUpload($request, $model, $controller->view, 'archivo');
         }
 
-        if ($controller->view === 'historia_clinica' && !$id) {
+        if ($controller->view === 'historia' && !$id) {
             return redirect("/{$controller->view}/form/update/{$model->getKey()}")
                 ->with('success', 'Registro creado exitosamente.');
         }

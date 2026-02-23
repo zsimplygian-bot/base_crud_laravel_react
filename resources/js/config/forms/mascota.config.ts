@@ -1,7 +1,8 @@
-// mascota.config.ts
+import { Dog } from "lucide-react"
 export const mascotaForm = {
   view: "mascota",
   title: "Mascota",
+  icon: Dog, // <-- icono de la tabla, se puede usar en NewRecordButton, tabs, etc.
   fields: [
     { id: "mascota", label: "Mascota", required: true, searchable: true, defaultVisible: true, width:"1/2" },
     { id: "id_cliente", label: "Cliente", type: "combobox", searchable: true, defaultVisible: true, width:"1/2" },

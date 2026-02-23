@@ -1,7 +1,8 @@
-// mascota.config.ts
+import { User } from "lucide-react"
 export const userForm = {
   view: "user",
   title: "Usuario",
+  icon: User,
   fields: [
     { id: "name", label: "Usuario", searchable: true, defaultVisible: true },
     { id: "id_rol", label: "Rol", type: "combobox", searchable: true, defaultVisible: true },

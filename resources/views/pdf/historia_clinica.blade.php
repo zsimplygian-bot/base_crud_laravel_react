@@ -23,7 +23,7 @@ th{background:#f2f2f2;font-weight:bold}
     $na = fn($v) => isset($v) && trim($v) !== '' ? $v : null;
     $fmt = fn($d) => $d ? \Carbon\Carbon::parse($d)->format('d/m/Y H:i') : null;
 
-    $hc = $historia_clinica;
+    $hc = $historia;
     $mascota = $hc->mascota;
     $cliente = $mascota->cliente;
 
@@ -142,9 +142,9 @@ th{background:#f2f2f2;font-weight:bold}
 </thead>
 <tbody>
 <tr>
-    <td>{{ $na($hc->motivo_historia_clinica?->motivo_historia_clinica) }}</td>
+    <td>{{ $na($hc->motivo_historia?->motivo_historia) }}</td>
     <td>{{ $na($hc->detalle) }}</td>
-    <td>{{ $na($hc->estado_historia_clinica?->estado_historia_clinica) }}</td>
+    <td>{{ $na($hc->estado_historia?->estado_historia) }}</td>
 </tr>
 </tbody>
 </table>

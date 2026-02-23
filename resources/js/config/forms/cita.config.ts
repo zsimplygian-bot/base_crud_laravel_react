@@ -1,7 +1,8 @@
-// mascota.config.ts
+import { Calendar } from "lucide-react"
 export const citaForm = {
   view: "cita",
   title: "Cita",
+  icon: Calendar,
   fields: [
     { id: "id_mascota", label: "Mascota", type: "combobox", searchable: true, defaultVisible: true },
     { id: "id_motivo", label: "Motivo cita", type: "combobox", searchable: true, defaultVisible: true },

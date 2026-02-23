@@ -2,6 +2,7 @@
 import React, { useCallback, memo, useEffect } from "react"
 import { SmartBadge } from "@/components/smart-badge"
 import { PhoneIcon } from "lucide-react"
+import { PhotoPreview } from "@/components/photo-preview"
 
 type RenderFn = (v: any, row?: any, view?: string) => React.ReactNode
 
@@ -17,7 +18,7 @@ const normalize = (v: any) =>
 
 // Configuración
 const CONFIG = {
-  estado_historia_clinica: {
+  estado_historia: {
     ACTIVO: "green",
     ATENDIDO: "green",
     ABIERTO: "green",
@@ -166,8 +167,8 @@ const R: Record<string, RenderFn> = {
 
   activo: renderActivo,
 
-  estado_historia_clinica: v => (
-    <BadgeStatus value={v} map={CONFIG.estado_historia_clinica} />
+  estado_historia: v => (
+    <BadgeStatus value={v} map={CONFIG.estado_historia} />
   ),
   estado_cita: v => (
     <BadgeStatus value={v} map={CONFIG.estado_cita} />
@@ -176,10 +177,10 @@ const R: Record<string, RenderFn> = {
     <BadgeStatus value={v} map={CONFIG.estado_mascota} />
   ),
 
-  archivo: (_, row, view) => {
-    if (!row?.id || !view) return "—"
-    return <ImageCell src={`/media/${view}/${row.id}/image.jpg`} />
-  },
+  archivo: (_, row) => {
+  if (!row?.archivo) return "—"
+  return <PhotoPreview filePath={row.archivo} />
+},
 }
 
 // Hook principal
