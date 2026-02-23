@@ -23,7 +23,9 @@ export const FormField=({
         </Label>
       )}
 
-      {type==="combobox"&&<Combobox {...{...base,value,options,loading,open,setOpen,onSelect}} />}
+      {type==="combobox"&&
+  <Combobox {...{...base,value,open,setOpen,onSelect}} />
+}
       {["date","time","datetime"].includes(type)&&<SmartDateTimePicker {...{type,value,onChange,disabled}} />}
       {type==="file"&&<FieldFile {...{id,value,setData,disabled,view}} />}
       {type==="textarea"&&<Textarea {...{...base,value,onChange}} />}

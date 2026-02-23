@@ -3,19 +3,20 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+
 class HistoriaProducto extends BaseModel
 {
     use HasFactory;
+
     protected $table = 'historia_producto';
+
     protected static $validationRules = [
         'id_historia' => 'required|integer|exists:historia,id_historia',
-        'id_producto' => 'required|integer|exists:producto,id_producto',
-        'cantidad' => 'required|numeric',
-        'unidad' => 'required|string|max:10',
-        'via' => 'required|string|max:50',
-        'frecuencia' => 'required|string|max:50',
+        'dosis' => 'required|string|max:50',
+        'precio' => 'nullable|numeric',
         'fecha' => 'required|date',
     ];
+
     protected static $tableColumns = [
         ['ID', 'id_historia_producto'],
         ['HISTORIA CLINICA', 'id_historia'],
@@ -28,11 +29,17 @@ class HistoriaProducto extends BaseModel
         ['FECHA', 'fecha'],
         ['FECHA REGISTRO', 'created_at'],
     ];
-    protected $appends = ['nombre_producto'];
+
+    protected $appends = [
+        'nombre_producto',
+        'productos', // Append nuevo
+    ];
+
     public static function getQuery(): array
     {
-        $t1 = (new self)->getTable(); // historia_producto_dosis
+        $t1 = (new self)->getTable();
         $t2 = 'producto';
+
         $query = DB::table($t1)
             ->leftJoin($t2, "$t1.id_producto", '=', "$t2.id_producto")
             ->select([
@@ -50,6 +57,40 @@ class HistoriaProducto extends BaseModel
 
         return ['query' => $query, 'alias' => $t1];
     }
+
+    // Relaciones
+    public function producto()
+    {
+        return $this->belongsTo(Producto::class, 'id_producto');
+    }
+
+    public function historia_productos_dosis(): HasMany
+    {
+        return $this->hasMany(HistoriaProductoDosis::class, 'id_historia_producto');
+    }
+
+    // Appends
+    public function getNombreProductoAttribute()
+    {
+        return $this->producto->producto ?? null;
+    }
+
+    public function getProductosAttribute()
+    {
+        return $this->historia_productos_dosis()
+            ->get()
+            ->map(fn($r) => [
+                'id' => $r->id_historia_producto_dosis,
+                'producto' => $r->nombre_producto,
+                'cantidad' => $r->cantidad,
+                'unidad' => $r->unidad,
+                'via' => $r->via,
+                'frecuencia' => $r->frecuencia,
+                'fecha' => $r->fecha,
+            ])
+            ->values()
+            ->toArray(); // Siempre retorna array limpio
+    }
     public static function getAllRelatedRecords(int $id): array
     {
         $historia = self::findOrFail($id);
@@ -64,8 +105,8 @@ class HistoriaProducto extends BaseModel
         });
         return $combined;
     }
-    public function producto() { return $this->belongsTo(Producto::class, 'id_producto'); }
-    public function getNombreproductoAttribute() { return $this->producto->producto ?? null; }
-    public function parent() { return $this->belongsTo(Historia::class, $this->parentForeignKey, 'id'); }
-    public function historia_productos_dosis(): HasMany { return $this->hasMany(HistoriaProductoDosis::class, 'id_historia_producto'); }
+    public function parent()
+    {
+        return $this->belongsTo(Historia::class, $this->parentForeignKey, 'id');
+    }
 }

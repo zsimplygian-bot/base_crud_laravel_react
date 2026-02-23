@@ -19,7 +19,6 @@ Route::get('/historia_producto/{id}/records', [HistoriaProductoController::class
 Route::get('/citas/proximas', [CitaController::class, 'proximas']);
 Route::get('/index', [ListadoController::class, 'index']);
 Route::get('/listas', [ListaController::class, 'obtenerLista']);
-Route::get('/listas/item', [ListaController::class, 'getItemInicial']);
 Route::get('/cita/eventos', [CitaController::class, 'eventos']);
 Route::get('/user', function (Request $request) {
     return $request->user();

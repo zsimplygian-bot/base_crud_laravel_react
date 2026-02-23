@@ -65,35 +65,33 @@ export const SimpleForm = ({ mode, endpoint, recordId, fields, extended_form, Ex
     <div className="space-y-6">
       <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-x-4 gap-y-4 overflow-visible">
         {normalizedFields.map(f => {
-          const lista = isCombobox(f) && getListaSync(f.lista)
-          if (f.hidden)
-            return <FormField key={f.name} {...{ id: f.name, type: "hidden", value: data[f.name], hidden: true, onChange: (v: any) => setData(f.name, v) }} />
-          return (
-            <div key={f.name} className={`overflow-visible ${fieldCols(f.width)}`}>
-              <FormField
-                {...{
-                  id: f.name,
-                  label: f.label,
-                  type: f.type,
-                  value: data[f.name],
-                  disabled: MODE.disabled,
-                  options: lista?.options ?? [],
-                  loading: !!lista?.loading,
-                  open: !!openMap[f.name],
-                  setOpen: (v: boolean) => setOpenMap(p => ({ ...p, [f.name]: v })),
-                  onChange: (v: any) => setData(f.name, v?.target ? v.target.value : v),
-                  onSelect: (id: any) => {
-                    setData(f.name, String(id))
-                    setOpenMap(p => ({ ...p, [f.name]: false }))
-                  },
-                  setData,
-                  view,
-                }}
-              />
-              <InputError message={errors[f.name]} />
-            </div>
-          )
-        })}
+  if (f.hidden)
+    return <FormField key={f.name} {...{ id:f.name,type:"hidden",value:data[f.name],hidden:true,onChange:(v:any)=>setData(f.name,v)}} />
+
+  return (
+    <div key={f.name} className={`overflow-visible ${fieldCols(f.width)}`}>
+      <FormField
+        {...{
+          id: f.name,
+          label: f.label,
+          type: f.type,
+          value: data[f.name],
+          disabled: MODE.disabled,
+          open: !!openMap[f.name],
+          setOpen: (v:boolean)=>setOpenMap(p=>({...p,[f.name]:v})),
+          onChange: (v:any)=>setData(f.name,v?.target?v.target.value:v),
+          onSelect: (id:any)=>{
+            setData(f.name,String(id))
+            setOpenMap(p=>({...p,[f.name]:false}))
+          },
+          setData,
+          view,
+        }}
+      />
+      <InputError message={errors[f.name]} />
+    </div>
+  )
+})}
         {MODE.showSubmit && (
           <div className="col-span-12 flex justify-end">
             <SmartButton {...{ type: "submit", icon: MODE.icon, disabled: processing, className: MODE.className, tooltip: MODE.submit }} />

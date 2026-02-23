@@ -61,17 +61,30 @@ export const ExtendedForm = ({ extended_form, recordId, mode, view }) => {
   }, [records, blocks])
 
   const buildValue = r =>
-    r._displayFields
-      .map(f =>
-        r[f.id]
-          ? f.label
-            ? `${f.label}: ${r[f.id]}`
-            : r[f.id]
-          : null
-      )
-      .filter(Boolean)
-      .join("\n")
+  r._displayFields
+    .map(f => {
+      const v = r[f.id]
+      if (!v) return null
 
+      // Formato join para arrays
+      if (f.format === "join" && Array.isArray(v)) {
+        const text = v
+          .map(item =>
+            f.template.replace(
+              /\{(\w+)\}/g,
+              (_, k) => item[k] ?? ""
+            )
+          )
+          .join(f.separator ?? ", ")
+
+        return f.label ? `${f.label}: ${text}` : text
+      }
+
+      // Valor simple
+      return f.label ? `${f.label}: ${v}` : v
+    })
+    .filter(Boolean)
+    .join("\n")
   return (
     <div className="space-y-2">
       {mode === "update" && (

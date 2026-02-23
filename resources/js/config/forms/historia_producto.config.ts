@@ -5,17 +5,24 @@ export const historia_productoForm = {
   icon: Syringe,
   fields: [
     { id: "id_historia", hidden: true },
-    { id: "id_producto", label: "Producto", type: "combobox" },
-    { id: "dosis", label: "Dosis" },
+    { id: "dosis", label: "Receta" },
     { id: "precio", label: "Precio S/", type: "number" },
     { id: "fecha", label: "Fecha", type: "datetime" },
     { id: "archivo", label: "Imagen", type: "file" },
   ],  
   recordFields: [
-    { id: "nombre_producto", label: "Producto" },
     { id: "dosis", label: "Dosis" },
-    { id: "precio", label: "Precio S/" },
-  ],
+  {
+    id: "productos",
+    label: "Productos",
+    format: "join",
+    fields: ["producto", "cantidad", "unidad"],
+    template: "{producto} ({cantidad} {unidad})",
+    separator: ", ",
+  },
+  
+  { id: "precio", label: "Precio S/" },
+],
   extended_form: [
     "historia_producto_dosis",
   ],

@@ -14,7 +14,7 @@ export const historia_producto_dosisForm = {
   ],  
   recordFields: [
     { id: "nombre_producto", label: "Producto" },
-    { id: "dosis", label: "Dosis" },
-    { id: "precio", label: "Precio S/" },
+    { id: "cantidad", label: "Dosis" },
+    { id: "unidad", label: "Unidad" },
   ],
 }

@@ -31,20 +31,20 @@ class HistoriaController extends BaseController
     }
     public function generatePDF($id)
     {
-        $historia_ = Historia::with([
+        $historia = Historia::with([
             'mascota.cliente',
             'historia_seguimientos',
             'historia_procedimientos',
             'historia_productos',
             'historia_anamnesis'
         ])->findOrFail($id);
-        $data = $this->preparePDFData($historia_);
-        $pdf = Pdf::loadView('pdf.historia_', $data)
+        $data = $this->preparePDFData($historia);
+        $pdf = Pdf::loadView('pdf.historia', $data)
             ->setPaper('a4', 'portrait');
-        return $pdf->stream('historia__'.$id.'.pdf');
+        return $pdf->stream('historia'.$id.'.pdf');
     }
-    private function preparePDFData($historia_)
+    private function preparePDFData($historia)
     {
-        return compact('historia_');
+        return compact('historia');
     }
 }
