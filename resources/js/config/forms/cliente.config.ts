@@ -6,6 +6,7 @@ export const clienteForm = {
   fields: [
     { id: "cliente", label: "Cliente", searchable: true, defaultVisible: true },
     { id: "email", label: "Email", searchable: true },
+    { id: "dni", label: "DNI", searchable: true },
     { id: "telefono", label: "Teléfono", searchable: true },
   ],
 }

@@ -20,8 +20,7 @@ class Cliente extends BaseModel {
         ['DIRECCIÓN', 'direccion'],
         ['FECHA REGISTRO', 'created_at'],
     ];
-    public static function getQuery(): array
-    {
+    public static function getQuery(): array {
         $t1 = (new self)->getTable(); // tabla
         return ['alias' => $t1,'query' => DB::table($t1)->select([
             "$t1.id_$t1 as id",
