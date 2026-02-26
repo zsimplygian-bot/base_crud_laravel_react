@@ -179,7 +179,7 @@ const R: Record<string, RenderFn> = {
 
   archivo: (_, row) => {
   if (!row?.archivo) return "—"
-  return <PhotoPreview filePath={row.archivo} />
+  return <PhotoPreview filePath={row.archivo} size={40} />
 },
 }
 

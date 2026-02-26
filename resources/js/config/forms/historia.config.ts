@@ -16,5 +16,6 @@ export const historiaForm = {
     "historia_producto",
     "historia_procedimiento",
     "historia_anamnesis",
+    "historia_valoracion",
   ],
 }

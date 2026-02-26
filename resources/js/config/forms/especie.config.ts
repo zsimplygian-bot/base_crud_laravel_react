@@ -5,6 +5,6 @@ export const especieForm = {
   icon: PawPrint,
   fields: [
     { id: "especie", label: "Especie", searchable: true, defaultVisible: true },
-    { id: "emoji", label: "Emoji" },
+    { id: "emoji_especie", label: "Emoji" },
   ],
 }

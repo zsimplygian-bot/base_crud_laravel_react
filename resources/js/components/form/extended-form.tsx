@@ -39,8 +39,9 @@ export const ExtendedForm = ({ extended_form, recordId, mode, view }) => {
     const map: Record<string, any[]> = {}
 
     records.forEach(r => {
-      const day = r.fecha?.split(" ")[0] ?? "unknown"
-      map[day] ??= []
+      const rawDate = r.fecha?.split(" ")[0] ?? r.created_at?.split("T")[0] // Quita hora en ambos casos
+  const day = rawDate ?? "unknown"
+  map[day] ??= []
 
       const block = blocks.find(b => b.view === r._view)
 

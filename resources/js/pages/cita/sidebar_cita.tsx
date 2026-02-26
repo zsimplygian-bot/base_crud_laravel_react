@@ -30,15 +30,17 @@ const CitaItem = memo(({ cita, onRefresh }: any) => {
         <div className="flex items-center gap-2 text-sm font-medium">
           <Bell className="w-4 h-4 text-blue-500" />
           <span className="truncate">{cita.mascota}</span>
-          <span className="text-xs text-muted-foreground">- {cita.cliente}</span>
+          <span className="text-xs text-muted-foreground"> {cita.cliente}</span>
         </div>
-        <div className="text-xs">{cita.motivo} - {formatFecha(cita.fecha)}</div>
+        <div className="text-xs">{cita.motivo}  {formatFecha(cita.fecha)}</div>
       </div>
       <div className="flex items-center gap-1">
-        <SmartButton {...{ icon: Check, tooltip: "Atender", variant: "secondary",
-          onClick: () => post(`/api/cita/${cita.id}/atender`, "Cita atendida") }} />
-        <SmartButton {...{ icon: X, tooltip: "Cancelar", variant: "destructive",
-          onClick: () => post(`/api/cita/${cita.id}/cancelar`, "Cita cancelada") }} />
+        <SmartButton { ...{ icon: Check, size: "xs", variant: "default", buttonColor: "green", tooltip: "Atender",
+            confirmation: { title: "Confirmar atención", description: "Esta acción marcará la cita como atendida.",
+            }, onClick: () => post(`/api/cita/${cita.id}/atender`, "Cita atendida"), } } />
+        <SmartButton { ...{ icon: X, size: "xs", variant: "destructive", tooltip: "Cancelar",
+            confirmation: { title: "Confirmar cancelación", description: "Esta acción cancelará la cita.",
+            }, onClick: () => post(`/api/cita/${cita.id}/cancelar`, "Cita cancelada"), } } />
         <ActionButtons {...{ row_id: cita.id,
           view: FORM_CONFIG.cita.view, title: FORM_CONFIG.cita.title, fields: FORM_CONFIG.cita.fields,
           onSuccess: onRefresh, }} />
@@ -89,7 +91,7 @@ export default function CitasDropdown() {
           onSuccess: fetchCitas, buttonClassName: "h-7 w-7 p-0", }} />
       ),
       triggerIcon: Bell, triggerVariant: "ghost", triggerBadge: citas.length,
-      triggerBadgeClassName: "bg-red-600 text-white", closeOnSelect: false,
+      triggerBadgeClassName: "bg-red-700 text-white", closeOnSelect: false,
       itemsMaxHeight: 320, items, }} />
   )
 }

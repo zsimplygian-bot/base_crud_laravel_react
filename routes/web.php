@@ -25,6 +25,7 @@ $resourcesWithForms = [ // Recursos principales con formularios
     'historia'  => C\HistoriaController::class,
     'historia_anamnesis'  => C\HistoriaAnamnesisController::class,
     'historia_seguimiento'  => C\HistoriaSeguimientoController::class,
+    'historia_valoracion'  => C\HistoriaValoracionController::class,
     'historia_procedimiento'  => C\HistoriaProcedimientoController::class,
     'historia_producto'  => C\HistoriaProductoController::class,
     'historia_producto_dosis'  => C\HistoriaProductoDosisController::class,

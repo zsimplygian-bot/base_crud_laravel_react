@@ -7,110 +7,47 @@ import { SmartModal } from "@/components/smart-modal"
 import { SmartButton } from "@/components/smart-button"
 import { SimpleForm } from "@/components/form/simple-form"
 import { ExtendedForm } from "@/components/form/extended-form"
-
 type ActionType = "store" | "info" | "update" | "delete" | null
-
-export const ActionButtons = ({
-  row_id,
-  view,
-  title,
-  icon,
-  fields,
-  extended_form,
-  onSuccess,
-  eye // Nuevo prop
-}: any) => {
-
+export const ActionButtons = ({ row_id, view, title, icon, fields, extended_form, onSuccess, eye }: any) => {
   const { auth } = usePage().props
   const isAdmin = auth?.user?.id_rol === 1
-
   const [open, setOpen] = useState(false)
   const [action, setAction] = useState<ActionType>(null)
-
   const openForm = useCallback((t: ActionType) => {
     setAction(t)
     setOpen(true)
   }, [])
-
   const items = [
-    { label: "Copiar ID", icon: CopyIcon, action: () => {
-        navigator.clipboard.writeText(row_id)
-        toast.success("ID copiado al portapapeles")
+    { label: "Copiar ID", icon: CopyIcon, action: () => { navigator.clipboard.writeText(row_id); toast.success("ID copiado al portapapeles")
       }
     },
     { key: "info", label: "Detalle", icon: EyeIcon, color: "text-blue-500",
-      modal: { title: "Detalle", description: "Consulta los datos del registro." },
-      action: () => openForm("info")
+      modal: { title: "Detalle", description: "Consulta los datos del registro." }, action: () => openForm("info")
     },
     ...(isAdmin ? [
       { key: "update", label: "Editar", icon: EditIcon, color: "text-green-500",
-        modal: { title: "Editar", description: "Actualiza los datos del registro." },
-        action: () => openForm("update")
+        modal: { title: "Editar", description: "Actualiza los datos del registro." }, action: () => openForm("update")
       },
       { key: "delete", label: "Eliminar", icon: TrashIcon, color: "text-red-500",
-        modal: { title: "Eliminar", description: "Confirma para eliminar este registro." },
-        action: () => openForm("delete")
+        modal: { title: "Eliminar", description: "Confirma para eliminar este registro." }, action: () => openForm("delete")
       }
     ] : []),
     ...(view === "historia" ? [
-      { key: "print", label: "Imprimir", icon: FileTextIcon, color: "text-cyan-600",
-        action: () => window.open(`/${view}/pdf/${row_id}`, "_blank")
+      { key: "print", label: "Imprimir", icon: FileTextIcon, color: "text-cyan-600", action: () => window.open(`/${view}/pdf/${row_id}`, "_blank")
       }
     ] : [])
   ]
-
   const activeItem = items.find(i => i.key === action)
-
   return (
-    <>
-      <div className="flex items-center gap-1">
-        {eye && (
-          <SmartButton
-            icon={EyeIcon}                // Botón directo de detalle
-            variant="ghost"
-            tooltip="Ver detalle"
-            className="h-8 w-8 p-0"
-            onClick={() => openForm("info")}
-          />
-        )}
-
-        <SmartDropdown
-          {...{
-            label: "Acciones",
-            triggerIcon: MoreVertical,
-            triggerVariant: "ghost",
-            items
-          }}
-        />
+    <><div className="flex items-center gap-1">
+        {eye && ( <SmartButton {...{ icon: EyeIcon, variant: "ghost", tooltip: "Ver detalle", className: "h-8 w-8 p-0", onClick: () => openForm("info") }} /> )}
+        {!eye && ( <SmartDropdown {...{ label: "Acciones", triggerIcon: MoreVertical, triggerVariant: "ghost", items }} /> )}
       </div>
-
       {action && activeItem?.modal && (
-        <SmartModal
-          {...{
-            type: "sheet",
-            open,
-            onOpenChange: setOpen,
-            title: `${activeItem.modal.title} ${title}`,
-            icon,
-            description: activeItem.modal.description,
-            size: "w-[90%] sm:w-[450px]"
-          }}
-        >
-          <SimpleForm
-            {...{
-              mode: action,
-              endpoint: `/${view}`,
-              recordId: row_id,
-              fields,
-              extended_form,
-              ExtendedForm,
-              open,
-              onSuccess: () => {
-                setOpen(false)
-                onSuccess?.()
-              }
-            }}
-          />
+        <SmartModal {...{ type: "sheet", open, onOpenChange: setOpen, title: `${activeItem.modal.title} ${title}`,
+           icon, description: activeItem.modal.description, size: "w-[90%] sm:w-[450px]" }} >
+          <SimpleForm {...{ mode: action, endpoint: `/${view}`, recordId: row_id, fields, extended_form,
+              ExtendedForm, open, onSuccess: () => { setOpen(false); onSuccess?.() } }} />
         </SmartModal>
       )}
     </>

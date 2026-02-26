@@ -31,7 +31,6 @@ class HistoriaProducto extends BaseModel
     ];
 
     protected $appends = [
-        'nombre_producto',
         'productos', // Append nuevo
     ];
 

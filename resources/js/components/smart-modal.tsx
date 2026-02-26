@@ -1,19 +1,37 @@
 // components/smart-modal.tsx
 import { ReactNode } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, } from "./ui/dialog"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, } from "./ui/sheet"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "./ui/dialog"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "./ui/sheet"
+import { Button } from "./ui/button"
+
 interface SmartModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   title: string
-  children: ReactNode
+  children?: ReactNode
   description?: string
   icon?: React.ComponentType<any>
   type?: "dialog" | "sheet"
   side?: "right" | "left" | "top" | "bottom"
   size?: string
   iconSize?: number
+  confirmation?: boolean
+  onConfirm?: () => void
 }
+
 export const SmartModal = ({
   open,
   onOpenChange,
@@ -25,11 +43,18 @@ export const SmartModal = ({
   type = "dialog",
   side = "right",
   size,
+  confirmation = false,
+  onConfirm,
 }: SmartModalProps) =>
   type === "sheet" ? (
     <Sheet {...{ open, onOpenChange }}>
-      <SheetContent {...{ side, className: `w-full sm:max-w-md md:max-w-lg lg:max-w-xl
-            ${size || ""} h-dvh max-h-dvh flex flex-col overflow-hidden`}} >
+      <SheetContent
+        {...{
+          side,
+          className: `w-full sm:max-w-md md:max-w-lg lg:max-w-xl
+          ${size || ""} h-dvh max-h-dvh flex flex-col overflow-hidden`,
+        }}
+      >
         <SheetHeader className="shrink-0">
           <div className="flex items-center gap-2">
             <SheetTitle>{title.toUpperCase()}</SheetTitle>
@@ -42,15 +67,43 @@ export const SmartModal = ({
     </Sheet>
   ) : (
     <Dialog {...{ open, onOpenChange }}>
-      <DialogContent {...{ className: `${size || ""} max-h-[90dvh] flex flex-col overflow-hidden` }} >
+      <DialogContent
+        {...{ className: `${size || ""} max-h-[90dvh] flex flex-col overflow-hidden` }}
+      >
         <DialogHeader>
-          <div className="flex items-center gap-2">
-            <DialogTitle>{title.toUpperCase()}</DialogTitle>
+          <DialogTitle className="flex justify-center gap-2">
+            {title.toUpperCase()}
             {Icon && <Icon style={{ width: iconSize, height: iconSize }} />}
-          </div>
-          {description && <DialogDescription>{description}</DialogDescription>}
+          </DialogTitle>
+
+          {description && (
+            <DialogDescription className="text-center">
+              {description}
+            </DialogDescription>
+          )}
         </DialogHeader>
-        <div>{children}</div>
+
+        {confirmation ? (
+          <DialogFooter className="flex justify-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
+              Cancelar
+            </Button>
+
+            <Button
+              onClick={() => {
+                onConfirm?.()
+                onOpenChange(false)
+              }}
+            >
+              Confirmar
+            </Button>
+          </DialogFooter>
+        ) : (
+          <div>{children}</div>
+        )}
       </DialogContent>
     </Dialog>
   )

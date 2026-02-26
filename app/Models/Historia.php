@@ -67,9 +67,10 @@ class Historia extends BaseModel {
         $seguimientos = $historia->historia_seguimientos()->get()->map(fn($r) => ['_view'=>'historia_seguimiento', ...$r->toArray()])->toArray();
         $procedimientos = $historia->historia_procedimientos()->get()->map(fn($r) => ['_view'=>'historia_procedimiento', ...$r->toArray()])->toArray();
         $productos = $historia->historia_productos()->get()->map(fn($r) => ['_view'=>'historia_producto', ...$r->toArray()])->toArray();
+        $valoraciones = $historia->historia_valoraciones()->get()->map(fn($r) => ['_view'=>'historia_valoracion', ...$r->toArray()])->toArray();
         $anamnesis = $historia->historia_anamnesis()->get()->map(fn($r) => ['_view'=>'historia_anamnesis', ...$r->toArray()])->toArray();
         // Combinar y ordenar por fecha
-        $combined = array_merge($seguimientos, $procedimientos, $productos, $anamnesis);
+        $combined = array_merge($seguimientos, $procedimientos, $productos, $anamnesis, $valoraciones);
         usort($combined, function ($a, $b) {
             $dateA = strtotime($a['fecha'] ?? $a['created_at'] ?? 0);
             $dateB = strtotime($b['fecha'] ?? $b['created_at'] ?? 0);
@@ -81,6 +82,7 @@ class Historia extends BaseModel {
     public function historia_procedimientos(): HasMany { return $this->hasMany(HistoriaProcedimiento::class, 'id_historia'); }
     public function historia_productos(): HasMany { return $this->hasMany(HistoriaProducto::class, 'id_historia'); }
     public function historia_anamnesis(): HasMany { return $this->hasMany(HistoriaAnamnesis::class, 'id_historia'); }
+    public function historia_valoraciones(): HasMany { return $this->hasMany(HistoriaValoracion::class, 'id_historia'); }
     public function mascota() { return $this->belongsTo(Mascota::class, 'id_mascota'); }
     public function estado_historia() { return $this->belongsTo(EstadoHistoria::class, 'id_estado_historia'); }
     public function motivo() { return $this->belongsTo(Motivo::class, 'id_motivo'); }

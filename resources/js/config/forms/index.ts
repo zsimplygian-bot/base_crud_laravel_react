@@ -5,6 +5,7 @@ import { citaForm } from "./cita.config"
 import { especieForm } from "./especie.config"
 import { historiaForm } from "./historia.config"
 import { historia_seguimientoForm } from "./historia_seguimiento.config"
+import { historia_valoracionForm } from "./historia_valoracion.config"
 import { historia_productoForm } from "./historia_producto.config"
 import { historia_producto_dosisForm } from "./historia_producto_dosis.config"
 import { historia_procedimientoForm } from "./historia_procedimiento.config"
@@ -25,6 +26,7 @@ export const FORM_CONFIG = {
   especie: especieForm,
   historia: historiaForm,
   historia_seguimiento: historia_seguimientoForm,
+  historia_valoracion: historia_valoracionForm,
   historia_producto: historia_productoForm,
   historia_producto_dosis: historia_producto_dosisForm,
   historia_procedimiento: historia_procedimientoForm,

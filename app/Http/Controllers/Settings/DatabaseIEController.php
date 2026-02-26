@@ -99,7 +99,10 @@ class DatabaseIEController extends Controller
         'created_at' => now(),
     ]);
 
-    return back()->with('success', 'La base de datos fue restaurada completamente.');
+    return response()->json([
+    'success' => true,
+    'message' => 'La base de datos fue restaurada completamente.',
+]);
 }
 
 
