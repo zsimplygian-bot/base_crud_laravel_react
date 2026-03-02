@@ -20,6 +20,6 @@ export function ResetFiltersButton({
     Object.keys(columnVisibility).length > 0 ||             // Visibilidad alterada
     !!sortBy;                                              // Ordenamiento activo
   return (
-    <SmartButton {...{ onClick: handleResetAll, icon: RotateCcwIcon, disabled: !canReset, tooltip: "Restablecer filtros" }} />
+    <SmartButton {...{ onClick: handleResetAll, icons: RotateCcwIcon, disabled: !canReset, tooltip: "Restablecer filtros" }} />
   );
 }

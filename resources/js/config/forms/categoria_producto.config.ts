@@ -5,6 +5,6 @@ export const categoriaProductoForm = {
   icon: Tag,
   fields: [
     { id: "categoria_producto", label: "Categoria producto", searchable: true, },
-    { id: "emoji_categoria_producto", label: "Emoji" },
+    { id: "emoji_categoria_producto", label: "Emoji", required: false},
   ],
 }

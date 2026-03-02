@@ -10,7 +10,7 @@ class HistoriaProcedimiento extends BaseModel {
         'id_procedimiento' => 'required|integer|exists:procedimiento,id_procedimiento',
         'detalle' => 'nullable|string',
         'precio' => 'required|numeric',
-        'fecha' => 'required|datetime',
+        'fecha' => 'required|date_format:Y-m-d H:i:s',
     ];
     protected static $tableColumns = [
         ['ID', 'id_historia_procedimiento'],

@@ -6,7 +6,7 @@ export const historia_valoracionForm = {
   fields: [
     { id: "id_historia", hidden: true },
     { id: "score", label: "Score", type: "textarea" },
-    { id: "comentario", label: "Comentario" },
+    { id: "comentario", label: "Comentario", required: false },
   ],
   recordFields: [
     { id: "score", label: "Score" },

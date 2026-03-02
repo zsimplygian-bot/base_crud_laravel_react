@@ -8,8 +8,8 @@ export const historia_producto_dosisForm = {
     { id: "id_producto", label: "Producto", type: "combobox" },
     { id: "cantidad", label: "Cantidad" },
     { id: "unidad", label: "Unidad" },
-    { id: "via", label: "Via" },
-    { id: "frecuencia", label: "Frecuencia" },
+    { id: "via", label: "Via", required: false },
+    { id: "frecuencia", label: "Frecuencia", required: false },
     { id: "fecha", label: "Fecha", type: "datetime" },
   ],  
   recordFields: [

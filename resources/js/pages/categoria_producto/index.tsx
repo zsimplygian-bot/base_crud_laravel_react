@@ -1,6 +1,6 @@
 import { DataTableLayout } from "@/layouts/datatable-layout"
 import { FORM_CONFIG } from "@/config/forms"
-const { view, title, icon, fields } = FORM_CONFIG.categoriaProducto
+const { view, title, icon, fields } = FORM_CONFIG.categoria_producto
 export default function DatatablePage() {
-  return <DataTableLayout {...{ view, title, icon, fields }} />;
+  return <DataTableLayout {...{ view, title, icon, fields, width:"1/3" }} />;
 }

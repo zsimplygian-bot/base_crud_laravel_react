@@ -6,7 +6,7 @@ export const userForm = {
   fields: [
     { id: "name", label: "Usuario", searchable: true, defaultVisible: true },
     { id: "id_rol", label: "Rol", type: "combobox", searchable: true, defaultVisible: true },
-    { id: "email", label: "Email", searchable: true, required: true },
-    { id: "archivo", label: "Imagen", type: "file" },
+    { id: "email", label: "Email", searchable: true, },
+    { id: "archivo", label: "Imagen", type: "file", required: false },
   ],
 }

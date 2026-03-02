@@ -5,6 +5,6 @@ export const razaForm = {
   icon: PawPrint,
   fields: [
     { id: "id_especie", label: "Especie", type: "combobox", searchable: true, defaultVisible: true},
-    { id: "raza", label: "Raza", searchable: true, defaultVisible: true },
+    { id: "raza", label: "Raza", searchable: true, defaultVisible: true, required: false },
   ],
 }

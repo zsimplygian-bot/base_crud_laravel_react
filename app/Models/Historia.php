@@ -8,7 +8,7 @@ class Historia extends BaseModel {
     protected $table = 'historia';
     protected static $validationRules = [
         'id_mascota' => 'required|int',
-        'fecha' => 'required|datetime',
+        'fecha' => 'required|date_format:Y-m-d H:i:s',
         'id_motivo' => 'required|int',
         'detalle' => 'nullable|string',
         'observaciones' => 'nullable|string',

@@ -7,9 +7,9 @@ export const historia_procedimientoForm = {
     { id: "id_historia", hidden: true },
     { id: "id_procedimiento", label: "Procedimiento", type: "combobox" },
     { id: "detalle", label: "Detalle" },
-    { id: "precio", label: "Precio S/", type: "number" },
+    { id: "precio", label: "Precio S/", type: "number", required: false },
     { id: "fecha", label: "Fecha", type: "datetime" },
-    { id: "archivo", label: "Imagen", type: "file" },
+    { id: "archivo", label: "Imagen", type: "file", required: false },
   ],
 
   recordFields: [

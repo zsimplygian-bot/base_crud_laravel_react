@@ -14,7 +14,7 @@ class HistoriaProducto extends BaseModel
         'id_historia' => 'required|integer|exists:historia,id_historia',
         'dosis' => 'required|string|max:50',
         'precio' => 'nullable|numeric',
-        'fecha' => 'required|date',
+        'fecha' => 'required|date_format:Y-m-d H:i:s',
     ];
 
     protected static $tableColumns = [

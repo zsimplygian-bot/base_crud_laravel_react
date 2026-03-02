@@ -62,7 +62,13 @@ export const SimpleForm = ({
     const url: string = MODE.method === "post" ? endpoint : `${endpoint}/${recordId}`
 
     if (!hasFile) {
-      if (MODE.method) submit(MODE.method, url, { onFinish: () => { reset(); onSuccess?.() } })
+      if (MODE.method)
+        submit(MODE.method, url, {
+          onSuccess: () => {
+            reset()
+            onSuccess?.() // ✅ solo aquí se cierra el modal
+          },
+        })
       return
     }
 
@@ -81,24 +87,27 @@ export const SimpleForm = ({
     )
 
     router.post(url, formData, {
-      forceFormData: true,
-      preserveScroll: true,
-      preserveState: true,
-      onSuccess: () => { reset(); onSuccess?.() },
-    })
+  forceFormData: true,
+  preserveState: true,   // 🔥 CLAVE
+  preserveScroll: true,  // 🔥 CLAVE
+  onSuccess: () => {
+    reset()
+    onSuccess?.()
+  },
+})
   }
 
   const getColClass = (width?: string) => {
-    if (!width) return "col-span-12" // Full por defecto
+    if (!width) return "col-span-12"
     if (width === "1/2") return "col-span-6"
     if (width === "1/3") return "col-span-4"
     if (width === "1/4") return "col-span-3"
-    return "col-span-12" // Fallback seguro
+    return "col-span-12"
   }
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-x-4 gap-y-4 overflow-visible">
+      <form onSubmit={handleSubmit} className="grid grid-cols-12 gap-x-4 gap-y-4">
         {normalizedFields.map(f => (
           <div key={f.name} className={getColClass(f.width)}>
             <FormField
@@ -120,7 +129,7 @@ export const SimpleForm = ({
           <div className="col-span-12 flex justify-end">
             <SmartButton
               {...{
-                icon: MODE.icon,
+                icons: MODE.icon,
                 disabled: processing,
                 className: MODE.className,
                 tooltip: MODE.submit,

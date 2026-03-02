@@ -1,24 +1,17 @@
 <?php
-
 namespace App\Models;
-
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
-
-class Cita extends BaseModel
-{
+class Cita extends BaseModel {
     use HasFactory;
-
     protected $table = 'cita';
-
     protected static $validationRules = [
         'id_mascota'     => 'required|integer',
-        'fecha'          => 'required|date',
+        'fecha' => 'required|date_format:Y-m-d H:i:s',
         'id_motivo'      => 'required|integer',
         'observaciones'  => 'nullable|string',
         'id_estado_cita' => 'required|integer',
     ];
-
     protected static $tableColumns = [
         ['ID', 'id'],
         ['MASCOTA', 'mascota'],
@@ -29,7 +22,6 @@ class Cita extends BaseModel
         ['ESTADO', 'estado_cita'],
         ['FECHA REGISTRO', 'created_at'],
     ];
-
     protected static function tables(): array
     {
         return [
@@ -40,22 +32,18 @@ class Cita extends BaseModel
             'motivo'      => 'motivo',
         ];
     }
-
     protected static function baseQuery()
     {
         extract(self::tables());
-
         return DB::table($cita)
             ->leftJoin($mascota, "$cita.id_mascota", '=', "$mascota.id_mascota")
             ->leftJoin($cliente, "$mascota.id_cliente", '=', "$cliente.id_cliente")
             ->leftJoin($estado, "$cita.id_estado_cita", '=', "$estado.id_estado_cita")
             ->leftJoin($motivo, "$cita.id_motivo", '=', "$motivo.id_motivo");
     }
-
     public static function getQuery(): array
     {
         extract(self::tables());
-
         return [
             'alias' => $cita,
             'query' => self::baseQuery()->select([
@@ -70,11 +58,9 @@ class Cita extends BaseModel
             ]),
         ];
     }
-
     public static function proximas()
     {
         extract(self::tables());
-
         return self::baseQuery()
             ->select([
                 "$cita.id_cita as id",
@@ -88,11 +74,8 @@ class Cita extends BaseModel
             ->orderBy("$cita.fecha")
             ->get();
     }
-
-    public static function eventosEntreFechas(string $start, string $end)
-    {
+    public static function eventosEntreFechas(string $start, string $end) {
         extract(self::tables());
-
         return self::baseQuery()
             ->select([
                 "$cita.id_cita as id",

@@ -9,7 +9,7 @@ class HistoriaSeguimiento extends BaseModel {
         'id_historia' => 'required|integer|exists:historia,id_historia',
         'detalle' => 'required|string',
         'observaciones' => 'nullable|string',
-        'fecha' => 'required|datetime',
+        'fecha' => 'required|date_format:Y-m-d H:i:s',
     ];
     protected static $tableColumns = [
         ['ID', 'id_historia_seguimiento'],

@@ -13,7 +13,7 @@ export const mascotaForm = {
     { id: "color", label: "Color", searchable: true, width:"1/2" },
     { id: "peso", label: "Peso", searchable: true, width:"1/2" },
     { id: "activo", label: "Se encuentra activo?", type: "checkbox", default: true, width:"1/2" },
-    { id: "observaciones", label: "Observaciones", type: "textarea", searchable: true, width:"1/2" },
-    { id: "archivo", label: "Imagen", type: "file" },
+    { id: "observaciones", label: "Observaciones", type: "textarea", searchable: true, width:"1/2", required: false },
+    { id: "archivo", label: "Imagen", type: "file", required: false },
   ],
 }

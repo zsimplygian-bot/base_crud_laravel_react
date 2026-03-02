@@ -5,10 +5,10 @@ export const historiaForm = {
   icon: ClipboardList,
   fields: [
     { id: "id_mascota", label: "Mascota - Dueño", type: "combobox", searchable: true },
-    { id: "fecha", label: "Fecha", type: "datetime", required: true },
     { id: "id_motivo", label: "Motivo historia", type: "combobox", searchable: true },
-    { id: "detalle", label: "Detalle", type: "textarea" },
-    { id: "observaciones", label: "Observaciones", type: "textarea" },
+    { id: "fecha", label: "Fecha", type: "datetime", required: true },
+    { id: "detalle", label: "Detalle", type: "textarea", width: "1/2" },
+    { id: "observaciones", label: "Observaciones", type: "textarea", required: false, width: "1/2" },
     { id: "id_estado_historia", label: "Estado", type: "combobox", default: "1" },
   ],
   extended_form: [

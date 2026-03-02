@@ -1,19 +1,20 @@
 import { useState } from "react"
 import { Plus } from "lucide-react"
-import { usePage } from "@inertiajs/react"
 import { SmartButton } from "@/components/smart-button"
 import { SmartModal } from "@/components/smart-modal"
 import { SimpleForm } from "@/components/form/simple-form"
-export const NewRecordButton = (props) => {
-  const { view, title, fields, onSuccess, icon, buttonClassName} = props
-  const { auth } = usePage().props
+import { useHasRole } from "@/hooks/use-hasrole"
+
+export const NewRecordButton = ({ view, title, fields, onSuccess, buttonClassName, icon, size }) => {
   const [open, setOpen] = useState(false)
-  if (auth?.user?.id_rol !== 1 || !view || !fields?.length) return null
-  const buttonIcons = [Plus, ...(icon ? [icon] : [])] // Plus + icono unico
+  const can = useHasRole(1) // Administrador
+  if (!can) return null
+
   return (
-    <><SmartButton {...{ tooltip: `Nuevo ${title}`, className: buttonClassName, onClick: () => setOpen(true),  icons: buttonIcons, }} />
-      <SmartModal {...{ open, onOpenChange: setOpen, title: `Nuevo ${title}`, icon, description: "Llena los campos con cuidado" }}>
-        <SimpleForm {...{ mode: "store", endpoint: `/${view}`, fields, open, onSuccess: () => { setOpen(false); onSuccess?.() }, }} />
+    <>
+      <SmartButton {...{ tooltip: `Nuevo ${title}`, className: buttonClassName, onClick: () => setOpen(true), icons: [Plus, icon], size }} />
+      <SmartModal {...{ open, onOpenChange: setOpen, title: `Nuevo ${title}`, description: "Llena los campos con cuidado", icon }}>
+        <SimpleForm {...{ mode: "store", endpoint: `/${view}`, fields, open, onSuccess: () => { setOpen(false); onSuccess?.() } }} />
       </SmartModal>
     </>
   )

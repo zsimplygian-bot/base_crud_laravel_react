@@ -59,14 +59,13 @@ export const Combobox = ({
       <PopoverTrigger asChild>
         <div className="relative w-full">
           <Input { ...{ id, disabled, value: selectedLabel, placeholder, readOnly: true } } />
-
           {value && resolvedForm && (
             <div
               className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-muted"
               onClick={e => e.stopPropagation()} // Evita abrir el popover
               onMouseDown={e => e.stopPropagation()} // Evita focus en CommandInput
             >
-              <ActionButtons { ...{ row_id: value, view: resolvedForm.view, title: resolvedForm.title, fields: resolvedForm.fields, eye: true, } } />
+              <ActionButtons { ...{ row_id: value, view: resolvedForm.view, title: resolvedForm.title, icon: resolvedForm.icon, fields: resolvedForm.fields, eye: true, } } />
             </div>
           )}
         </div>
@@ -78,7 +77,7 @@ export const Combobox = ({
               <CommandInput { ...{ disabled, value: search, onValueChange: setSearch, placeholder: "Buscar...", } } className="w-full pr-20" />
               {resolvedForm && (
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                  <SmartButton { ...{ icon: RotateCcw, onClick: handleRefresh, tooltip: "Refrescar", className: "h-6 w-6 p-0", } } />
+                  <SmartButton { ...{ icons: RotateCcw, onClick: handleRefresh, tooltip: "Refrescar", className: "h-6 w-6 p-0", } } />
                   <NewRecordButton { ...{ view: resolvedForm.view, title: resolvedForm.title, fields: resolvedForm.fields, buttonClassName: "h-6 w-6 p-0", } } />
                 </div>
               )}

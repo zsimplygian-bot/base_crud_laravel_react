@@ -14,7 +14,7 @@ class HistoriaProductoDosis extends BaseModel
         'unidad' => 'required|string|max:50',
         'via' => 'nullable|string|max:100',
         'frecuencia' => 'nullable|string|max:100',
-        'fecha' => 'required|date',
+        'fecha' => 'required|date_format:Y-m-d H:i:s',
     ];
     // Columnas de tabla / datatable
     protected static $tableColumns = [

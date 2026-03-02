@@ -6,9 +6,9 @@ export const historia_productoForm = {
   fields: [
     { id: "id_historia", hidden: true },
     { id: "dosis", label: "Receta" },
-    { id: "precio", label: "Precio S/", type: "number" },
+    { id: "precio", label: "Precio S/", type: "number", required: false },
     { id: "fecha", label: "Fecha", type: "datetime" },
-    { id: "archivo", label: "Imagen", type: "file" },
+    { id: "archivo", label: "Imagen", type: "file", required: false },
   ],  
   recordFields: [
     { id: "dosis", label: "Dosis" },

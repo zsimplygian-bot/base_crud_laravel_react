@@ -6,12 +6,12 @@ export const historia_anamnesisForm = {
   fields: [
     { id: "id_historia", hidden: true },
     { id: "fecha", label: "Fecha", type: "datetime" },
-    { id: "temperatura", label: "Temperatura (°C)", type: "number" },
-    { id: "frecuencia_cardiaca", label: "Frecuencia cardiaca (lpm)", type: "number" },
-    { id: "frecuencia_respiratoria", label: "Frecuencia respiratoria (rpm)", type: "number" },
-    { id: "tiempo_llenado_capilar", label: "Tiempo llenado capilar (seg)", type: "number" },
-    { id: "peso", label: "Peso (kg)", type: "number" },
-    { id: "archivo", label: "Imagen", type: "file" },
+    { id: "temperatura", label: "Temperatura (°C)", type: "number", required: false },
+    { id: "frecuencia_cardiaca", label: "Frecuencia cardiaca (lpm)", type: "number", required: false },
+    { id: "frecuencia_respiratoria", label: "Frecuencia respiratoria (rpm)", type: "number", required: false },
+    { id: "tiempo_llenado_capilar", label: "Tiempo llenado capilar (seg)", type: "number", required: false },
+    { id: "peso", label: "Peso (kg)", type: "number", required: false },
+    { id: "archivo", label: "Imagen", type: "file", required: false },
   ],
 
   recordFields: [

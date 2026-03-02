@@ -1,50 +1,32 @@
 import { memo, useCallback, useState, useEffect, useMemo } from "react"
 import { SmartDropdown } from "@/components/smart-dropdown"
 import { SmartButton } from "@/components/smart-button"
-import { SearchIcon, FilterIcon } from "lucide-react"
+import { SearchIcon, Filter } from "lucide-react"
 import { FormField } from "@/components/form/form-fields"
-import { getLista, getListaSync } from "@/hooks/use-listas-cache"
 export const SearchFilter = memo(function SearchFilter({
-  searchFields = [],
-  visibleFields,
-  setVisibleFields,
-  values = {},
-  setValues,
-  onApply
-}) {
+  searchFields = [], visibleFields, setVisibleFields, values = {}, setValues, onApply, }) {
   const safeVisibleFields = Array.isArray(visibleFields) ? visibleFields : []
   const [draftValues, setDraftValues] = useState(values)
-  useEffect(() => setDraftValues(values), [values])
-  const searchFieldsWithId = useMemo(
-    () => [{ id: "id", label: "ID", type: "text" }, ...searchFields],
-    [searchFields]
-  )
   useEffect(() => {
-    safeVisibleFields.forEach(key => {
-      const field = searchFieldsWithId.find(f => (f.id ?? f.label) === key)
-      if (field?.type === "combobox") getLista(key)
-    })
-  }, [safeVisibleFields, searchFieldsWithId])
-  const toggleField = useCallback((key, checked) => {
-    setVisibleFields(
-      checked
-        ? [...safeVisibleFields, key]
-        : safeVisibleFields.filter(v => v !== key)
-    )
-  }, [safeVisibleFields, setVisibleFields])
-  const items = useMemo(
-    () => searchFieldsWithId.map(({ id, label }) => {
-      const key = id ?? label
-      return {
-        id: key,
-        type: "checkbox",
-        label: label.toUpperCase(),
-        checked: safeVisibleFields.includes(key),
-        onChange: v => toggleField(key, v),
-      }
-    }),
-    [searchFieldsWithId, safeVisibleFields, toggleField]
-  )
+    setDraftValues(values)
+  }, [values])
+  const searchFieldsWithId = useMemo(
+    () => [{ id: "id", label: "ID", type: "text" }, ...searchFields], [searchFields] )
+  const toggleField = useCallback(
+    (key, checked) => {
+      setVisibleFields( checked ? [...safeVisibleFields, key] : safeVisibleFields.filter(v => v !== key) )
+    }, [safeVisibleFields, setVisibleFields] )
+  const items = useMemo( () =>
+      searchFieldsWithId.map(({ id, label }) => {
+        const key = id ?? label
+        return {
+          id: key,
+          type: "checkbox",
+          label: label.toUpperCase(),
+          checked: safeVisibleFields.includes(key),
+          onChange: v => toggleField(key, v),
+        }
+      }), [searchFieldsWithId, safeVisibleFields, toggleField] )
   const normalizeValue = e => e?.target?.value ?? e
   const applyFilters = useCallback(() => {
     const payload = {}
@@ -61,35 +43,23 @@ export const SearchFilter = memo(function SearchFilter({
   )
   return (
     <div className={`flex items-start ${safeVisibleFields.length > 0 ? "gap-2" : ""}`}>
-      <SmartDropdown {...{ label: "Buscar por:", triggerIcon: SearchIcon, items, closeOnSelect: false }} />
-      <div className="overflow-x-auto flex gap-2 max-w-[320px] md:max-w-full pt-1">
+      <SmartDropdown {...{ label: "Buscar por:", triggerIcon: SearchIcon, items, closeOnSelect: false, }} />
+      {/* Scroll solo en X, Y libre, sin stacking context */}
+      <div className="flex gap-2 max-w-[320px] md:max-w-full pt-2 overflow-x-auto overflow-y-visible">
         {safeVisibleFields.map(key => {
           const field = searchFieldsWithId.find(f => (f.id ?? f.label) === key)
           if (!field) return null
-          const cache = getListaSync(key)
           return (
-            <div key={key} className="flex-shrink-0 overflow-visible">
-              <FormField {...{
-                id: key,
-                label: field.label,
-                type: field.type,
-                value: draftValues[key] ?? "",
-                options: cache?.options ?? [],
-                loading: !!cache?.loading,
-                onChange: e => setDraftValues(p => ({ ...p, [key]: normalizeValue(e) })),
-                onSelect: v => setDraftValues(p => ({ ...p, [key]: v })),
-              }} />
+            <div key={key} className="flex-shrink-0 relative overflow-visible z-[30]">
+              <FormField {...{ id: key, label: field.label, type: field.type, value: draftValues[key] ?? "",
+                  onChange: e => setDraftValues(p => ({ ...p, [key]: normalizeValue(e) })),
+                  onSelect: v => setDraftValues(p => ({ ...p, [key]: v })), }} />
             </div>
           )
         })}
       </div>
       {safeVisibleFields.length > 0 && (
-        <SmartButton {...{
-          icon: FilterIcon,
-          tooltip: "Filtrar",
-          onClick: applyFilters,
-          disabled: isFilterDisabled,
-        }} />
+        <SmartButton {...{ icons: Filter, tooltip: "Filtrar", onClick: applyFilters, disabled: isFilterDisabled, }} />
       )}
     </div>
   )

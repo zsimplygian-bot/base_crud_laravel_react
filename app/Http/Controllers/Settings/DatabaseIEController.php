@@ -13,40 +13,38 @@ class DatabaseIEController extends Controller
         date_default_timezone_set('America/Lima');
     }
     public function export()
-    {
-        $filename = 'backup-veterinaria-' . now()->format('Y-m-d_H-i-s') . '.sql';
-        $path = storage_path("app/{$filename}");
-        $tables = DB::select('SHOW TABLES');
-        $key = 'Tables_in_veterinaria';
-        $dump = "SET FOREIGN_KEY_CHECKS=0;\n";
-        $dump .= "SET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';\n";
-        $dump .= "START TRANSACTION;\n";
-        $dump .= "SET time_zone = '-05:00';\n\n";
-        foreach ($tables as $t) {
-            $table = $t->$key;
-            $create = DB::selectOne("SHOW CREATE TABLE `$table`")->{'Create Table'};
-            $dump .= "\n\nDROP TABLE IF EXISTS `$table`;\n$create;\n\n";
-            $rows = DB::table($table)->get();
-            foreach ($rows as $row) {
-                $values = array_map(function ($value) {
-                    return isset($value)
-                        ? "'" . str_replace("'", "''", $value) . "'"
-                        : "NULL";
-                }, (array) $row);
-                $dump .= "INSERT INTO `$table` VALUES(" . implode(",", $values) . ");\n";
-            }
+{
+    $filename = 'backup-' . now()->format('Y-m-d_H-i-s') . '.sql'; // Nombre con fecha y hora
+    $path = storage_path("app/{$filename}");
+    $tables = DB::select('SHOW TABLES');
+    $key = 'Tables_in_veterinaria';
+    $dump = "SET FOREIGN_KEY_CHECKS=0;\nSET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';\nSTART TRANSACTION;\nSET time_zone = '-05:00';\n\n";
+
+    foreach ($tables as $t) {
+        $table = $t->$key;
+        $create = DB::selectOne("SHOW CREATE TABLE `$table`")->{'Create Table'};
+        $dump .= "\n\nDROP TABLE IF EXISTS `$table`;\n$create;\n\n";
+
+        $rows = DB::table($table)->get();
+        foreach ($rows as $row) {
+            $values = array_map(fn($v) => isset($v) ? "'" . str_replace("'", "''", $v) . "'" : "NULL", (array)$row);
+            $dump .= "INSERT INTO `$table` VALUES(" . implode(",", $values) . ");\n";
         }
-        $dump .= "\nSET FOREIGN_KEY_CHECKS=1;\nCOMMIT;\n";
-        file_put_contents($path, $dump);
-        DB::table('database_history')->insert([
-            'action'     => 'export',
-            'filename'   => $filename,
-            'user_id'    => Auth::id(),
-            'ip_address' => request()->ip(),
-            'created_at' => now(), // ahora Lima
-        ]);
-        return response()->download($path)->deleteFileAfterSend(true);
     }
+
+    $dump .= "\nSET FOREIGN_KEY_CHECKS=1;\nCOMMIT;\n";
+    file_put_contents($path, $dump);
+
+    DB::table('database_history')->insert([
+        'action'     => 'export',
+        'filename'   => $filename,
+        'user_id'    => Auth::id(),
+        'ip_address' => request()->ip(),
+        'created_at' => now(),
+    ]);
+
+    return response()->download($path)->deleteFileAfterSend(true);
+}
     public function import(Request $request)
 {
     $request->validate([

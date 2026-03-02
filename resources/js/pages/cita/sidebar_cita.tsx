@@ -35,10 +35,10 @@ const CitaItem = memo(({ cita, onRefresh }: any) => {
         <div className="text-xs">{cita.motivo}  {formatFecha(cita.fecha)}</div>
       </div>
       <div className="flex items-center gap-1">
-        <SmartButton { ...{ icon: Check, size: "xs", variant: "default", buttonColor: "green", tooltip: "Atender",
+        <SmartButton { ...{ icons: Check, size: "xs", variant: "default", buttonColor: "green", tooltip: "Atender",
             confirmation: { title: "Confirmar atención", description: "Esta acción marcará la cita como atendida.",
             }, onClick: () => post(`/api/cita/${cita.id}/atender`, "Cita atendida"), } } />
-        <SmartButton { ...{ icon: X, size: "xs", variant: "destructive", tooltip: "Cancelar",
+        <SmartButton { ...{ icons: X, size: "xs", variant: "destructive", tooltip: "Cancelar",
             confirmation: { title: "Confirmar cancelación", description: "Esta acción cancelará la cita.",
             }, onClick: () => post(`/api/cita/${cita.id}/cancelar`, "Cita cancelada"), } } />
         <ActionButtons {...{ row_id: cita.id,

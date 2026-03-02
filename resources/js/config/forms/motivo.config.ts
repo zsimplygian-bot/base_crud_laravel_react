@@ -5,6 +5,6 @@ export const motivoForm = {
   icon: ClipboardList,
   fields: [
     { id: "motivo", label: "Motivo", searchable: true, defaultVisible: true },
-    { id: "emoji_motivo", label: "Emoji motivo" },
+    { id: "emoji_motivo", label: "Emoji motivo", required: false },
   ],
 }

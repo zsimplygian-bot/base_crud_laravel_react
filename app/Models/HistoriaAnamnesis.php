@@ -7,7 +7,7 @@ class HistoriaAnamnesis extends BaseModel {
     protected $table = 'historia_anamnesis';
     protected static $validationRules = [
         'id_historia' => 'required|integer|exists:historia,id_historia',
-        'fecha' => 'required|datetime',
+        'fecha' => 'required|date_format:Y-m-d H:i:s',
         'temperatura' => 'nullable|numeric',
         'frecuencia_cardiaca' => 'nullable|numeric',
         'frecuencia_respiratoria' => 'nullable|numeric',

@@ -6,9 +6,9 @@ export const historia_seguimientoForm = {
   fields: [
     { id: "id_historia", hidden: true },
     { id: "detalle", label: "Detalle", type: "textarea" },
-    { id: "observaciones", label: "Observaciones" },
+    { id: "observaciones", label: "Observaciones", required: false },
     { id: "fecha", label: "Fecha", type: "datetime" },
-    { id: "archivo", label: "Imagen", type: "file" },
+    { id: "archivo", label: "Imagen", type: "file", required: false },
   ],
   recordFields: [
     { id: "detalle", label: "Detalle" },

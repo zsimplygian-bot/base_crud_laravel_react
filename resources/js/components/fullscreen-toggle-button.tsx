@@ -17,7 +17,7 @@ export function FullscreenToggleButton() {
     else await document.documentElement.requestFullscreen() // Entra en pantalla completa si no hay ninguno
   }, []) // [] asegura que la función no se recree entre renders
   return (
-    <SmartButton {...{icon: isFullscreen ? MinimizeIcon : ExpandIcon, 
+    <SmartButton {...{icons: isFullscreen ? MinimizeIcon : ExpandIcon, 
                       tooltip: isFullscreen ? "Salir de pantalla completa" : "Pantalla completa", 
                       variant: "ghost", onClick: toggleFullscreen}} />
   )

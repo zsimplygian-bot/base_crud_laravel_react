@@ -40,7 +40,7 @@ export const ActionButtons = ({ row_id, view, title, icon, fields, extended_form
   const activeItem = items.find(i => i.key === action)
   return (
     <><div className="flex items-center gap-1">
-        {eye && ( <SmartButton {...{ icon: EyeIcon, variant: "ghost", tooltip: "Ver detalle", className: "h-8 w-8 p-0", onClick: () => openForm("info") }} /> )}
+        {eye && ( <SmartButton {...{ icons: EyeIcon, variant: "ghost", tooltip: "Ver detalle", className: "h-8 w-8 p-0", onClick: () => openForm("info") }} /> )}
         {!eye && ( <SmartDropdown {...{ label: "Acciones", triggerIcon: MoreVertical, triggerVariant: "ghost", items }} /> )}
       </div>
       {action && activeItem?.modal && (
