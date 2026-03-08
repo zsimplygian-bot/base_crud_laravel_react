@@ -6,7 +6,7 @@ import { SmartButton } from "@/components/smart-button"
 import { NewRecordButton } from "@/components/datatable/toolbar/new-record-button"
 import { FORM_CONFIG } from "@/config/forms"
 const CARD_STYLES = {
-  primary: { card: "rounded-xl border shadow-sm p-4", iconWrap: "p-3", icon: "w-7 h-7", title: "text-4xl font-bold", buttonSize: "default" },
+  primary: { card: "rounded-xl border shadow-sm p-4", iconWrap: "p-3", icon: "w-7 h-7", title: "text-4xl font-bold", buttonSize: "md" },
   secondary: { card: "rounded-lg border shadow-sm p-3", iconWrap: "p-2", icon: "w-5 h-5", title: "text-3xl font-bold", buttonSize: "sm" },
 }
 const STORAGE_KEY = "dashboard_show_secondary"

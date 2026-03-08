@@ -27,9 +27,8 @@ th{background:#f2f2f2;font-weight:bold}
     $mascota = $hc->mascota;
     $cliente = $mascota->cliente;
 
-    // Edad total
+    // Calcular edad total
     $edadBaseMeses = (int) ($mascota->edad ?? 0);
-
     if ($mascota->created_at) {
         $inicio = \Carbon\Carbon::parse($mascota->created_at);
         $diff = $inicio->diff(\Carbon\Carbon::now());
@@ -47,50 +46,61 @@ th{background:#f2f2f2;font-weight:bold}
         $edadFmt = $edadBaseMeses ? $edadBaseMeses.' meses' : 'N/A';
     }
 
-    // Actividades normalizadas con fecha real para ordenar
+    // Construir actividades
     $actividades = collect()
-        ->merge($hc->historia_seguimientos->map(fn($s)=>[
-            'fecha_raw'=>$s->fecha,
-            'tipo'=>'Seguimiento',
-            'detalle'=>array_filter([
+        ->merge($hc->historia_seguimientos->map(fn($s) => [
+            'fecha_raw' => $s->fecha,
+            'tipo' => 'Seguimiento',
+            'detalle' => array_filter([
                 $na($s->detalle) ? "Detalle: {$s->detalle}" : null,
                 $na($s->observaciones) ? "Observaciones: {$s->observaciones}" : null,
             ]),
-            'precio'=>0
+            'precio' => 0,
         ]))
-        ->merge($hc->historia_procedimientos->map(fn($p)=>[
-            'fecha_raw'=>$p->fecha,
-            'tipo'=>'Procedimiento',
-            'detalle'=>array_filter([
+        ->merge($hc->historia_procedimientos->map(fn($p) => [
+            'fecha_raw' => $p->fecha,
+            'tipo' => 'Procedimiento',
+            'detalle' => array_filter([
                 $na($p->procedimiento?->procedimiento) ? "Procedimiento: {$p->procedimiento->procedimiento}" : null,
                 $na($p->detalle) ? "Detalle: {$p->detalle}" : null,
                 $p->precio ? "Precio: S/ ".number_format($p->precio,2) : null,
             ]),
-            'precio'=>$p->precio ?? 0
+            'precio' => $p->precio ?? 0,
         ]))
-        ->merge($hc->historia_productos->map(fn($m)=>[
-            'fecha_raw'=>$m->fecha,
-            'tipo'=>'Producto',
-            'detalle'=>array_filter([
-                $na($m->producto?->producto) ? "Producto: {$m->producto->producto}" : null,
-                $na($m->dosis) ? "Dosis: {$m->dosis}" : null,
-                $m->precio ? "Precio: S/ ".number_format($m->precio,2) : null,
-                $na($m->observaciones) ? "Observaciones: {$m->observaciones}" : null,
-            ]),
-            'precio'=>$m->precio ?? 0
+        ->merge($hc->historia_productos->map(fn($m) => [
+            'fecha_raw' => $m->fecha,
+            'tipo' => 'Producto',
+            'detalle' => array_merge(
+                array_filter([
+                    $na($m->producto?->producto) ? "Producto: {$m->producto->producto}" : null,
+                    $na($m->dosis) ? "Dosis: {$m->dosis}" : null,
+                    $m->precio ? "Precio: S/ ".number_format($m->precio,2) : null,
+                    $na($m->observaciones) ? "Observaciones: {$m->observaciones}" : null,
+                ]),
+                // Productos dosis asociados
+                $m->historia_productos_dosis->map(fn($d) => array_filter([
+                    $na($d->producto?->producto) ? "Producto Dosis: {$d->producto->producto}" : null,
+                    $na($d->cantidad) ? "Cantidad: {$d->cantidad}" : null,
+                    $na($d->unidad) ? "Unidad: {$d->unidad}" : null,
+                    $na($d->via) ? "Vía: {$d->via}" : null,
+                    $na($d->frecuencia) ? "Frecuencia: {$d->frecuencia}" : null,
+                    $fmt($d->fecha) ? "Fecha: ".$fmt($d->fecha) : null,
+                ]))->flatten()->toArray()
+            ),
+            'precio' => $m->precio ?? 0,
         ]))
-        ->merge($hc->historia_anamnesis->map(fn($a)=>[
-            'fecha_raw'=>$a->fecha,
-            'tipo'=>'Anamnesis',
-            'detalle'=>array_filter([
+        ->merge($hc->historia_anamnesis->map(fn($a) => [
+            'fecha_raw' => $a->fecha,
+            'tipo' => 'Anamnesis',
+            'detalle' => array_filter([
                 $na($a->temperatura) ? "Temperatura: {$a->temperatura} °C" : null,
                 $na($a->frecuencia_cardiaca) ? "Frecuencia cardiaca: {$a->frecuencia_cardiaca} lpm" : null,
                 $na($a->frecuencia_respiratoria) ? "Frecuencia respiratoria: {$a->frecuencia_respiratoria} rpm" : null,
                 $na($a->tiempo_llenado_capilar) ? "TLC: {$a->tiempo_llenado_capilar} seg" : null,
             ]),
-            'precio'=>0
+            'precio' => 0,
         ]))
-        ->sortBy(fn($a)=>\Carbon\Carbon::parse($a['fecha_raw']))
+        ->sortBy(fn($a) => \Carbon\Carbon::parse($a['fecha_raw'] ?? now()))
         ->values();
 
     $total = $actividades->sum('precio');

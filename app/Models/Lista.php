@@ -6,7 +6,7 @@ class Lista
     protected static array $tablasPermitidas = [
         'sexo','producto','procedimiento','cliente','mascota','estado_cita',
         'estado_mascota','motivo',
-        'estado_historia','especie','unidad_tiempo','raza',
+        'estado_historia','especie','raza',
         'rol','categoria_producto','categoria_procedimiento',
     ];
     protected static array $columnasTablasSimples = [
@@ -45,7 +45,7 @@ class Lista
             $emoji = self::$tablasConEmoji[$tabla];
             return [
                 "id_{$tabla} as id",
-                DB::raw("CONCAT({$emoji}, ' ', {$tabla}) as label"), // Emoji + texto
+                DB::raw("CONCAT(COALESCE({$emoji}, ''), IF({$emoji} IS NULL, '', ' '), {$tabla}) as label"), // Evita null en emoji
             ];
         }
         return ["id_{$tabla} as id","{$tabla} as label"]; // Caso normal

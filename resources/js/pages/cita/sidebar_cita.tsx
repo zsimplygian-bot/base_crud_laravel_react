@@ -43,7 +43,7 @@ const CitaItem = memo(({ cita, onRefresh }: any) => {
             }, onClick: () => post(`/api/cita/${cita.id}/cancelar`, "Cita cancelada"), } } />
         <ActionButtons {...{ row_id: cita.id,
           view: FORM_CONFIG.cita.view, title: FORM_CONFIG.cita.title, fields: FORM_CONFIG.cita.fields,
-          onSuccess: onRefresh, }} />
+          onSuccess: onRefresh, size: "sm" }} />
       </div>
     </div>
   )
@@ -88,7 +88,7 @@ export default function CitasDropdown() {
     <SmartDropdown {...{ label: "Citas próximas",
       labelExtra: (
         <NewRecordButton {...{  view: FORM_CONFIG.cita.view, title: FORM_CONFIG.cita.title, fields: FORM_CONFIG.cita.fields,
-          onSuccess: fetchCitas, buttonClassName: "h-7 w-7 p-0", }} />
+          onSuccess: fetchCitas, size: "xs" }} />
       ),
       triggerIcon: Bell, triggerVariant: "ghost", triggerBadge: citas.length,
       triggerBadgeClassName: "bg-red-700 text-white", closeOnSelect: false,

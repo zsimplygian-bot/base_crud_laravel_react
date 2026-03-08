@@ -54,13 +54,13 @@ const hasCreatedAt = useMemo(
             <div className="flex gap-2 ml-auto flex-shrink-0">
               <ToggleColumns {...{ columns, columnVisibility, setColumnVisibility }} />
               <ExportMenu {...{ view, columns, data }} />
-              <NewRecordButton {...{ view, title, icon, fields, onSuccess: () => setPageIndex(0),  }} />
+              <NewRecordButton {...{ view, title, icon, fields, extended_form, onSuccess: () => setPageIndex(0),  }} />
             </div>
           </div>
           <SmartTable {...{ columns, rows: data, loading, error: error?.message ?? null,
               columnVisibility, sortBy, sortOrder, renderCell }}
             onSortChange={(by, order) => { setSortBy(by); setSortOrder(order ?? "desc") }}
-            actions={row => ( <ActionButtons {...{ row_id: row.id, view, title, icon, fields, extended_form, onSuccess: fetchData }} /> )}
+            actions={row => ( <ActionButtons {...{ row_id: row.id, view, title, icon, fields, extended_form, onSuccess: fetchData, size: "sm" }} /> )}
           />
           <DataTableFooter {...{ data, totalRows, pageIndex, setPageIndex, pageSize, setPageSize, footerFields }} />
         </div>

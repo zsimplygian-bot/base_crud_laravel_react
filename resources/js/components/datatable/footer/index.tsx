@@ -83,7 +83,7 @@ export const DataTableFooter = ({ data = [], totalRows, pageIndex, setPageIndex,
                     if (isNaN(v) || v < 1 || v === pageSize) return;
                     setPageSize(v);
                     setPageIndex(0);
-                  }} onClick={e => e.stopPropagation()}  className="w-25 h-7 border rounded text-sm text-center"
+                  }} onClick={e => e.stopPropagation()}  className="w-25 h-7 border rounded-full text-sm text-center"
                 />
               </>
             ), items: sizeItems, }} />
@@ -99,7 +99,7 @@ export const DataTableFooter = ({ data = [], totalRows, pageIndex, setPageIndex,
       <div className="flex items-center gap-1 text-right">
         Página <input type="number" min={1} max={totalPages} value={pageInput}
           onChange={e => setPageInput(e.target.value)} onKeyDown={e => e.key === "Enter" && applyPageInput()}
-          className="w-12 h-7 text-center border rounded text-sm"
+          className="w-12 h-7 text-center border rounded-full text-sm"
         />
         de <span className="font-medium">{totalPages}</span>
         <br />

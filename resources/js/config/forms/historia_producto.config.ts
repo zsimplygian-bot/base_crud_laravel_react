@@ -1,7 +1,7 @@
 import { Syringe } from "lucide-react"
 export const historia_productoForm = {
   view: "historia_producto",
-  title: "Productos",
+  title: "Medicamentos",
   icon: Syringe,
   fields: [
     { id: "id_historia", hidden: true },
@@ -11,7 +11,7 @@ export const historia_productoForm = {
     { id: "archivo", label: "Imagen", type: "file", required: false },
   ],  
   recordFields: [
-    { id: "dosis", label: "Dosis" },
+    { id: "dosis", label: "Receta" },
   {
     id: "productos",
     label: "Productos",
@@ -20,7 +20,7 @@ export const historia_productoForm = {
     template: "{producto} ({cantidad} {unidad})",
     separator: ", ",
   },
-  
+  { id: "nombre_producto", label: "Medicamento" },
   { id: "precio", label: "Precio S/" },
 ],
   extended_form: [

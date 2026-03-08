@@ -73,7 +73,7 @@ export const FieldFile = ({ id, value, setData, disabled }: any) => {
             />
           )}
           {!disabled && (
-            <SmartButton {...{ icon: Trash, variant: "ghost", tooltip: "Eliminar archivo", onClick: handleClear, }} />
+            <SmartButton {...{ icons: Trash, variant: "ghost", tooltip: "Eliminar archivo", onClick: handleClear, }} />
           )}
         </div>
       )}

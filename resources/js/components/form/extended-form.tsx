@@ -9,9 +9,7 @@ import { FilePreviewDialog } from "@/components/file-preview-dialog"
 import { Image as ImageIcon, FileText, Plus } from "lucide-react"
 
 export const ExtendedForm = ({ extended_form, recordId, mode, view }) => {
-  if (!extended_form || !recordId || !view) return null
-
-  // Resuelve los forms extendidos desde FORM_CONFIG usando solo strings
+  if (!view || !recordId || !Array.isArray(extended_form) || !extended_form.length) return null
   const blocks = useMemo(
     () =>
       extended_form
@@ -24,7 +22,6 @@ export const ExtendedForm = ({ extended_form, recordId, mode, view }) => {
   const [previewFile, setPreviewFile] = useState<string | null>(null)
   const [openPreview, setOpenPreview] = useState(false)
 
-  // Un solo endpoint dinámico
   const fetchRecords = useCallback(() => {
     axios
       .get(`/api/${view}/${recordId}/records`)
@@ -34,14 +31,13 @@ export const ExtendedForm = ({ extended_form, recordId, mode, view }) => {
 
   useEffect(fetchRecords, [fetchRecords])
 
-  // Agrupa todos los registros por día
   const recordsByDay = useMemo(() => {
     const map: Record<string, any[]> = {}
 
     records.forEach(r => {
-      const rawDate = r.fecha?.split(" ")[0] ?? r.created_at?.split("T")[0] // Quita hora en ambos casos
-  const day = rawDate ?? "unknown"
-  map[day] ??= []
+      const rawDate = r.fecha?.split(" ")[0] ?? r.created_at?.split("T")[0]
+      const day = rawDate ?? "unknown"
+      map[day] ??= []
 
       const block = blocks.find(b => b.view === r._view)
 
@@ -65,29 +61,30 @@ export const ExtendedForm = ({ extended_form, recordId, mode, view }) => {
   r._displayFields
     .map(f => {
       const v = r[f.id]
-      if (!v) return null
 
-      // Formato join para arrays
+      if (v === null || v === undefined || v === "") return null // Campo vacío
+
+      if (Array.isArray(v) && v.length === 0) return null // Array sin items
+
       if (f.format === "join" && Array.isArray(v)) {
         const text = v
           .map(item =>
-            f.template.replace(
-              /\{(\w+)\}/g,
-              (_, k) => item[k] ?? ""
-            )
+            f.template.replace(/\{(\w+)\}/g, (_, k) => item?.[k] ?? "")
           )
+          .filter(Boolean) // Elimina textos vacíos
           .join(f.separator ?? ", ")
+
+        if (!text) return null // Si no generó texto
 
         return f.label ? `${f.label}: ${text}` : text
       }
 
-      // Valor simple
       return f.label ? `${f.label}: ${v}` : v
     })
-    .filter(Boolean)
-    .join("\n")
+    .filter(Boolean) // Elimina null
+    .join("\n") 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 max-h-[410px] overflow-y-auto pr-1">
       {mode === "update" && (
         <div className="flex flex-wrap gap-2">
           {blocks.map(b => {
@@ -106,6 +103,7 @@ export const ExtendedForm = ({ extended_form, recordId, mode, view }) => {
                       ? { ...f, value: recordId }
                       : f
                   ),
+                  size: "sm",
                   onSuccess: fetchRecords,
                 }}
               />
@@ -114,7 +112,7 @@ export const ExtendedForm = ({ extended_form, recordId, mode, view }) => {
         </div>
       )}
 
-      <div className="space-y-3 pr-1 overflow-y-auto">
+      <div className="space-y-3">
         {!recordsByDay.some(d => d.records.length) && (
           <div className="text-xs italic text-muted-foreground">
             Sin información adicional
@@ -143,7 +141,7 @@ export const ExtendedForm = ({ extended_form, recordId, mode, view }) => {
                       {r.archivo && (
                         <SmartButton
                           {...{
-                            icon: isImage ? ImageIcon : FileText,
+                            icons: isImage ? ImageIcon : FileText,
                             variant: "ghost",
                             onClick: () => {
                               setPreviewFile(r.archivo)
@@ -155,15 +153,16 @@ export const ExtendedForm = ({ extended_form, recordId, mode, view }) => {
 
                       {mode === "update" && row_id && (
                         <ActionButtons
-    {...{
-      row_id,
-      view: r._view,
-      title: r._title,
-      fields: r._formFields,
-      extended_form: FORM_CONFIG[r._view]?.extended_form, // Solo si existe
-      onSuccess: fetchRecords,
-    }}
-  />
+                          {...{
+                            row_id,
+                            view: r._view,
+                            title: r._title,
+                            fields: r._formFields,
+                            extended_form: FORM_CONFIG[r._view]?.extended_form,
+                            onSuccess: fetchRecords,
+                            size: "sm",
+                          }}
+                        />
                       )}
                     </div>
                   </div>

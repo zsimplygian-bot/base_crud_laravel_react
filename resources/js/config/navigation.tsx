@@ -7,7 +7,7 @@ import {
   Users,
   BookOpen,
   User,
-  Package,
+  Syringe,
   Tags,
   Dog,
   ListChecks,
@@ -57,7 +57,7 @@ const rawSidebar: NavDef[] = [
     BookOpen,
     undefined,
     [
-      ["Productos", Package, "/producto"], // Inventario / productos
+      ["Productos", Syringe, "/producto"], // Inventario / productos
       ["Procedimientos", Stethoscope, "/procedimiento"], // Actos médicos
       ["Categoría productos", Tags, "/categoria_producto"], // Clasificación
       ["Categoría procedimientos", Tags, "/categoria_procedimiento"], // Clasificación

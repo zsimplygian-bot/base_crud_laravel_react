@@ -31,7 +31,8 @@ class HistoriaProducto extends BaseModel
     ];
 
     protected $appends = [
-        'productos', // Append nuevo
+        'productos',
+        'nombre_producto', // Append nuevo
     ];
 
     public static function getQuery(): array

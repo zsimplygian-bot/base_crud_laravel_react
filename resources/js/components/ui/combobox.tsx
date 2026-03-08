@@ -77,8 +77,8 @@ export const Combobox = ({
               <CommandInput { ...{ disabled, value: search, onValueChange: setSearch, placeholder: "Buscar...", } } className="w-full pr-20" />
               {resolvedForm && (
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-                  <SmartButton { ...{ icons: RotateCcw, onClick: handleRefresh, tooltip: "Refrescar", className: "h-6 w-6 p-0", } } />
-                  <NewRecordButton { ...{ view: resolvedForm.view, title: resolvedForm.title, fields: resolvedForm.fields, buttonClassName: "h-6 w-6 p-0", } } />
+                  <SmartButton { ...{ icons: [RotateCcw], onClick: handleRefresh, tooltip: "Refrescar", size: "xs", } } />
+                  <NewRecordButton { ...{ view: resolvedForm.view, title: resolvedForm.title, fields: resolvedForm.fields, size: "xs", } } />
                 </div>
               )}
             </div>

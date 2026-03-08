@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Historia extends BaseModel {
     use HasFactory;
     protected $table = 'historia';
+    protected $primaryKey = 'id_historia';
     protected static $validationRules = [
         'id_mascota' => 'required|int',
         'fecha' => 'required|date_format:Y-m-d H:i:s',

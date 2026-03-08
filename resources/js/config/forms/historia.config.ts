@@ -4,12 +4,12 @@ export const historiaForm = {
   title: "Historias Clínicas",
   icon: ClipboardList,
   fields: [
-    { id: "id_mascota", label: "Mascota - Dueño", type: "combobox", searchable: true },
-    { id: "id_motivo", label: "Motivo historia", type: "combobox", searchable: true },
+    { id: "id_mascota", label: "Mascota - Dueño", type: "combobox", searchable: true, defaultVisible: true, },
+    { id: "id_motivo", label: "Motivo historia", type: "combobox", searchable: true, defaultVisible: true, },
     { id: "fecha", label: "Fecha", type: "datetime", required: true },
     { id: "detalle", label: "Detalle", type: "textarea", width: "1/2" },
     { id: "observaciones", label: "Observaciones", type: "textarea", required: false, width: "1/2" },
-    { id: "id_estado_historia", label: "Estado", type: "combobox", default: "1" },
+    { id: "id_estado_historia", label: "Estado", type: "combobox", default: "1", searchable: true, defaultVisible: true, },
   ],
   extended_form: [
     "historia_seguimiento",

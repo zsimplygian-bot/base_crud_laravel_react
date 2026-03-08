@@ -1,15 +1,26 @@
+// frontend/components/form/simple-form.tsx
 import { useEffect, useMemo, useState } from "react"
 import { useForm, router } from "@inertiajs/react"
 import InputError from "@/components/input-error"
 import { SmartButton } from "@/components/smart-button"
 import { Save, Edit, Trash } from "lucide-react"
 import { FormField } from "@/components/form/form-fields"
+import { ExtendedForm } from "@/components/form/extended-form"
 import axios from "axios"
 
 export const SimpleForm = ({
-  mode, endpoint, recordId, fields, extended_form, ExtendedForm, open, onSuccess,
+  mode: initialMode,
+  endpoint,
+  recordId: initialRecordId,
+  fields,
+  extended_form,
+  open,
+  onSuccess,
 }: any) => {
   const safeFields: any[] = Array.isArray(fields) ? fields : []
+
+  const [mode, setMode] = useState(initialMode)
+  const [recordId, setRecordId] = useState(initialRecordId ?? null)
 
   const MODE: any = {
     store: { submit: "Registrar", disabled: false, showSubmit: true, method: "post", icon: Save, className: "bg-blue-600 hover:bg-blue-700 text-white" },
@@ -18,24 +29,18 @@ export const SimpleForm = ({
     info: { submit: null, disabled: true, showSubmit: false, method: null },
   }[mode]
 
-  const normalizedFields = useMemo(
-    () => safeFields.map(f => ({ ...f, name: f.name ?? f.id })),
-    [safeFields]
-  )
+  const normalizedFields = useMemo(() => safeFields.map(f => ({ ...f, name: f.name ?? f.id })), [safeFields])
 
-  const initialData = useMemo(
-    () =>
-      Object.fromEntries(
-        normalizedFields.map(f => [
-          f.name,
-          f.value != null ? String(f.value) : f.default != null ? String(f.default) : "",
-        ])
-      ),
-    [normalizedFields]
+  const initialData = useMemo(() =>
+    Object.fromEntries(normalizedFields.map(f => [
+      f.name,
+      f.value != null ? String(f.value) : f.default != null ? String(f.default) : "",
+    ])), [normalizedFields]
   )
 
   const form = useForm(initialData)
   const { data, setData, submit, processing, errors, reset } = form
+
   const [record, setRecord] = useState<any>(null)
   const view: string | undefined = endpoint?.split("/").pop()
 
@@ -55,46 +60,43 @@ export const SimpleForm = ({
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault()
 
-    const hasFile: boolean = Object.entries(data).some(
-      ([k, v]) => v instanceof File || k.endsWith("_remove")
-    )
-
+    const hasFile: boolean = Object.entries(data).some(([k, v]) => v instanceof File || k.endsWith("_remove"))
     const url: string = MODE.method === "post" ? endpoint : `${endpoint}/${recordId}`
 
+    const handleSuccess = (resp?: any) => {
+      const rid = resp?.props?.flash?.record_id ?? window.page.props.flash?.record_id
+      console.log("Nuevo record_id:", rid)
+
+      // 🔥 Solo si estamos en 'historia', transformar store → update
+      if (mode === "store" && rid && view === "historia") {
+        setRecordId(rid)
+        setMode("update")
+        reset() // Reinicia los campos, pero el modal permanece abierto
+      }
+
+      onSuccess?.(rid)
+    }
+
     if (!hasFile) {
-      if (MODE.method)
-        submit(MODE.method, url, {
-          onSuccess: () => {
-            reset()
-            onSuccess?.() // ✅ solo aquí se cierra el modal
-          },
-        })
+      if (MODE.method) submit(MODE.method, url, { onSuccess: handleSuccess })
       return
     }
 
     const formData = new FormData()
-    const token: string | null = document
-      .querySelector('meta[name="csrf-token"]')
-      ?.getAttribute("content")
-
+    const token: string | null = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content")
     if (!token) return
 
     formData.append("_token", token)
     if (MODE.method !== "post") formData.append("_method", MODE.method)
 
-    Object.entries(data).forEach(
-      ([k, v]) => v != null && formData.append(k, v instanceof File ? v : String(v))
-    )
+    Object.entries(data).forEach(([k, v]) => v != null && formData.append(k, v instanceof File ? v : String(v)))
 
     router.post(url, formData, {
-  forceFormData: true,
-  preserveState: true,   // 🔥 CLAVE
-  preserveScroll: true,  // 🔥 CLAVE
-  onSuccess: () => {
-    reset()
-    onSuccess?.()
-  },
-})
+      forceFormData: true,
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: handleSuccess,
+    })
   }
 
   const getColClass = (width?: string) => {
@@ -134,13 +136,7 @@ export const SimpleForm = ({
                 className: MODE.className,
                 tooltip: MODE.submit,
                 ...(mode === "delete"
-                  ? {
-                      onClick: handleSubmit,
-                      confirmation: {
-                        title: "Confirmar eliminación",
-                        description: "Esta acción eliminará el registro permanentemente.",
-                      },
-                    }
+                  ? { onClick: handleSubmit, confirmation: { title: "Confirmar eliminación", description: "Esta acción eliminará el registro permanentemente." } }
                   : { type: "submit" }),
               }}
             />
@@ -148,8 +144,8 @@ export const SimpleForm = ({
         )}
       </form>
 
-      {ExtendedForm && extended_form && (
-        <ExtendedForm {...{ view, data, recordId, mode, extended_form }} />
+      {extended_form?.length && recordId && (
+        <ExtendedForm {...{ view, recordId, mode, extended_form }} />
       )}
     </div>
   )

@@ -1,4 +1,4 @@
-import { forwardRef, memo } from "react"
+import { forwardRef, memo, useMemo } from "react"
 import { cn } from "@/lib/utils"
 import {
   DropdownMenu,
@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Link } from "@inertiajs/react"
 import type { LucideIcon } from "lucide-react"
-
+type Size = "xs" | "sm" | "md" | "lg"
+const sizeMap: Record<Size, string> = { xs: "6", sm: "8", md: "9", lg: "12" }
 type BaseItem = {
   label?: string
   icon?: LucideIcon
@@ -23,12 +24,10 @@ type BaseItem = {
   to?: string
   external?: boolean
 }
-
 export type SDItem =
   | { separator: true }
   | (BaseItem & { type?: "item"; custom?: React.ReactNode })
   | (BaseItem & { type: "checkbox"; checked: boolean; onChange: (v: boolean) => void })
-
 interface Props {
   triggerIcon?: LucideIcon
   triggerLabel?: React.ReactNode
@@ -37,19 +36,13 @@ interface Props {
   triggerBadge?: string | number
   triggerBadgeClassName?: string
   iconSize?: number | string
-  triggerSize?: "sm" | "md" | "lg"
+  size?: Size
   label?: string
   labelExtra?: React.ReactNode
   items: SDItem[]
   align?: "start" | "center" | "end"
   closeOnSelect?: boolean
   itemsMaxHeight?: number | string
-}
-
-const sizeMap = {
-  sm: "h-7 min-w-7 text-xs",
-  md: "h-9 min-w-9 text-sm",
-  lg: "h-11 min-w-11 text-base",
 }
 
 export const SmartDropdown = memo(
@@ -62,7 +55,7 @@ export const SmartDropdown = memo(
       triggerBadge,
       triggerBadgeClassName,
       iconSize = 20,
-      triggerSize,
+      size = "md",
       label,
       labelExtra,
       items,
@@ -74,10 +67,13 @@ export const SmartDropdown = memo(
   ) {
     const prevent = (e: Event) => !closeOnSelect && e.preventDefault()
     const showBadge = triggerBadge !== undefined && triggerBadge !== null && triggerBadge !== 0
-    const isIconOnly = !triggerLabel
+
+    const unit = sizeMap[size]
+    const hasText = !!triggerLabel
+    const isIconOnly = !hasText && !!Icon
 
     const renderIcon = (Icon?: LucideIcon, className?: string) =>
-      Icon && <Icon style={{ width: iconSize, height: iconSize }} className={className} />
+      Icon ? <Icon style={{ width: iconSize, height: iconSize }} className={className} /> : null
 
     const wrapLink = (it: BaseItem, content: React.ReactNode) => {
       if (!it.to) return content
@@ -136,9 +132,8 @@ export const SmartDropdown = memo(
               ref,
               variant: triggerVariant,
               className: cn(
-                "rounded-full relative flex items-center gap-2",
-                isIconOnly ? "w-9 px-0" : "px-3",
-                triggerSize && sizeMap[triggerSize],
+                "rounded-full flex items-center justify-center relative",
+                isIconOnly ? `h-${unit} w-${unit} px-0` : `h-${unit} px-2`,
                 triggerButtonClassName
               ),
             }}
@@ -184,5 +179,3 @@ export const SmartDropdown = memo(
     )
   })
 )
-
-SmartDropdown.displayName = "SmartDropdown"

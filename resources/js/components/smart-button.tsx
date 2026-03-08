@@ -1,4 +1,4 @@
-import { forwardRef, useState } from "react"
+import { forwardRef, useMemo, useState } from "react"
 import { cn } from "@/lib/utils"
 import { Link } from "@inertiajs/react"
 import { Button } from "@/components/ui/button"
@@ -7,10 +7,12 @@ import { Loader2 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { SmartModal } from "@/components/smart-modal"
 
+type Size = "xs" | "sm" | "md" | "lg"
+
 type Props = {
   to?: string
   type?: "button" | "submit" | "reset"
-  icons?: LucideIcon | LucideIcon[]      
+  icons?: LucideIcon | LucideIcon[]
   iconPosition?: "left" | "right"
   iconSize?: number | string
   label?: React.ReactNode
@@ -23,8 +25,17 @@ type Props = {
   disabled?: boolean
   onClick?: (e?: React.MouseEvent) => void | Promise<void>
   confirmation?: { title: string; description?: string }
-  size?: "xs" | "sm" | "md" | "lg" 
+  size?: Size
   buttonColor?: "green" | "red" | "blue" | "gray"
+}
+
+const sizeMap: Record<Size, string> = { xs: "6", sm: "8", md: "9", lg: "12" }
+
+const colorClasses: Record<string, string> = {
+  green: "bg-green-500 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700",
+  red: "bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700",
+  blue: "bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700",
+  gray: "bg-gray-800 text-white hover:bg-gray-900 dark:bg-gray-900 dark:hover:bg-gray-950",
 }
 
 export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartButton(props, ref) {
@@ -51,7 +62,14 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
   const [loading, setLoading] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
-  const iconsArray = Array.isArray(icons) ? icons : icons ? [icons] : []
+  const iconsArray = useMemo(
+  () =>
+    (Array.isArray(icons) ? icons : icons ? [icons] : []).filter(Boolean), // Elimina undefined/null
+  [icons]
+)
+  const hasText = !!(label || children || loadingLabel)
+  const isIconOnly = !hasText && iconsArray.length === 1
+  const unit = sizeMap[size]
 
   const executeAction = async () => {
     if (!onClick) return
@@ -65,22 +83,19 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
   const handleClick = async (e: React.MouseEvent) => {
     if (!to && type !== "submit") e.preventDefault()
     if (disabled || loading) return
-    if (confirmation) { setConfirmOpen(true); return }
+    if (confirmation) return setConfirmOpen(true)
     await executeAction()
   }
 
-  const hasText = !!(label || children || loadingLabel)
-  const isIconOnly = !hasText && iconsArray.length === 1
-
-  const IconsEl = iconsArray.filter(Boolean).length > 0 && (
+  const IconsEl = iconsArray.length > 0 && (
     <span className="flex items-center gap-1">
-      {iconsArray.filter(Boolean).map((Icon, i) => (
+      {iconsArray.map((Icon, i) => (
         <Icon key={i} style={{ width: iconSize, height: iconSize }} />
       ))}
     </span>
   )
 
-  const content = loading ? (
+  const Content = loading ? (
     <>
       <Loader2 className="animate-spin" style={{ width: iconSize, height: iconSize }} />
       {hasText && <span>{loadingLabel ?? label ?? children}</span>}
@@ -92,20 +107,6 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
       {iconPosition === "right" && IconsEl}
     </>
   )
-
-  const colorClasses: Record<string, string> = {
-    green: "bg-green-500 text-white hover:bg-green-600 dark:bg-green-600 dark:hover:bg-green-700",
-    red: "bg-red-500 text-white hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700",
-    blue: "bg-blue-500 text-white hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700",
-    gray: "bg-gray-800 text-white hover:bg-gray-900 dark:bg-gray-900 dark:hover:bg-gray-950",
-  }
-
-  const sizeClasses: Record<string, string> = {
-    xs: "h-7 w-7 text-xs px-0",
-    sm: "h-8 w-8 text-sm px-2",
-    md: "h-10 w-auto text-base px-3",
-    lg: "h-12 w-auto text-lg px-4",
-  }
 
   const buttonNode = (
     <span className="inline-flex">
@@ -119,15 +120,14 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
           style,
           onClick: handleClick,
           className: cn(
-            isIconOnly ? "w-9 px-0" : "px-2",
-            "rounded-full flex items-center gap-2",
-            sizeClasses[size],
+            "rounded-full flex items-center justify-center",
+            isIconOnly ? `h-${unit} w-${unit} px-0` : `h-${unit} px-2`,
             buttonColor && variant === "default" && colorClasses[buttonColor],
             className
           ),
         }}
       >
-        {to ? <Link {...{ href: to }}>{content}</Link> : content}
+        {to ? <Link {...{ href: to }}>{Content}</Link> : Content}
       </Button>
 
       {confirmation && (

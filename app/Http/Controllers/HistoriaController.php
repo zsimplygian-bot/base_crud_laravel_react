@@ -5,7 +5,9 @@ use App\Models\Historia;
 use App\Models\HistoriaSeguimiento;
 use App\Models\HistoriaProcedimiento;
 use App\Models\HistoriaProducto;
+use App\Models\HistoriaProductoDosis;
 use App\Models\HistoriaAnamnesis;
+use App\Models\HistoriaValoracion;
 use Illuminate\Http\Request;
 class HistoriaController extends BaseController
 {
@@ -16,13 +18,25 @@ class HistoriaController extends BaseController
         parent::__construct();
     }
     public function deleteExtra($model)
-    {
-        $idHistoria = $model->getKey();
-        HistoriaSeguimiento::where('id_historia_', $idHistoria)->delete();
-        HistoriaAnamnesis::where('id_historia_', $idHistoria)->delete();
-        HistoriaProcedimiento::where('id_historia_', $idHistoria)->delete();
-        HistoriaProducto::where('id_historia_', $idHistoria)->delete();
-    }
+{
+    $idHistoria = $model->getKey();
+
+    HistoriaSeguimiento::where('id_historia', $idHistoria)->delete();
+    HistoriaAnamnesis::where('id_historia', $idHistoria)->delete();
+    HistoriaProcedimiento::where('id_historia', $idHistoria)->delete();
+
+    // Obtener IDs de productos asociados a la historia
+    $productoIds = HistoriaProducto::where('id_historia', $idHistoria)
+        ->pluck('id_historia_producto'); // obtenemos los IDs de HistoriaProducto
+
+    // Borrar solo dosis de esos productos
+    HistoriaProductoDosis::whereIn('id_historia_producto', $productoIds)->delete();
+
+    // Finalmente borrar los productos
+    HistoriaProducto::where('id_historia', $idHistoria)->delete();
+
+    HistoriaValoracion::where('id_historia', $idHistoria)->delete();
+}
     public function records(int $id)
     {
         return response()->json([
