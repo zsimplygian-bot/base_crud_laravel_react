@@ -17,6 +17,7 @@ import { motivoForm } from "./motivo.config"
 import { userForm } from "./user.config"    
 import { productoForm } from "./producto.config"    
 import { procedimientoForm } from "./procedimiento.config"  
+import { miembroForm } from "./miembro.config"
 export const FORM_CONFIG = {
   mascota: mascotaForm,
   cliente: clienteForm,
@@ -36,4 +37,5 @@ export const FORM_CONFIG = {
   user: userForm, 
   producto: productoForm,
   procedimiento: procedimientoForm,
+  miembro: miembroForm,
 }

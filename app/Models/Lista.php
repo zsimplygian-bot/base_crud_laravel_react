@@ -8,6 +8,7 @@ class Lista
         'estado_mascota','motivo',
         'estado_historia','especie','raza',
         'rol','categoria_producto','categoria_procedimiento',
+        'rol_miembro', 'coordinador', 'estado_miembro',
     ];
     protected static array $columnasTablasSimples = [
         // 'especialidad' => ['id_especialidad as id','especialidad as label'],

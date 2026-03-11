@@ -12,6 +12,8 @@ import {
   Dog,
   ListChecks,
 } from "lucide-react"
+import { useHasRole } from "@/hooks/use-hasrole"
+
 // Tipo base mínimo
 type NavDef = [
   title: string,
@@ -19,6 +21,7 @@ type NavDef = [
   href?: string,
   children?: NavDef[]
 ]
+
 // Transformador compacto → estructura final
 function buildNav(defs: NavDef[]) {
   return defs.map(item => {
@@ -37,6 +40,7 @@ function buildNav(defs: NavDef[]) {
     }
   })
 }
+
 // Definición con iconos más semánticos
 const rawSidebar: NavDef[] = [
   ["Dashboard", LayoutGrid, "/dashboard"],
@@ -52,21 +56,36 @@ const rawSidebar: NavDef[] = [
   ],
   ["Mascotas", PawPrint, "/mascota"],
   ["Dueños", Users, "/cliente"],
+  ["Miembros", User, "/miembro"],
   [
     "Items",
     BookOpen,
     undefined,
     [
-      ["Productos", Syringe, "/producto"], // Inventario / productos
-      ["Procedimientos", Stethoscope, "/procedimiento"], // Actos médicos
-      ["Categoría productos", Tags, "/categoria_producto"], // Clasificación
-      ["Categoría procedimientos", Tags, "/categoria_procedimiento"], // Clasificación
-      ["Especie", Dog, "/especie"], // Tipo de animal
-      ["Raza", PawPrint, "/raza"], // Subtipo
-      ["Motivo", ClipboardList, "/motivo"], // Razón de cita
-      ["Usuarios", User, "/user"], // Gestión usuarios
+      ["Productos", Syringe, "/producto"],
+      ["Procedimientos", Stethoscope, "/procedimiento"],
+      ["Categoría productos", Tags, "/categoria_producto"],
+      ["Categoría procedimientos", Tags, "/categoria_procedimiento"],
+      ["Especie", Dog, "/especie"],
+      ["Raza", PawPrint, "/raza"],
+      ["Motivo", ClipboardList, "/motivo"],
+      ["Usuarios", User, "/user"],
     ],
   ],
 ]
-export const sidebarItems = buildNav(rawSidebar)
+
+export const sidebarItems = () => {
+  const isRol3 = useHasRole(3)
+
+  let filtered: NavDef[]
+
+  if (isRol3) {
+    filtered = rawSidebar.filter(([title]) => title === "Miembros") // Rol 3 solo ve Miembros
+  } else {
+    filtered = rawSidebar.filter(([title]) => title !== "Miembros") // Otros roles no ven Miembros
+  }
+
+  return buildNav(filtered)
+}
+
 export const footerNavItems = buildNav([])

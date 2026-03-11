@@ -11,7 +11,7 @@ import { useHasRole } from "@/hooks/use-hasrole"
 type ActionType = "store" | "info" | "update" | "delete" | null
 
 export const ActionButtons = ({ row_id, view, title, icon, fields, extended_form, onSuccess, eye, size }: any) => {
-  const canAdmin = useHasRole(1)
+  const canAdmin = useHasRole([1,3]) // Rol 1 y 3 pueden usar acciones admin
   const [open, setOpen] = useState(false)
   const [action, setAction] = useState<ActionType>(null)
 
@@ -35,8 +35,10 @@ export const ActionButtons = ({ row_id, view, title, icon, fields, extended_form
   return (
     <>
       <div className="flex items-center gap-1">
-        {eye ? <SmartButton {...{ icons: EyeIcon, variant: "ghost", tooltip: "Ver detalle", size: "xs", onClick: () => openForm("info") }} />
-          : <SmartDropdown {...{ label: "Acciones", triggerIcon: MoreVertical, triggerVariant: "ghost", items, size: size ?? "md" }} />}
+        {eye
+          ? <SmartButton {...{ icons: EyeIcon, variant: "ghost", tooltip: "Ver detalle", size: "xs", onClick: () => openForm("info") }} />
+          : <SmartDropdown {...{ label: "Acciones", triggerIcon: MoreVertical, triggerVariant: "ghost", items, size: size ?? "md" }} />
+        }
       </div>
 
       {action && activeItem?.modal && (

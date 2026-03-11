@@ -15,8 +15,11 @@ import { NavFooter } from "@/components/nav-footer";
 import { NavUser } from "@/components/nav-user";
 import AppLogo from "./app-logo";
 import { sidebarItems, footerNavItems } from "@/config/navigation";
+
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
+  const items = sidebarItems(); // Ejecutar función para obtener array
+
   return (
     <Sidebar collapsible="icon" variant="inset">
       <SidebarHeader>
@@ -30,9 +33,11 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent className="flex flex-col min-h-0">
-        <NavMain items={sidebarItems} isCollapsed={collapsed} />
+        <NavMain items={items} isCollapsed={collapsed} />
       </SidebarContent>
+
       <SidebarFooter>
         <NavFooter items={footerNavItems} className="mt-auto" />
         <NavUser />

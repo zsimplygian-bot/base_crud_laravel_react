@@ -6,8 +6,8 @@ import { SimpleForm } from "@/components/form/simple-form"
 import { useHasRole } from "@/hooks/use-hasrole"
 
 export const NewRecordButton = ({ view, title, fields, extended_form, onSuccess, icon, size }) => {
-  const can = useHasRole(1)
-  if (!can) return null
+  const isRol2 = useHasRole(2) // Verifica si es rol 2
+  if (isRol2) return null // Rol 2 no puede usar este componente
 
   const [open, setOpen] = useState(false)
   const [formMode, setFormMode] = useState<"store" | "update">("store")
@@ -15,11 +15,10 @@ export const NewRecordButton = ({ view, title, fields, extended_form, onSuccess,
 
   const handleSuccess = (rid?: number) => {
     if (rid && view === "historia") {
-      // ⚡ Solo con view 'historia' no se cierra, se transforma a update
-      setRecordId(rid)
-      setFormMode("update")
+      setRecordId(rid) // Mantiene el id creado
+      setFormMode("update") // Cambia a modo edición
     } else {
-      setOpen(false) // Otras vistas cierran el modal normalmente
+      setOpen(false) // Cierra el modal en otros casos
     }
     onSuccess?.()
   }
@@ -41,7 +40,9 @@ export const NewRecordButton = ({ view, title, fields, extended_form, onSuccess,
           size: "lg",
           onOpenChange: setOpen,
           title: formMode === "store" ? `Nuevo ${title}` : `Editar ${title}`,
-          description: formMode === "store" ? "Llena los campos con cuidado" : "Actualiza los datos del registro",
+          description: formMode === "store"
+            ? "Llena los campos con cuidado"
+            : "Actualiza los datos del registro",
           icon,
         }}
       >

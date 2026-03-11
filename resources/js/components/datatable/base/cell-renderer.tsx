@@ -1,7 +1,8 @@
 // components/datatable/body/cell-renderer.tsx
 import React, { useCallback, memo, useEffect } from "react"
 import { SmartBadge } from "@/components/smart-badge"
-import { PhoneIcon } from "lucide-react"
+import { SmartButton } from "@/components/smart-button"
+import { PhoneIcon, MapPin } from "lucide-react"
 import { PhotoPreview } from "@/components/photo-preview"
 
 type RenderFn = (v: any, row?: any, view?: string) => React.ReactNode
@@ -29,6 +30,11 @@ const CONFIG = {
   estado_cita: {
     ATENDIDO: "green",
     CANCELADO: "red",
+    PENDIENTE: "gray",
+  },
+  estado_miembro: {
+    AUSENTE: "red",
+    ACTIVO: "green",
     PENDIENTE: "gray",
   },
   estado_mascota: {
@@ -152,6 +158,22 @@ const renderActivo = (v: any) => {
   )
 }
 
+// Botón para abrir ubicación
+const renderUbicacion = (v: any) => {
+  const url = String(v ?? "").trim()
+  if (!url) return "—"
+  return (
+    <SmartButton
+      {...{
+        tooltip: "Ver ubicación",
+        icons: [MapPin],
+        size: "sm",
+        onClick: () => window.open(url, "_blank"),
+      }}
+    />
+  )
+}
+
 // Registro de renderers
 const R: Record<string, RenderFn> = {
   fecha: renderFecha,
@@ -167,20 +189,25 @@ const R: Record<string, RenderFn> = {
 
   activo: renderActivo,
 
+  ubicacion: renderUbicacion,
+
   estado_historia: v => (
     <BadgeStatus value={v} map={CONFIG.estado_historia} />
   ),
   estado_cita: v => (
     <BadgeStatus value={v} map={CONFIG.estado_cita} />
   ),
+  estado_miembro: v => (
+    <BadgeStatus value={v} map={CONFIG.estado_miembro} />
+  ),
   estado_mascota: v => (
     <BadgeStatus value={v} map={CONFIG.estado_mascota} />
   ),
 
   archivo: (_, row) => {
-  if (!row?.archivo) return "—"
-  return <PhotoPreview filePath={row.archivo} size={40} />
-},
+    if (!row?.archivo) return "—"
+    return <PhotoPreview filePath={row.archivo} size={40} />
+  },
 }
 
 // Hook principal

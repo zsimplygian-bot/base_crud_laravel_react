@@ -36,6 +36,7 @@ $resourcesWithForms = [ // Recursos principales con formularios
     'motivo'           => C\MotivoController::class,
     'producto'       => C\ProductoController::class,
     'procedimiento'     => C\ProcedimientoController::class,
+    'miembro'     => C\MiembroController::class,
 ];
 Route::get('/calendario', function () { // Calendario de citas
     return Inertia::render('calendario/index');
