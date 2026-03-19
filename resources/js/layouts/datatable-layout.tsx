@@ -54,7 +54,9 @@ const hasCreatedAt = useMemo(
             <div className="flex gap-2 ml-auto flex-shrink-0">
               <ToggleColumns {...{ columns, columnVisibility, setColumnVisibility }} />
               <ExportMenu {...{ view, columns, data }} />
-              <NewRecordButton {...{ view, title, icon, fields, extended_form, onSuccess: () => setPageIndex(0),  }} />
+              {Array.isArray(fields) && fields.length > 0 && (
+  <NewRecordButton {...{ view, title, icon, fields, extended_form, onSuccess: () => setPageIndex(0) }} />
+)}
             </div>
           </div>
           <SmartTable {...{ columns, rows: data, loading, error: error?.message ?? null,

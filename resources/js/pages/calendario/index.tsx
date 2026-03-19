@@ -7,10 +7,10 @@ import interactionPlugin from "@fullcalendar/interaction"
 import esLocale from "@fullcalendar/core/locales/es"
 import { useCallback, memo } from "react"
 import { ActionButtons } from "@/components/datatable/base/action-buttons"
-import { FORM_CONFIG } from "@/config/forms"
+import { VIEW_CONFIG } from "@/config/views"
 const EventContent = memo(({ arg }: any) => {
   const { mascota, cliente, motivo } = arg.event.extendedProps
-  const { view, title, fields } = FORM_CONFIG.cita
+  const { view, title, fields } = VIEW_CONFIG.cita
   return (
     <div className="flex items-start gap-1 py-1 text-foreground">
       {/* Acciones */}

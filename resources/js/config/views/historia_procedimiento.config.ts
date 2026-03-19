@@ -1,0 +1,20 @@
+import { Stethoscope } from "lucide-react"
+export const historia_procedimientoView = {
+  title: "Procedimientos",
+  view: "historia_procedimiento",
+  icon: Stethoscope,
+  fields: [
+    { id: "id_historia", hidden: true },
+    { id: "id_procedimiento", label: "Procedimiento", type: "combobox" },
+    { id: "detalle", label: "Detalle" },
+    { id: "precio", label: "Precio S/", type: "number", required: false },
+    { id: "fecha", label: "Fecha", type: "datetime" },
+    { id: "archivo", label: "Imagen", type: "file", required: false },
+  ],
+
+  recordFields: [
+    { id: "nombre_procedimiento", label: "Procedimiento" },
+    { id: "detalle", label: "Detalle" },
+    { id: "precio", label: "Precio S/" },
+  ],
+}

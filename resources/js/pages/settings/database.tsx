@@ -48,7 +48,7 @@ export default function DatabaseSettings() {
           <SmartButton { ...{ icons: Database, label: "Exportar Base de Datos", loadingLabel: "Exportando...", onClick: handleExport } } />
           {/* IMPORTAR */}
           <div className="mt-2 flex items-center gap-3">
-            <input type="file" accept=".sql,.txt" className="rounded border p-2 text-sm" onChange={e => setFile(e.target.files?.[0] || null)} />
+            <input type="file" accept=".sql,.txt" className="rounded-full border p-2 text-sm" onChange={e => setFile(e.target.files?.[0] || null)} />
             <SmartButton
               { ...{ icons: Upload, label: "Importar Base de Datos", loadingLabel: "Importando...", variant: "secondary", disabled: !file,
                 confirmation: { title: "Confirmar importación", description: "Esta acción sobrescribirá la base de datos actual.",

@@ -6,7 +6,7 @@ import { toast } from "@/components/ui/sonner"
 import { NewRecordButton } from "@/components/datatable/toolbar/new-record-button"
 import { ActionButtons } from "@/components/datatable/base/action-buttons"
 import { SmartButton } from "@/components/smart-button"
-import { FORM_CONFIG } from "@/config/forms"
+import { VIEW_CONFIG } from "@/config/views"
 const DAY_RULES = [
   { max: 0, type: "error" },
   { max: 1, type: "warning" },
@@ -42,7 +42,7 @@ const CitaItem = memo(({ cita, onRefresh }: any) => {
             confirmation: { title: "Confirmar cancelación", description: "Esta acción cancelará la cita.",
             }, onClick: () => post(`/api/cita/${cita.id}/cancelar`, "Cita cancelada"), } } />
         <ActionButtons {...{ row_id: cita.id,
-          view: FORM_CONFIG.cita.view, title: FORM_CONFIG.cita.title, fields: FORM_CONFIG.cita.fields,
+          view: VIEW_CONFIG.cita.view, title: VIEW_CONFIG.cita.title, fields: VIEW_CONFIG.cita.fields,
           onSuccess: onRefresh, size: "sm" }} />
       </div>
     </div>
@@ -87,7 +87,7 @@ export default function CitasDropdown() {
   return (
     <SmartDropdown {...{ label: "Citas próximas",
       labelExtra: (
-        <NewRecordButton {...{  view: FORM_CONFIG.cita.view, title: FORM_CONFIG.cita.title, fields: FORM_CONFIG.cita.fields,
+        <NewRecordButton {...{  view: VIEW_CONFIG.cita.view, title: VIEW_CONFIG.cita.title, fields: VIEW_CONFIG.cita.fields,
           onSuccess: fetchCitas, size: "xs" }} />
       ),
       triggerIcon: Bell, triggerVariant: "ghost", triggerBadge: citas.length,

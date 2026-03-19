@@ -39,7 +39,7 @@ class ListadoQueryBuilder
         }
 
         $sort = $req->input('sortBy', 'id');
-        if ($sort === 'id') $sort = "id_$viewName";
+        if ($sort === 'id') $sort = "id_$alias";
         $table = $colMap[$sort] ?? $alias;
 
         $query->orderBy(

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardHeader, CardTitle } from "@/components/ui/card"
 import { SmartButton } from "@/components/smart-button"
 import { NewRecordButton } from "@/components/datatable/toolbar/new-record-button"
-import { FORM_CONFIG } from "@/config/forms"
+import { VIEW_CONFIG } from "@/config/views"
 const CARD_STYLES = {
   primary: { card: "rounded-xl border shadow-sm p-4", iconWrap: "p-3", icon: "w-7 h-7", title: "text-4xl font-bold", buttonSize: "md" },
   secondary: { card: "rounded-lg border shadow-sm p-3", iconWrap: "p-2", icon: "w-5 h-5", title: "text-3xl font-bold", buttonSize: "sm" },
@@ -16,7 +16,7 @@ export default function DashboardCards({ menus }) {
   useEffect(() => { localStorage.setItem(STORAGE_KEY, String(showSecondary)) }, [showSecondary])
   const [primary, secondary] = [menus.slice(0, 4), menus.slice(4)]
   const renderCard = (item, variant, i) => {
-    const form = FORM_CONFIG[item.view]
+    const form = VIEW_CONFIG[item.view]
     const styles = CARD_STYLES[variant]
     const Icon = form?.icon ?? LucideIcons[item.icon] ?? LucideIcons.Info
     return (
@@ -31,7 +31,7 @@ export default function DashboardCards({ menus }) {
           </CardHeader>
           <div className="flex flex-col gap-2">
             {form && <NewRecordButton {...{ view: form.view, title: form.title, fields: form.fields, size: styles.buttonSize }} />}
-            <SmartButton {...{ to: `/${item.view}`, icons: List, variant: "outline", size: styles.buttonSize }} />
+            <SmartButton {...{ to: `/${item.view}`, icons: List, tooltip: 'Ver listado', variant: "outline", size: styles.buttonSize }} />
           </div>
         </div>
       </Card>

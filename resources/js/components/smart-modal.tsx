@@ -89,7 +89,7 @@ export const SmartModal = ({
     <Dialog {...{ open, onOpenChange }}>
       <DialogContent
         {...{
-          className: `${dialogSizeClass}  lg:max-w-xl max-h-[90dvh] flex flex-col overflow-hidden w-full`,
+          className: `${dialogSizeClass}  lg:max-w-xl max-h flex flex-col overflow-hidden w-full`,
         }}
       >
         <DialogHeader>

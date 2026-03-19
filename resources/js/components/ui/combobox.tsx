@@ -6,7 +6,7 @@ import { CheckIcon, RotateCcw } from "lucide-react"
 import { NewRecordButton } from "@/components/datatable/toolbar/new-record-button"
 import { SmartButton } from "@/components/smart-button"
 import { ActionButtons } from "@/components/datatable/base/action-buttons"
-import { FORM_CONFIG } from "@/config/forms"
+import { VIEW_CONFIG } from "@/config/views"
 import { getLista, getListaSync, resetLista } from "@/hooks/use-listas-cache"
 export const Combobox = ({
   id, value, placeholder = "-", disabled, open: openProp, setOpen: setOpenProp, onSelect, lista, }: any) => {
@@ -19,7 +19,7 @@ export const Combobox = ({
   const resolvedForm = useMemo(() => {
     if (!id) return null
     const key = id.startsWith("id_") ? id.slice(3) : id
-    return FORM_CONFIG[key] ?? null
+    return VIEW_CONFIG[key] ?? null
   }, [id])
   const listaCache = useMemo(
     () => (campoLista ? getListaSync(campoLista) : null),

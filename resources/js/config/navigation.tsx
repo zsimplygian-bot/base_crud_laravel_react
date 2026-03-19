@@ -11,6 +11,10 @@ import {
   Tags,
   Dog,
   ListChecks,
+  BarChart,
+  TrendingUp,
+  UserX,
+  Smile,
 } from "lucide-react"
 import { useHasRole } from "@/hooks/use-hasrole"
 
@@ -72,19 +76,26 @@ const rawSidebar: NavDef[] = [
       ["Usuarios", User, "/user"],
     ],
   ],
+  [
+    "Estadistica",
+    BarChart,
+    undefined,
+    [
+      ["Valor de vida del cliente", TrendingUp, "/clv"],
+      ["Churn", UserX, "/churn"],
+      ["NPS", Smile, "/nps"],
+    ],
+  ],
 ]
 
 export const sidebarItems = () => {
   const isRol3 = useHasRole(3)
-
   let filtered: NavDef[]
-
   if (isRol3) {
-    filtered = rawSidebar.filter(([title]) => title === "Miembros") // Rol 3 solo ve Miembros
+    filtered = rawSidebar.filter(([title]) => title === "Miembros")
   } else {
-    filtered = rawSidebar.filter(([title]) => title !== "Miembros") // Otros roles no ven Miembros
+    filtered = rawSidebar.filter(([title]) => title !== "Miembros")
   }
-
   return buildNav(filtered)
 }
 

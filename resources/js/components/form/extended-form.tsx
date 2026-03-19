@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from "react"
 import axios from "axios"
-import { FORM_CONFIG } from "@/config/forms"
+import { VIEW_CONFIG } from "@/config/views"
 import { NewRecordButton } from "@/components/datatable/toolbar/new-record-button"
 import { ActionButtons } from "@/components/datatable/base/action-buttons"
 import { Textarea } from "@/components/ui/textarea"
@@ -13,7 +13,7 @@ export const ExtendedForm = ({ extended_form, recordId, mode, view }) => {
   const blocks = useMemo(
     () =>
       extended_form
-        .map(v => FORM_CONFIG[v])
+        .map(v => VIEW_CONFIG[v])
         .filter(b => b?.view && Array.isArray(b.fields)),
     [extended_form]
   )
@@ -158,7 +158,7 @@ export const ExtendedForm = ({ extended_form, recordId, mode, view }) => {
                             view: r._view,
                             title: r._title,
                             fields: r._formFields,
-                            extended_form: FORM_CONFIG[r._view]?.extended_form,
+                            extended_form: VIEW_CONFIG[r._view]?.extended_form,
                             onSuccess: fetchRecords,
                             size: "sm",
                           }}
