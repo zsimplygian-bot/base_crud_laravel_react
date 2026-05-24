@@ -12,10 +12,6 @@ Route::get('/', function () { // Página principal
 })->name('home');
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::post('/cita/{id}/notificar', [CitaController::class, 'notificar'])
-        ->name('cita.notificar');
-    Route::post('/cita/atender/{id}', [CitaController::class, 'atender'])
-        ->name('cita.atender');
 });
 $resourcesWithForms = [ // Recursos principales con formularios
     'cliente'           => C\ClienteController::class,
@@ -36,10 +32,7 @@ $resourcesWithForms = [ // Recursos principales con formularios
     'motivo'           => C\MotivoController::class,
     'producto'       => C\ProductoController::class,
     'procedimiento'     => C\ProcedimientoController::class,
-    'miembro'     => C\MiembroController::class,
-    'clv'     => C\CLVController::class,
-    'churn'     => C\ChurnController::class,
-    'nps'     => C\NPSController::class,
+    'rfm'     => C\RFMController::class,
 ];
 Route::get('/calendario', function () { // Calendario de citas
     return Inertia::render('calendario/index');

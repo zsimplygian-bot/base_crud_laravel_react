@@ -1,249 +1,151 @@
-// components/datatable/body/cell-renderer.tsx
-import React, { useCallback, memo, useEffect } from "react"
+import React, { useCallback, memo, useMemo } from "react"
 import { SmartBadge } from "@/components/smart-badge"
 import { SmartButton } from "@/components/smart-button"
 import { PhoneIcon, MapPin } from "lucide-react"
 import { PhotoPreview } from "@/components/photo-preview"
+import { cn } from "@/lib/utils"
 
 type RenderFn = (v: any, row?: any, view?: string) => React.ReactNode
 
-// Utils
-export const $ = (obj: any, path: string) =>
-  path.split(".").reduce((a, k) => a?.[k], obj)
+const EMOJI_REGEX = /(\u00a9|\u00ae|[\u2000-\u3300]|\ud83c[\ud000-\udfff]|\ud83d[\ud000-\udfff]|\ud83e[\ud000-\udfff])/g
+const EMOJI_FONT = '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif'
+const VARIATION_SELECTOR = "\uFE0F"
 
-const normalize = (v: any) =>
-  String(v ?? "")
-    .trim()
-    .replace(/\s+/g, " ")
-    .toUpperCase()
-
-// Configuración
-const CONFIG = {
-  estado_historia: {
-    ACTIVO: "green",
-    ATENDIDO: "green",
-    ABIERTO: "green",
-    REFERIDO: "yellow",
-    CERRADO: "gray",
-    "EN OBSERVACIÓN": "gray",
-  },
-  estado_cita: {
-    ATENDIDO: "green",
-    CANCELADO: "red",
-    PENDIENTE: "gray",
-  },
-  estado_miembro: {
-    AUSENTE: "red",
-    ACTIVO: "green",
-    PENDIENTE: "gray",
-  },
-  estado_mascota: {
-    SANO: "green",
-    ENFERMO: "red",
-    FALLECIDO: "gray",
-    TRATAMIENTO: "yellow",
+const MAPS = {
+  estados: {
+    success: new Set(["ACTIVO", "ATENDIDO", "ABIERTO", "SANO"]),
+    warning: new Set(["REFERIDO", "TRATAMIENTO", "EN RIESGO"]),
+    error: new Set(["CANCELADO", "ENFERMO", "AUSENTE", "INACTIVO"]),
   },
   colores: {
-    negro: "#000",
-    negras: "#000",
-    marrón: "#7B3F00",
-    marron: "#7B3F00",
-    acero: "#A8A9AD",
-    cenizo: "#B2BEB5",
-    crema: "#fff0bf",
-    blanco: "#fff",
-    gris: "#808080",
-    plomo: "#808080",
-    dorado: "#DAA520",
-    rojo: "#f00",
-    azul: "#00f",
-    verde: "#008000",
-    rosa: "#FFC0CB",
-    naranja: "#FFA500",
-    morado: "#800080",
-    caramelo: "#FF7F50",
-    beige: "#F5F5DC",
-    fuego: "#FF4500",
-  },
-  ignoreColorWords: new Set(["con", "y", "de", "manchas", "claro", "oscuro"]),
+    negro: "#000", marrón: "#7B3F00", acero: "#A8A9AD", cenizo: "#B2BEB5", 
+    crema: "#fff0bf", blanco: "#fff", gris: "#808080", dorado: "#DAA520", 
+    rojo: "#f00", azul: "#00f", verde: "#008000", rosa: "#FFC0CB",
+    naranja: "#FFA500", morado: "#800080", beige: "#F5F5DC", fuego: "#FF4500"
+  } as Record<string, string>,
+  ignoreWords: new Set(["con", "y", "de", "manchas", "claro", "oscuro"])
 }
 
-// Renderers base
-const BadgeStatus = memo(
-  ({ value, map }: { value: any; map: Record<string, string> }) => (
-    <SmartBadge color={map[normalize(value)] || "gray"}>
-      {normalize(value)}
-    </SmartBadge>
-  )
-)
+export const $ = (obj: any, path: string) => path.split(".").reduce((a, k) => a?.[k], obj)
+const normalize = (v: any) => String(v ?? "").trim().replace(/\s+/g, " ").toUpperCase()
 
-const ImageCell = memo(({ src }: { src?: string }) => {
-  if (!src) return "—"
-  useEffect(() => {
-    fetch(src, { method: "HEAD" }).catch(() => {})
-  }, [src])
+// --- RENDERER DE EMOJIS SIN ESPACIADO EXTRA ---
+const EmojiTextRenderer = memo(({ value }: { value: string }) => {
+  const parts = useMemo(() => value.split(EMOJI_REGEX).filter(Boolean), [value])
+
   return (
-    <img
-      src={src}
-      className="h-12 w-12 object-cover rounded-md border"
-      alt="Archivo"
+    <div className="flex items-center gap-2 h-6 leading-none overflow-visible">
+      {parts.map((part, i) => {
+        const isEmoji = new RegExp(EMOJI_REGEX, "").test(part)
+        
+        if (isEmoji) {
+          return (
+            <div key={i} className="relative w-8 h-6 flex-shrink-0">
+              <span 
+                className="absolute inset-0 flex items-center justify-center text-[2rem] pointer-events-none select-none"
+                style={{ 
+                  fontFamily: EMOJI_FONT,
+                  lineHeight: 1, // Forzado para evitar el pixel de base
+                  top: '-2px'   // Ajuste fino manual si el emoji se ve muy alto
+                }}
+              >
+                {part.includes(VARIATION_SELECTOR) ? part : `${part}${VARIATION_SELECTOR}`}
+              </span>
+            </div>
+          )
+        }
+
+        return (
+          <span key={i} className="text-sm font-medium whitespace-nowrap self-center">
+            {part}
+          </span>
+        )
+      })}
+    </div>
+  )
+})
+
+const ColorCircle = memo(({ v }: { v: any }) => {
+  const background = useMemo(() => {
+    if (!v) return null
+    const words = String(v).toLowerCase().split(/\s+/).filter(w => w && !MAPS.ignoreWords.has(w))
+    const colors = words.map(w => MAPS.colores[w] ?? "#999")
+    return colors.length > 1 ? `linear-gradient(to right, ${colors.join(", ")})` : colors[0]
+  }, [v])
+
+  if (!background) return "—"
+
+  return (
+    <div 
+      className="size-7 rounded-full shadow-sm mx-auto transition-transform hover:scale-110 border border-black/20 dark:border-white/40" 
+      style={{ background }} 
+      title={String(v)}
     />
   )
 })
 
-const renderFecha = (v: any) => {
-  const s = String(v ?? "")
-  if (!s) return "—"
-  return s.endsWith("00:00:00") ? s.replace(" 00:00:00", "") : s
-}
+const BadgeStatus = memo(({ value }: { value: any }) => {
+  const val = useMemo(() => normalize(value), [value])
+  const color = useMemo(() => 
+    MAPS.estados.success.has(val) ? "green" :
+    MAPS.estados.warning.has(val) ? "yellow" :
+    MAPS.estados.error.has(val) ? "red" : "gray", [val])
+  
+  return <SmartBadge color={color}>{val}</SmartBadge>
+})
 
-const renderEmoji = (v: any) => (
-  <span className="text-[2.5em] leading-none">{v}</span>
-)
-
-const renderTelefono = (v: any) => {
-  const phone = String(v ?? "").replace(/\D/g, "")
-  if (!phone) {
-    return <SmartBadge color="gray">—</SmartBadge>
-  }
-  return (
-    <SmartBadge color="green" icon={PhoneIcon}>
-      <a href={`https://wa.me/51${phone}`} target="_blank">
-        {v}
-      </a>
-    </SmartBadge>
-  )
-}
-
-const renderColor = (v: any) => {
-  if (!v) return "—"
-  const colors = String(v)
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(w => w && !CONFIG.ignoreColorWords.has(w))
-    .map(w => CONFIG.colores[w] ?? "#999")
-  const bg =
-    colors.length > 1
-      ? `linear-gradient(to right, ${colors.join(", ")})`
-      : colors[0]
-  return (
-    <SmartBadge
-      className="size-7 rounded-full border border-gray-600 p-0"
-      style={{ background: bg }}
-    />
-  )
-}
-
-// Edad en meses -> años + meses
-const renderEdad = (v: any) => {
-  const meses = parseInt(v, 10)
-  if (isNaN(meses) || meses < 0) return "—"
-  const años = Math.floor(meses / 12)
-  const resto = meses % 12
-  if (años && resto)
-    return `${años} ${años === 1 ? "año" : "años"}, ${resto} ${
-      resto === 1 ? "mes" : "meses"
-    }`
-  if (años) return `${años} ${años === 1 ? "año" : "años"}`
-  return `${resto} ${resto === 1 ? "mes" : "meses"}`
-}
-
-// Estado activo / inactivo
-const renderActivo = (v: any) => {
-  const activo = Number(v) === 1
-  return (
-    <SmartBadge color={activo ? "green" : "gray"}>
-      {activo ? "ACTIVO" : "INACTIVO"}
-    </SmartBadge>
-  )
-}
-
-// Botón para abrir ubicación
-const renderUbicacion = (v: any) => {
-  const url = String(v ?? "").trim()
-  if (!url) return "—"
-  return (
-    <SmartButton
-      {...{
-        tooltip: "Ver ubicación",
-        icons: [MapPin],
-        size: "sm",
-        onClick: () => window.open(url, "_blank"),
-      }}
-    />
-  )
-}
-
-// Registro de renderers
 const R: Record<string, RenderFn> = {
-  fecha: renderFecha,
-  created_at: renderFecha,
-  updated_at: renderFecha,
-
-  telefono: renderTelefono,
-  color: renderColor,
-
-  edad: renderEdad,
-  edad_actual: renderEdad,
-  edad_meses: renderEdad,
-
-  activo: renderActivo,
-
-  ubicacion: renderUbicacion,
-
-  estado_historia: v => (
-    <BadgeStatus value={v} map={CONFIG.estado_historia} />
-  ),
-  estado_cita: v => (
-    <BadgeStatus value={v} map={CONFIG.estado_cita} />
-  ),
-  estado_miembro: v => (
-    <BadgeStatus value={v} map={CONFIG.estado_miembro} />
-  ),
-  estado_mascota: v => (
-    <BadgeStatus value={v} map={CONFIG.estado_mascota} />
-  ),
-
-  archivo: (_, row) => {
-    if (!row?.archivo) return "—"
-    return <PhotoPreview filePath={row.archivo} size={40} />
+  id: (v) => <span className="font-bold text-[13px] opacity-50">{v}</span>,
+  fecha: (v) => String(v ?? "").split(" ")[0] || "—",
+  telefono: (v) => {
+    const phone = String(v ?? "").replace(/\D/g, "")
+    return phone ? (
+      <SmartBadge color="green" icon={PhoneIcon}>
+        <a href={`https://wa.me/51${phone}`} target="_blank" rel="noreferrer">{v}</a>
+      </SmartBadge>
+    ) : "—"
   },
+  edad: (v) => {
+    const m = parseInt(v, 10)
+    if (isNaN(m) || m < 0) return "—"
+    const a = Math.floor(m / 12), r = m % 12
+    return [a && `${a} ${a === 1 ? "año" : "años"}`, (r || !a) && `${r} ${r === 1 ? "mes" : "meses"}`]
+      .filter(Boolean).join(", ")
+  },
+  ubicacion: (v) => v ? <SmartButton tooltip="Abrir Mapa" icons={[MapPin]} size="sm" onClick={() => window.open(v, "_blank")} /> : "—",
+  archivo: (_, row) => row?.archivo ? <PhotoPreview filePath={row.archivo} size={40} /> : "—"
 }
 
-// Hook principal
-export const useRenderCellContent = (defaultView?: string) =>
-  useCallback(
+R.created_at = R.updated_at = R.fecha
+R.edad_actual = R.edad_meses = R.edad
+
+export const useRenderCellContent = (defaultView?: string) => {
+  return useCallback(
     (key: string, row?: any, view?: string) => {
       const v = $(row, key)
+      if (v == null || v === "" || (Array.isArray(v) && v.length === 0)) return "—"
 
-      if (
-        v == null ||
-        (typeof v === "string" && v.trim() === "") ||
-        (Array.isArray(v) && v.length === 0)
-      ) {
-        return "—"
+      if (key === "id") return R.id(v)
+      if (key === "estado_mascota" && v == 1) return <BadgeStatus value="ACTIVO" />
+      
+      if (key === "motivo" || key.startsWith("emoji") || key.includes("icono")) {
+        return <EmojiTextRenderer value={String(v)} />
       }
 
-      if (key.startsWith("emoji")) return renderEmoji(v)
-      if (key.toLowerCase().includes("fecha") || key.endsWith("_at"))
-        return renderFecha(v)
+      if (key.startsWith("estado_")) return <BadgeStatus value={v} />
+      if (key.includes("color")) return <ColorCircle v={v} />
+      
+      const renderer = R[key]
+      if (renderer) return renderer(v, row, view || defaultView)
 
-      const renderFn = R[key]
-      if (typeof renderFn === "function")
-        return renderFn(v, row, view || defaultView)
-
+      if (key.toLowerCase().includes("fecha") || key.endsWith("_at")) return R.fecha(v)
+      
       if (key.toLowerCase().includes("archivo") && view) {
-        const file = Array.isArray(v)
-          ? v.find(f => f)?.trim()
-          : String(v).trim()
-        return <ImageCell src={`/images/${view}/${file}`} />
+        return <img src={`/images/${view}/${Array.isArray(v) ? v[0] : v}`} className="size-10 object-cover rounded shadow-inner" alt="preview" />
       }
 
       return v
     },
     [defaultView]
   )
-
-export const registerRenderer = (key: string, fn: RenderFn) => {
-  if (typeof fn === "function") R[key] = fn
 }

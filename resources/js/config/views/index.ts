@@ -17,10 +17,7 @@ import { motivoView } from "./motivo.config"
 import { userView } from "./user.config"    
 import { productoView } from "./producto.config"    
 import { procedimientoView } from "./procedimiento.config"  
-import { miembroView } from "./miembro.config"
-import { clvView } from "./clv.config"
-import { churnView } from "./churn.config"
-import { npsView } from "./nps.config"
+import { rfmView } from "./rfm.config"
 export const VIEW_CONFIG = {
   mascota: mascotaView,
   cliente: clienteView,
@@ -40,8 +37,5 @@ export const VIEW_CONFIG = {
   user: userView, 
   producto: productoView,
   procedimiento: procedimientoView,
-  miembro: miembroView,
-  clv: clvView,
-  churn: churnView,
-  nps: npsView,
+  rfm: rfmView,
 }

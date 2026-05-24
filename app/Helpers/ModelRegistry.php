@@ -18,10 +18,7 @@ class ModelRegistry
             'motivo'   => M\Motivo::class,
             'producto'   => M\Producto::class,
             'procedimiento'   => M\Procedimiento::class,
-            'miembro'   => M\Miembro::class,
-            'clv'   => M\CLV::class,
-            'churn'   => M\Churn::class,
-            'nps'   => M\NPS::class,
+            'rfm'   => M\RFM::class,
         ];
         if (!array_key_exists($view, $modelMap)) {
             throw new \InvalidArgumentException("Vista '$view' no soportada");

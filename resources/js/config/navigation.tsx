@@ -12,9 +12,10 @@ import {
   Dog,
   ListChecks,
   BarChart,
-  TrendingUp,
-  UserX,
-  Smile,
+  // Nuevos iconos para RFM
+  Clock,      // Para Recencia
+  Repeat,     // Para Frecuencia
+  Coins,      // Para Valor Monetario
 } from "lucide-react"
 import { useHasRole } from "@/hooks/use-hasrole"
 
@@ -45,7 +46,6 @@ function buildNav(defs: NavDef[]) {
   })
 }
 
-// Definición con iconos más semánticos
 const rawSidebar: NavDef[] = [
   ["Dashboard", LayoutGrid, "/dashboard"],
   ["Historias clínicas", ClipboardList, "/historia"],
@@ -77,13 +77,11 @@ const rawSidebar: NavDef[] = [
     ],
   ],
   [
-    "Estadistica",
+    "Estadística",
     BarChart,
     undefined,
     [
-      ["Valor de vida del cliente", TrendingUp, "/clv"],
-      ["Churn", UserX, "/churn"],
-      ["NPS", Smile, "/nps"],
+      ["Métricas RFM", Repeat, "/rfm"],
     ],
   ],
 ]

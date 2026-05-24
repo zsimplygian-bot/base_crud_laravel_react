@@ -21,15 +21,14 @@ class Mascota extends BaseModel {
         ['ID', 'id'],
         ['NOMBRE', 'mascota'],
         ['DUEÑO', 'cliente'],
-        ['ESPECIE', 'emoji_especie'],
-        ['RAZA', 'raza'],
+        ['ESPECIE', 'emoji_raza'],
         ['SEXO', 'emoji_sexo'],
-        ['FECHA NACIMIENTO', 'fecha_nacimiento'],
+        ['FECHA NAC.', 'fecha_nacimiento'],
         ['EDAD', 'edad_meses'],
         ['COLOR', 'color'],
         ['PESO (kg)', 'peso'],
         ['FOTO', 'archivo'],
-        ['ESTADO', 'activo'],
+        ['ESTADO', 'estado_mascota'],
         ['FECHA REGISTRO', 'created_at'],
     ];
     public static function getQuery(): array {
@@ -49,10 +48,9 @@ class Mascota extends BaseModel {
                     "$t1.id_$t1 as id",
                     "$t1.mascota",
                     "$t2.cliente",
-                    "$t4.emoji_especie",
-                    "$t3.raza",
+                    DB::raw("CONCAT($t4.emoji_especie, ' ', $t3.raza) as emoji_raza"),
                     "$t5.emoji_sexo",
-                    "$t1.activo",
+                    "$t1.activo as estado_mascota",
                     "$t1.fecha_nacimiento",
                     DB::raw("
                         CASE

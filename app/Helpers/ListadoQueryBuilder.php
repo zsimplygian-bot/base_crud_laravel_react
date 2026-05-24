@@ -8,29 +8,30 @@ class ListadoQueryBuilder
 {
     public static function apply($query, $alias, Request $req, $instance, $viewName)
     {
+        // Extraemos la metadata que identifica qué campos son reales y cuáles derivados (MAX, CASE, etc.)
         $meta = ListadoHelper::extractSelectMeta(
             $instance::getQuery(null, $viewName)['query']
         );
 
         $colMap  = $meta['columnToTable'] ?? [];
-        $allowed = property_exists($instance, 'allowedFilters')
-            ? $instance::$allowedFilters
-            : [];
+        $derived = $meta['derived'] ?? []; // Campos como 'recencia' o 'estado_recencia'
 
+        // --- MANEJO DE FILTROS ---
         foreach ((array) $req->input('filters', []) as $field => $value) {
-    if ($value === '' || $value === null) continue;
+            if ($value === '' || $value === null) continue;
 
-    // Filtro por ID (alias → columna real)
-    if ($field === 'id') {
-        $query->where("{$alias}.id_{$alias}", $value);
-        continue;
-    }
+            if ($field === 'id') {
+                $query->where("{$alias}.id_{$alias}", $value);
+                continue;
+            }
 
-    // Campos reales del alias principal
-    $query->where("{$alias}.{$field}", $value);
-}
+            // Evitamos aplicar WHERE a campos derivados (daría error de columna no encontrada)
+            if (!in_array($field, $derived)) {
+                $query->where("{$alias}.{$field}", $value);
+            }
+        }
 
-
+        // --- FILTRO DE FECHAS ---
         if ($req->filled('from') && $req->filled('to')) {
             $query->whereBetween("$alias.created_at", [
                 Carbon::parse($req->from)->startOfDay(),
@@ -38,14 +39,24 @@ class ListadoQueryBuilder
             ]);
         }
 
+        // --- MANEJO DE ORDENAMIENTO OPTIMIZADO ---
         $sort = $req->input('sortBy', 'id');
-        if ($sort === 'id') $sort = "id_$alias";
-        $table = $colMap[$sort] ?? $alias;
+        $order = $req->input('sortOrder', 'desc');
 
-        $query->orderBy(
-            "$table.$sort",
-            $req->input('sortOrder', 'desc')
-        );
+        if ($sort === 'id') {
+            // Manejo especial para la llave primaria con prefijo
+            $query->orderBy("{$alias}.id_{$alias}", $order);
+        } elseif (in_array($sort, $derived)) {
+            /**
+             * SOLUCIÓN: Si el campo es derivado, ordenamos por el ALIAS directamente.
+             * SQL permite "ORDER BY recencia", pero fallaría con "ORDER BY cliente.recencia".
+             */
+            $query->orderBy($sort, $order);
+        } else {
+            // Para campos físicos, buscamos su tabla de origen en el mapa
+            $table = $colMap[$sort] ?? $alias;
+            $query->orderBy("$table.$sort", $order);
+        }
 
         return $query;
     }
