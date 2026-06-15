@@ -27,6 +27,7 @@ type Props = {
   confirmation?: { title: string; description?: string }
   size?: Size
   buttonColor?: "green" | "red" | "blue" | "gray"
+  isLoading?: boolean // <--- NUEVA PROP AGREGADA
 }
 
 const sizeMap: Record<Size, string> = { xs: "6", sm: "8", md: "9", lg: "12" }
@@ -56,17 +57,20 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
     disabled = false,
     confirmation,
     size = "md",
-    buttonColor
+    buttonColor,
+    isLoading // <--- DESESTRUCTURAR NUEVA PROP
   } = props
 
-  const [loading, setLoading] = useState(false)
+  const [localLoading, setLocalLoading] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
+  // El estado de carga final es la unión del estado interno y el externo
+  const loading = isLoading ?? localLoading
+
   const iconsArray = useMemo(
-  () =>
-    (Array.isArray(icons) ? icons : icons ? [icons] : []).filter(Boolean), // Elimina undefined/null
-  [icons]
-)
+    () => (Array.isArray(icons) ? icons : icons ? [icons] : []).filter(Boolean),
+    [icons]
+  )
   const hasText = !!(label || children || loadingLabel)
   const isIconOnly = !hasText && iconsArray.length === 1
   const unit = sizeMap[size]
@@ -75,8 +79,8 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
     if (!onClick) return
     const result = onClick()
     if (result instanceof Promise) {
-      setLoading(true)
-      try { await result } finally { setLoading(false) }
+      setLocalLoading(true)
+      try { await result } finally { setLocalLoading(false) }
     }
   }
 
@@ -97,7 +101,7 @@ export const SmartButton = forwardRef<HTMLButtonElement, Props>(function SmartBu
 
   const Content = loading ? (
     <>
-      <Loader2 className="animate-spin" style={{ width: iconSize, height: iconSize }} />
+      <Loader2 className="animate-spin mr-2" style={{ width: iconSize, height: iconSize }} />
       {hasText && <span>{loadingLabel ?? label ?? children}</span>}
     </>
   ) : (

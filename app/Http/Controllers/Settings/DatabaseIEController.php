@@ -1,107 +1,67 @@
 <?php
+
 namespace App\Http\Controllers\Settings;
+
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 class DatabaseIEController extends Controller
 {
-    public function __construct()
-    {
-        // Fuerza la zona horaria correcta
-        date_default_timezone_set('America/Lima');
-    }
+    private $mysqlPath = 'C:\xampp\mysql\bin\mysql.exe';
+    private $mysqldumpPath = 'C:\xampp\mysql\bin\mysqldump.exe';
+
     public function export()
-{
-    $filename = 'backup-' . now()->format('Y-m-d_H-i-s') . '.sql'; // Nombre con fecha y hora
-    $path = storage_path("app/{$filename}");
-    $tables = DB::select('SHOW TABLES');
-    $key = 'Tables_in_veterinaria';
-    $dump = "SET FOREIGN_KEY_CHECKS=0;\nSET SQL_MODE = 'NO_AUTO_VALUE_ON_ZERO';\nSTART TRANSACTION;\nSET time_zone = '-05:00';\n\n";
+    {
+        set_time_limit(0);
+        $filename = 'backup-' . now()->format('Y-m-d_H-i-s') . '.sql';
+        $path = storage_path("app/{$filename}");
 
-    foreach ($tables as $t) {
-        $table = $t->$key;
-        $create = DB::selectOne("SHOW CREATE TABLE `$table`")->{'Create Table'};
-        $dump .= "\n\nDROP TABLE IF EXISTS `$table`;\n$create;\n\n";
+        $dbUser = escapeshellarg(config('database.connections.mysql.username'));
+        $dbPass = config('database.connections.mysql.password');
+        $dbHost = escapeshellarg(config('database.connections.mysql.host'));
+        $dbName = escapeshellarg(config('database.connections.mysql.database'));
+        $passFlag = $dbPass ? "-p" . escapeshellarg($dbPass) : "";
+        
+        $command = "\"{$this->mysqldumpPath}\" -u{$dbUser} {$passFlag} -h{$dbHost} {$dbName} > \"{$path}\" 2>&1";
 
-        $rows = DB::table($table)->get();
-        foreach ($rows as $row) {
-            $values = array_map(fn($v) => isset($v) ? "'" . str_replace("'", "''", $v) . "'" : "NULL", (array)$row);
-            $dump .= "INSERT INTO `$table` VALUES(" . implode(",", $values) . ");\n";
+        exec($command, $output, $returnCode);
+
+        if ($returnCode !== 0) {
+            Log::error("Error export DB: " . implode("\n", $output));
+            return response()->json(['message' => 'Error al generar backup'], 500);
         }
+
+        return response()->download($path, $filename, [
+            'Content-Type' => 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ])->deleteFileAfterSend(true);
     }
 
-    $dump .= "\nSET FOREIGN_KEY_CHECKS=1;\nCOMMIT;\n";
-    file_put_contents($path, $dump);
-
-    DB::table('database_history')->insert([
-        'action'     => 'export',
-        'filename'   => $filename,
-        'user_id'    => Auth::id(),
-        'ip_address' => request()->ip(),
-        'created_at' => now(),
-    ]);
-
-    return response()->download($path)->deleteFileAfterSend(true);
-}
     public function import(Request $request)
-{
-    $request->validate([
-        'backup' => 'required|file|mimes:sql,txt'
-    ]);
+    {
+        set_time_limit(0);
+        $request->validate(['backup' => 'required|file']);
+        
+        $path = $request->file('backup')->getRealPath();
+        
+        $dbUser = escapeshellarg(config('database.connections.mysql.username'));
+        $dbPass = config('database.connections.mysql.password');
+        $dbHost = escapeshellarg(config('database.connections.mysql.host'));
+        $dbName = escapeshellarg(config('database.connections.mysql.database'));
+        $passFlag = $dbPass ? "-p" . escapeshellarg($dbPass) : "";
 
-    $db = DB::getDatabaseName();
+        $command = "\"{$this->mysqlPath}\" -u{$dbUser} {$passFlag} -h{$dbHost} {$dbName} < \"{$path}\" 2>&1";
+        
+        exec($command, $output, $returnCode);
 
-    // Desactiva restricciones y warnings
-    DB::statement('SET FOREIGN_KEY_CHECKS=0');
-    DB::statement('SET SQL_MODE=""');
-
-    // Obtiene solo tablas reales
-    $tables = DB::select("
-        SELECT TABLE_NAME
-        FROM information_schema.tables
-        WHERE TABLE_SCHEMA = ?
-          AND TABLE_TYPE = 'BASE TABLE'
-    ", [$db]);
-
-    // Borra todas las tablas sin importar errores
-    foreach ($tables as $t) {
-        try {
-            DB::statement("DROP TABLE IF EXISTS `{$t->TABLE_NAME}`");
-        } catch (\Throwable $e) {
-            // Ignora cualquier error
-            continue;
+        if ($returnCode !== 0) {
+            Log::error("Error import DB: " . implode("\n", $output));
+            return response()->json(['success' => false, 'message' => 'Error en la importación'], 500);
         }
+
+        return response()->json(['success' => true]);
     }
-
-    // Ejecuta el SQL del archivo completo
-    $file = $request->file('backup');
-    $sql = file_get_contents($file->getRealPath());
-
-    try {
-        DB::unprepared($sql);
-    } catch (\Throwable $e) {
-        // No se corta el proceso, pero sí puedes loguear si quieres
-    }
-
-    // Reactiva restricciones
-    DB::statement('SET FOREIGN_KEY_CHECKS=1');
-
-    // Log histórico
-    DB::table('database_history')->insert([
-        'action'     => 'import',
-        'filename'   => $file->getClientOriginalName(),
-        'user_id'    => Auth::id(),
-        'ip_address' => request()->ip(),
-        'created_at' => now(),
-    ]);
-
-    return response()->json([
-    'success' => true,
-    'message' => 'La base de datos fue restaurada completamente.',
-]);
-}
-
-
 }
