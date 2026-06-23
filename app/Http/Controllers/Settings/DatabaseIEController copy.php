@@ -4,37 +4,28 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class DatabaseIEController extends Controller
 {
-    /**
-     * Detecta si estamos en Windows para usar la ruta de XAMPP,
-     * o en Linux para usar el comando directo del sistema.
-     */
-    private function getBinaryPath($binary) {
-        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            return "C:\\xampp\\mysql\\bin\\{$binary}.exe";
-        }
-        return $binary; 
-    }
+    private $mysqlPath = 'C:\xampp\mysql\bin\mysql.exe';
+    private $mysqldumpPath = 'C:\xampp\mysql\bin\mysqldump.exe';
 
     public function export()
     {
         set_time_limit(0);
-        $mysqldump = $this->getBinaryPath('mysqldump');
         $filename = 'backup-' . now()->format('Y-m-d_H-i-s') . '.sql';
         $path = storage_path("app/{$filename}");
 
-        $dbUser = config('database.connections.mysql.username');
+        $dbUser = escapeshellarg(config('database.connections.mysql.username'));
         $dbPass = config('database.connections.mysql.password');
-        $dbHost = config('database.connections.mysql.host');
-        $dbName = config('database.connections.mysql.database');
-        
+        $dbHost = escapeshellarg(config('database.connections.mysql.host'));
+        $dbName = escapeshellarg(config('database.connections.mysql.database'));
         $passFlag = $dbPass ? "-p" . escapeshellarg($dbPass) : "";
         
-        // Comando construido con seguridad
-        $command = "{$mysqldump} -u" . escapeshellarg($dbUser) . " {$passFlag} -h" . escapeshellarg($dbHost) . " " . escapeshellarg($dbName) . " > " . escapeshellarg($path) . " 2>&1";
+        $command = "\"{$this->mysqldumpPath}\" -u{$dbUser} {$passFlag} -h{$dbHost} {$dbName} > \"{$path}\" 2>&1";
 
         exec($command, $output, $returnCode);
 
@@ -45,6 +36,7 @@ class DatabaseIEController extends Controller
 
         return response()->download($path, $filename, [
             'Content-Type' => 'application/octet-stream',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ])->deleteFileAfterSend(true);
     }
 
@@ -53,17 +45,15 @@ class DatabaseIEController extends Controller
         set_time_limit(0);
         $request->validate(['backup' => 'required|file']);
         
-        $mysql = $this->getBinaryPath('mysql');
         $path = $request->file('backup')->getRealPath();
         
-        $dbUser = config('database.connections.mysql.username');
+        $dbUser = escapeshellarg(config('database.connections.mysql.username'));
         $dbPass = config('database.connections.mysql.password');
-        $dbHost = config('database.connections.mysql.host');
-        $dbName = config('database.connections.mysql.database');
+        $dbHost = escapeshellarg(config('database.connections.mysql.host'));
+        $dbName = escapeshellarg(config('database.connections.mysql.database'));
         $passFlag = $dbPass ? "-p" . escapeshellarg($dbPass) : "";
 
-        // Comando construido con seguridad
-        $command = "{$mysql} -u" . escapeshellarg($dbUser) . " {$passFlag} -h" . escapeshellarg($dbHost) . " " . escapeshellarg($dbName) . " < " . escapeshellarg($path) . " 2>&1";
+        $command = "\"{$this->mysqlPath}\" -u{$dbUser} {$passFlag} -h{$dbHost} {$dbName} < \"{$path}\" 2>&1";
         
         exec($command, $output, $returnCode);
 
