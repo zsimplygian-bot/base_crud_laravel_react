@@ -13,6 +13,7 @@ class Cliente extends BaseModel {
         'telefono'  => 'nullable|string|max:9',
         'email'     => 'nullable|email|max:255',
         'direccion' => 'nullable|string|max:255',
+        'observaciones' => 'nullable|string',
     ];
 
     protected static $tableColumns = [
@@ -22,6 +23,7 @@ class Cliente extends BaseModel {
         ['TELÉFONO', 'telefono'],
         ['DNI', 'dni'],
         ['DIRECCIÓN', 'direccion'],
+        ['OBSERVACIONES', 'observaciones'],
         ['FECHA REGISTRO', 'created_at'],
     ];
 
@@ -37,6 +39,7 @@ class Cliente extends BaseModel {
                 "$t1.dni",
                 "$t1.telefono",
                 "$t1.direccion",
+                "$t1.observaciones",
                 "$t1.created_at",
                 // Contamos las mascotas asociadas a cada cliente
                 DB::raw("COUNT($t2.id_$t2) as total_mascotas"),
@@ -47,6 +50,7 @@ class Cliente extends BaseModel {
                 "$t1.dni", 
                 "$t1.telefono", 
                 "$t1.direccion", 
+                "$t1.observaciones",
                 "$t1.created_at"
             );
 

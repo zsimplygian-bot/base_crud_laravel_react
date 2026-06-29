@@ -8,5 +8,6 @@ export const clienteView = {
     { id: "email", label: "Email", searchable: true, required: false },
     { id: "dni", label: "DNI", searchable: true, required: false },
     { id: "telefono", label: "Teléfono", searchable: true },
+    { id: "observaciones", label: "Observaciones", searchable: true },
   ],
 }

@@ -16,6 +16,7 @@ Route::post('/cita/{id}/notificar', [CitaController::class, 'notificar']);
 Route::get('/citas/proximas', [CitaController::class, 'proximas']);
 Route::get('/cita/eventos', [CitaController::class, 'eventos']);
 Route::post('/rfm/procesar', [RFMController::class, 'procesar']);
+Route::post('/rfm/procesar-individual/{id_cliente}', [RFMController::class, 'procesarIndividual']);
 Route::post('/rfm/predecir', [RFMController::class, 'predecir']);
 Route::get('/historia/{id}/records', [HistoriaController::class, 'records']);
 Route::get('/historia_producto/{id}/records', [HistoriaProductoController::class, 'records']);

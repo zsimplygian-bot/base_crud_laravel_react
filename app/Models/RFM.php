@@ -23,6 +23,7 @@ class RFM extends BaseModel {
 
     protected static $tableColumns = [
         ['ID', 'id'],
+        ['ID2', 'id_cliente'],
         ['CLIENTE', 'cliente'],
         ['SEGMENTO', 'estado_cliente'],
         ['RECENCIA', 'recencia'],
@@ -47,6 +48,7 @@ class RFM extends BaseModel {
             ->join($t2, "$t1.id_cliente", '=', "$t2.id_$t2")
             ->select([
                 "$t1.id_rfm as id", 
+                "$t1.id_cliente",
                 "$t2.cliente",
                 "$t1.segmento as estado_cliente",
                 "$t1.frecuencia",
